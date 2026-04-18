@@ -17,6 +17,8 @@ CPT, EIT, and other interference effects are not captured here.
 
 from __future__ import annotations
 
+import io
+from contextlib import redirect_stdout
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Dict, Iterable, List, Sequence, Tuple
@@ -36,10 +38,10 @@ MHz = 2.0 * np.pi * 1.0e6  # angular frequency units
 Gauss = 1.0e-4  # Tesla
 
 SIMULATION_CONFIG = {
-    "detuning_op": 0.0 * MHz,
+    "detuning_op": 0 * MHz,
     "detuning_rp": 0.0 * MHz,
     "intensity_op": 1.0,
-    "intensity_rp": 0.5,
+    "intensity_rp": 1.0,
     "B_field": 2.35 * Gauss,
     "total_time": 120.0e-6,
     "num_time_points": 1200,
@@ -50,15 +52,16 @@ SIMULATION_CONFIG = {
     "show_plots": False,
     "save_plots": True,
     "output_filename": "output.png",
+    "detailed_output_filename": "detailed_output.md",
 }
 
 # Polarization amplitudes may be real or complex. The code uses |epsilon_q|^2
 # and normalizes the three components so the listed laser intensity is the total
 # intensity for that beam.
 OPTICAL_PUMP_POLARIZATION = {
-    "epsilon_plus": 0.9 + 0.0j,
+    "epsilon_plus": 1 + 0.0j,
     "epsilon_pi": 0.0 + 0.0j,
-    "epsilon_minus": 0.1 + 0.0j,
+    "epsilon_minus": 0.0 + 0.0j,
 }
 
 REPUMP_POLARIZATION = {
@@ -574,6 +577,34 @@ def describe_transition_network(states: Sequence[State], absorption_channels: Se
         )
 
 
+def write_detailed_output(
+    filename: str,
+    states: Sequence[State],
+    lasers: Sequence[Laser],
+    gF_map: Dict[Tuple[str, int], float],
+    config: Dict[str, float],
+    branching_sums: Dict[int, float],
+    excitation_out_rates: Dict[int, float],
+    absorption_channels: Sequence[Channel],
+    solution: solve_ivp,
+) -> None:
+    """Write the detailed textual diagnostics to a markdown file."""
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        print_configuration_summary(lasers, gF_map, config)
+        print_branching_checks(states, branching_sums)
+        print_dark_states(states, excitation_out_rates)
+        describe_transition_network(states, absorption_channels)
+        print_population_conservation(solution.t, solution.y, config["population_drift_warning"])
+        print_final_populations(states, solution.y[:, -1])
+
+    with open(filename, "w", encoding="utf-8") as handle:
+        handle.write("# Detailed Output\n\n")
+        handle.write("```text\n")
+        handle.write(buffer.getvalue().lstrip("\n"))
+        handle.write("\n```\n")
+
+
 def plot_level_structure(
     states: Sequence[State],
     absorption_channels: Sequence[Channel],
@@ -583,7 +614,7 @@ def plot_level_structure(
     """Draw a level-structure diagram with x as mF and y as energy."""
     laser_colors = {
         "optical_pump": "#c81d25",
-        "repump": "#f08bb4",
+        "repump": "#2f9e44",
     }
     B_field = config["B_field"]
     manifold_offsets_mhz = {
@@ -654,7 +685,6 @@ def plot_level_structure(
     ax.text(-3.55, manifold_offsets_mhz[("g", 2)], r"$F=2$", color=manifold_colors[("g", 2)], fontsize=11, va="center")
     ax.text(-3.55, manifold_offsets_mhz[("g", 3)], r"$F=3$", color=manifold_colors[("g", 3)], fontsize=11, va="center")
     ax.text(-3.55, manifold_offsets_mhz[("e", 3)], r"$F'=3$", color=manifold_colors[("e", 3)], fontsize=11, va="center")
-    ax.text(1.55, manifold_offsets_mhz[("e", 3)] + 38.0, "Color = laser, alpha = polarization power", fontsize=9)
 
     plt.tight_layout()
 
@@ -776,12 +806,17 @@ def main() -> None:
     rate_matrix = build_rate_matrix(states, absorption_channels, decay_channels)
     solution = solve_populations(rate_matrix, initial, config["total_time"], config["num_time_points"])
 
-    print_configuration_summary(lasers, gF_map, config)
-    print_branching_checks(states, branching_sums)
-    print_dark_states(states, excitation_out_rates)
-    describe_transition_network(states, absorption_channels)
-    print_population_conservation(solution.t, solution.y, config["population_drift_warning"])
-    print_final_populations(states, solution.y[:, -1])
+    write_detailed_output(
+        filename=config["detailed_output_filename"],
+        states=states,
+        lasers=lasers,
+        gF_map=gF_map,
+        config=config,
+        branching_sums=branching_sums,
+        excitation_out_rates=excitation_out_rates,
+        absorption_channels=absorption_channels,
+        solution=solution,
+    )
 
     plot_level_structure(states, absorption_channels, gF_map, config)
     plot_population_dynamics(states, solution, config)
@@ -798,7 +833,9 @@ def main() -> None:
 
     if config["save_plots"]:
         save_open_figures_as_single_png(config["output_filename"])
-        print(f"\nSaved plots to {config['output_filename']}")
+        print(f"Saved plots to {config['output_filename']}")
+
+    print(f"Saved detailed report to {config['detailed_output_filename']}")
 
     if config["show_plots"]:
         if "agg" in plt.get_backend().lower():
