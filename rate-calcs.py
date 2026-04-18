@@ -97,13 +97,20 @@ REPUMP_POLARIZATION = {
 INITIAL_POPULATIONS: Dict[str, float] = {}
 
 # Optional parameter sweep helper.
-RUN_SWEEP = True
-SWEEP_SCAN_PARAMS = {
+RUN_SWEEP = False
+OP_DETUNING_PARAMS = {
     "parameter": "detuning_op",
     "values": np.linspace(-100, 100, 200) * MHz,
     "tracked_states": ["|g, F=3, mF=+3>", "|g, F=3, mF=+2>", "|g, F=2, mF=+2>"],
     "parameter_units": "2pi MHz",
 }
+RP_POWER_PARAMS = {
+    "parameter": "intensity_rp",
+    "values": np.linspace(10, 100, 90),
+    "tracked_states": ["|g, F=3, mF=+3>", "|g, F=3, mF=+2>", "|g, F=2, mF=+2>"],
+    "parameter_units": "2pi MHz",
+}
+SWEEP_SCAN_PARAMS = RP_POWER_PARAMS
 
 
 # -----------------------------------------------------------------------------
@@ -684,7 +691,7 @@ def plot_level_structure(
     absorption_channels: Sequence[Channel],
     gF_map: Dict[Tuple[str, int], float],
     config: Dict[str, float],
-) -> None:
+) -> plt.Figure:
     """Draw a level-structure diagram with x as mF and y as energy."""
     laser_colors = {
         "optical_pump": "#c81d25",
@@ -772,31 +779,38 @@ def plot_level_structure(
         ax.text(-3.55, manifold_offsets_mhz[("e", F)], rf"$F'={F}$", color=manifold_colors[("e", F)], fontsize=11, va="center")
 
     plt.tight_layout()
+    return fig
 
 
-def plot_population_dynamics(states: Sequence[State], solution: solve_ivp, config: Dict[str, float]) -> None:
-    """Generate the ground-state population plots."""
+def plot_population_dynamics(states: Sequence[State], solution: solve_ivp, config: Dict[str, float]) -> Tuple[plt.Figure, plt.Figure]:
+    """Generate separate F=3 and F=2 ground-state population plots."""
     times_us = solution.t * 1.0e6
     populations = solution.y
 
     ground_f3 = [state for state in states if state.manifold == "g" and state.F == 3]
     ground_f2 = [state for state in states if state.manifold == "g" and state.F == 2]
 
-    fig_ground, axes_ground = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
+    fig_f3, ax_f3 = plt.subplots(figsize=(7, 4.5))
     for state in ground_f3:
-        axes_ground[0].plot(times_us, populations[state.index], label=state.label)
+        ax_f3.plot(times_us, populations[state.index], label=state.label)
+    ax_f3.set_ylabel("Population")
+    ax_f3.set_xlabel("Time (us)")
+    ax_f3.set_title(r"Ground $F=3$ populations vs time")
+    ax_f3.legend(ncol=2, fontsize=8)
+    ax_f3.grid(alpha=0.25)
+    fig_f3.tight_layout()
+
+    fig_f2, ax_f2 = plt.subplots(figsize=(7, 4.5))
     for state in ground_f2:
-        axes_ground[1].plot(times_us, populations[state.index], label=state.label)
-    axes_ground[0].set_ylabel("Population")
-    axes_ground[0].set_xlabel("Time (us)")
-    axes_ground[1].set_xlabel("Time (us)")
-    axes_ground[0].set_title(r"Ground $F=3$ populations vs time")
-    axes_ground[1].set_title(r"Ground $F=2$ populations vs time")
-    axes_ground[0].legend(ncol=2, fontsize=8)
-    axes_ground[1].legend(ncol=2, fontsize=8)
-    axes_ground[0].grid(alpha=0.25)
-    axes_ground[1].grid(alpha=0.25)
-    fig_ground.tight_layout()
+        ax_f2.plot(times_us, populations[state.index], label=state.label)
+    ax_f2.set_ylabel("Population")
+    ax_f2.set_xlabel("Time (us)")
+    ax_f2.set_title(r"Ground $F=2$ populations vs time")
+    ax_f2.legend(ncol=2, fontsize=8)
+    ax_f2.grid(alpha=0.25)
+    fig_f2.tight_layout()
+
+    return fig_f3, fig_f2
 
 def run_sweep(
     states: Sequence[State],
@@ -806,7 +820,7 @@ def run_sweep(
     sweep_values: Sequence[float],
     parameter_name: str,
     parameter_units: str,
-) -> None:
+) -> plt.Figure:
     """Optional helper: sweep one parameter and plot final populations."""
     label_to_index = {state.label: state.index for state in states}
     label_to_index.update({state.key: state.index for state in states})
@@ -839,38 +853,53 @@ def run_sweep(
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
+    return fig
 
-def save_open_figures_as_single_png(filename: str, dpi: int = 180, padding_px: int = 24) -> None:
-    """Render all currently open matplotlib figures into one stacked PNG."""
-    figure_numbers = plt.get_fignums()
-    if not figure_numbers:
-        return
+def figure_to_image(figure: plt.Figure, dpi: int = 180) -> np.ndarray:
+    """Render a matplotlib figure to an RGB array."""
+    figure.set_dpi(dpi)
+    figure.canvas.draw()
+    return np.asarray(figure.canvas.buffer_rgba(), dtype=np.uint8)[..., :3]
 
-    rendered_images = []
-    max_width = 0
-    total_height = 0
 
-    for figure_number in figure_numbers:
-        figure = plt.figure(figure_number)
-        figure.set_dpi(dpi)
-        figure.canvas.draw()
-        image = np.asarray(figure.canvas.buffer_rgba(), dtype=np.uint8)[..., :3]
-        rendered_images.append(image)
-        height, width = image.shape[:2]
-        max_width = max(max_width, width)
-        total_height += height
+def save_dashboard_png(
+    filename: str,
+    level_figure: plt.Figure,
+    f3_figure: plt.Figure,
+    f2_figure: plt.Figure,
+    sweep_figure: plt.Figure | None = None,
+    dpi: int = 300,
+) -> None:
+    """Save the final output image in the requested left-right dashboard layout."""
+    level_image = figure_to_image(level_figure, dpi=dpi)
+    f3_image = figure_to_image(f3_figure, dpi=dpi)
+    f2_image = figure_to_image(f2_figure, dpi=dpi)
+    sweep_image = figure_to_image(sweep_figure, dpi=dpi) if sweep_figure is not None else None
 
-    total_height += padding_px * (len(rendered_images) - 1)
-    combined = np.full((total_height, max_width, 3), 255, dtype=np.uint8)
+    right_rows = 3 if sweep_image is not None else 2
+    dashboard = plt.figure(figsize=(14, 8 if sweep_image is None else 10), dpi=dpi)
+    grid = dashboard.add_gridspec(right_rows, 2, width_ratios=[1.1, 1.0], wspace=0.08, hspace=0.10)
 
-    y_offset = 0
-    for image in rendered_images:
-        height, width = image.shape[:2]
-        x_offset = (max_width - width) // 2
-        combined[y_offset : y_offset + height, x_offset : x_offset + width] = image
-        y_offset += height + padding_px
+    ax_level = dashboard.add_subplot(grid[:, 0])
+    ax_level.imshow(level_image)
+    ax_level.axis("off")
 
-    plt.imsave(filename, combined)
+    ax_f3 = dashboard.add_subplot(grid[0, 1])
+    ax_f3.imshow(f3_image)
+    ax_f3.axis("off")
+
+    ax_f2 = dashboard.add_subplot(grid[1, 1])
+    ax_f2.imshow(f2_image)
+    ax_f2.axis("off")
+
+    if sweep_image is not None:
+        ax_sweep = dashboard.add_subplot(grid[2, 1])
+        ax_sweep.imshow(sweep_image)
+        ax_sweep.axis("off")
+
+    dashboard.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)
+    dashboard.savefig(filename, dpi=dpi)
+    plt.close(dashboard)
 
 
 def main() -> None:
@@ -905,11 +934,12 @@ def main() -> None:
         solution=solution,
     )
 
-    plot_level_structure(states, absorption_channels, gF_map, config)
-    plot_population_dynamics(states, solution, config)
+    level_figure = plot_level_structure(states, absorption_channels, gF_map, config)
+    f3_figure, f2_figure = plot_population_dynamics(states, solution, config)
+    sweep_figure = None
 
     if RUN_SWEEP:
-        run_sweep(
+        sweep_figure = run_sweep(
             states=states,
             gF_map=gF_map,
             base_config=config,
@@ -920,7 +950,13 @@ def main() -> None:
         )
 
     if config["save_plots"]:
-        save_open_figures_as_single_png(config["output_filename"])
+        save_dashboard_png(
+            filename=config["output_filename"],
+            level_figure=level_figure,
+            f3_figure=f3_figure,
+            f2_figure=f2_figure,
+            sweep_figure=sweep_figure,
+        )
         print(f"Saved plots to {config['output_filename']}")
 
     print(f"Saved detailed report to {config['detailed_output_filename']}")
