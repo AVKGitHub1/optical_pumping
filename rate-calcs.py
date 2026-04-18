@@ -4,10 +4,14 @@ mF-resolved optical pumping for 85Rb D2 using population rate equations.
 This script models the 85Rb D2 manifolds
     ground: F=3, mF=-3..+3
     ground: F=2, mF=-2..+2
-    excited: F'=3, mF'=-3..+3
+    excited: F'=1,2,3,4 with all allowed mF'
 driven by
     1) an optical pumping laser on F=3 -> F'=3
     2) a repump laser on F=2 -> F'=3
+
+The nominal target transitions are F=3 -> F'=3 and F=2 -> F'=3, but the
+rate-equation model also includes off-resonant coupling to the other D2
+hyperfine excited manifolds and to the opposite ground hyperfine state.
 
 Important limitation:
 This is a pure population-rate model. It does not include optical coherences,
@@ -37,11 +41,28 @@ from sympy.physics.wigner import wigner_3j, wigner_6j
 MHz = 2.0 * np.pi * 1.0e6  # angular frequency units
 Gauss = 1.0e-4  # Tesla
 
+# Hyperfine offsets in MHz, referenced to the manifold used as zero in the model.
+# These default values are based on standard 85Rb D2 hyperfine intervals.
+GROUND_HYPERFINE_OFFSETS_MHZ = {
+    2: -3035.732439,
+    3: 0.0,
+}
+
+EXCITED_HYPERFINE_OFFSETS_MHZ = {
+    1: -92.7724,
+    2: -63.4017,
+    3: 0.0,
+    4: 120.6407,
+}
+
+INCLUDED_EXCITED_F_VALUES = (1, 2, 3, 4)
+DISPLAYED_EXCITED_F_VALUES = (3,)
+
 SIMULATION_CONFIG = {
-    "detuning_op": 0 * MHz,
-    "detuning_rp": 0.0 * MHz,
-    "intensity_op": 1.0,
-    "intensity_rp": 1.0,
+    "detuning_op": 10 * MHz,
+    "detuning_rp": 10 * MHz,
+    "intensity_op": 10,
+    "intensity_rp": 100,
     "B_field": 2.35 * Gauss,
     "total_time": 120.0e-6,
     "num_time_points": 1200,
@@ -59,15 +80,15 @@ SIMULATION_CONFIG = {
 # and normalizes the three components so the listed laser intensity is the total
 # intensity for that beam.
 OPTICAL_PUMP_POLARIZATION = {
-    "epsilon_plus": 1 + 0.0j,
+    "epsilon_plus": 0.99 + 0.0j,
     "epsilon_pi": 0.0 + 0.0j,
-    "epsilon_minus": 0.0 + 0.0j,
+    "epsilon_minus": 0.01 + 0.0j,
 }
 
 REPUMP_POLARIZATION = {
-    "epsilon_plus": 0.0 + 0.0j,
+    "epsilon_plus": 1.0 + 0.0j,
     "epsilon_pi": 1 + 0.0j,
-    "epsilon_minus": 0.0 + 0.0j,
+    "epsilon_minus": 1.0 + 0.0j,
 }
 
 # Example initial condition: uniform across F=3, zero elsewhere.
@@ -76,11 +97,12 @@ REPUMP_POLARIZATION = {
 INITIAL_POPULATIONS: Dict[str, float] = {}
 
 # Optional parameter sweep helper.
-RUN_DETUNING_SWEEP = False
-DETUNING_SWEEP = {
+RUN_SWEEP = True
+SWEEP_SCAN_PARAMS = {
     "parameter": "detuning_op",
-    "values": np.linspace(-30.0, 30.0, 121) * MHz,
+    "values": np.linspace(-100, 100, 200) * MHz,
     "tracked_states": ["|g, F=3, mF=+3>", "|g, F=3, mF=+2>", "|g, F=2, mF=+2>"],
+    "parameter_units": "2pi MHz",
 }
 
 
@@ -91,7 +113,6 @@ DETUNING_SWEEP = {
 I_RB85 = S(5) / 2
 J_GROUND = S(1) / 2
 J_EXCITED = S(3) / 2
-F_EXCITED = 3
 GROUND_F_VALUES = (2, 3)
 
 GJ_5S12 = 2.00233113
@@ -125,6 +146,7 @@ class Laser:
 
     name: str
     ground_F: int
+    excited_F: int
     detuning: float
     intensity: float
     epsilon_plus: complex
@@ -205,6 +227,37 @@ def zeeman_shift_rad_s(state: State, B_field: float, gF_map: Dict[Tuple[str, int
     return MU_B_OVER_HBAR * gF_map[(state.manifold, state.F)] * state.m * B_field
 
 
+def ground_hyperfine_offset_rad_s(F: int) -> float:
+    """Ground-manifold hyperfine offset relative to F=3, in angular-frequency units."""
+    return GROUND_HYPERFINE_OFFSETS_MHZ[F] * MHz
+
+
+def excited_hyperfine_offset_rad_s(F: int) -> float:
+    """Excited-manifold hyperfine offset relative to F'=3, in angular-frequency units."""
+    return EXCITED_HYPERFINE_OFFSETS_MHZ[F] * MHz
+
+
+def transition_offset_rad_s(laser: Laser, ground_F: int, excited_F: int) -> float:
+    """
+    Zero-field hyperfine shift of a given transition relative to the laser's
+    nominal target transition |g, F=laser.ground_F> -> |e, F'=laser.excited_F>.
+    """
+    excited_part = excited_hyperfine_offset_rad_s(excited_F) - excited_hyperfine_offset_rad_s(laser.excited_F)
+    ground_part = ground_hyperfine_offset_rad_s(ground_F) - ground_hyperfine_offset_rad_s(laser.ground_F)
+    return excited_part - ground_part
+
+
+def is_nominal_display_channel(states: Sequence[State], channel: Channel) -> bool:
+    """Return True only for the nominal on-diagram/on-report channels for each laser."""
+    ground = states[channel.ground_index]
+    excited = states[channel.excited_index]
+    if channel.laser_name == "optical_pump":
+        return ground.F == 3 and excited.F == 3
+    if channel.laser_name == "repump":
+        return ground.F == 2 and excited.F == 3
+    return False
+
+
 @lru_cache(maxsize=None)
 def dipole_strength(F_ground: int, m_ground: int, F_excited: int, m_excited: int) -> float:
     """
@@ -240,11 +293,12 @@ def build_states() -> Tuple[List[State], List[State], List[State]]:
             ground_states.append(state)
             index += 1
 
-    for m in range(-F_EXCITED, F_EXCITED + 1):
-        state = State("e", F_EXCITED, m, index)
-        states.append(state)
-        excited_states.append(state)
-        index += 1
+    for F in INCLUDED_EXCITED_F_VALUES:
+        for m in range(-F, F + 1):
+            state = State("e", F, m, index)
+            states.append(state)
+            excited_states.append(state)
+            index += 1
 
     return states, ground_states, excited_states
 
@@ -283,6 +337,7 @@ def build_lasers(config: Dict[str, float]) -> List[Laser]:
         Laser(
             name="optical_pump",
             ground_F=3,
+            excited_F=3,
             detuning=config["detuning_op"],
             intensity=config["intensity_op"],
             epsilon_plus=OPTICAL_PUMP_POLARIZATION["epsilon_plus"],
@@ -292,6 +347,7 @@ def build_lasers(config: Dict[str, float]) -> List[Laser]:
         Laser(
             name="repump",
             ground_F=2,
+            excited_F=3,
             detuning=config["detuning_rp"],
             intensity=config["intensity_rp"],
             epsilon_plus=REPUMP_POLARIZATION["epsilon_plus"],
@@ -306,10 +362,11 @@ def max_absorption_strength() -> float:
     strengths = []
     for F_ground in GROUND_F_VALUES:
         for m_ground in range(-F_ground, F_ground + 1):
-            for q in (-1, 0, +1):
-                m_excited = m_ground + q
-                if abs(m_excited) <= F_EXCITED:
-                    strengths.append(dipole_strength(F_ground, m_ground, F_EXCITED, m_excited))
+            for F_excited in INCLUDED_EXCITED_F_VALUES:
+                for q in (-1, 0, +1):
+                    m_excited = m_ground + q
+                    if abs(m_excited) <= F_excited:
+                        strengths.append(dipole_strength(F_ground, m_ground, F_excited, m_excited))
     return max(strengths)
 
 
@@ -341,60 +398,71 @@ def build_absorption_channels(
             continue
 
         polarization_weights = laser.polarization_weights()
-        ground_states = [state for state in states if state.manifold == "g" and state.F == laser.ground_F]
+        ground_states = [state for state in states if state.manifold == "g"]
         s_total_ground: Dict[int, float] = {}
 
         for ground in ground_states:
             s_total = 0.0
-            for q, pol_fraction in polarization_weights.items():
-                if pol_fraction <= 0.0:
-                    continue
-                m_excited = ground.m + q
-                if abs(m_excited) > F_EXCITED:
-                    continue
-                bare_strength = dipole_strength(ground.F, ground.m, F_EXCITED, m_excited)
-                if bare_strength <= 0.0:
-                    continue
-                s_total += (laser.intensity / saturation_intensity) * pol_fraction * (bare_strength / reference_strength)
+            for F_excited in INCLUDED_EXCITED_F_VALUES:
+                for q, pol_fraction in polarization_weights.items():
+                    if pol_fraction <= 0.0:
+                        continue
+                    m_excited = ground.m + q
+                    if abs(m_excited) > F_excited:
+                        continue
+                    bare_strength = dipole_strength(ground.F, ground.m, F_excited, m_excited)
+                    if bare_strength <= 0.0:
+                        continue
+                    excited = key_to_state[state_key("e", F_excited, m_excited)]
+                    s_channel = (laser.intensity / saturation_intensity) * pol_fraction * (bare_strength / reference_strength)
+                    detuning = (
+                        laser.detuning
+                        - transition_offset_rad_s(laser, ground.F, excited.F)
+                        + zeeman_shift_rad_s(ground, config["B_field"], gF_map)
+                        - zeeman_shift_rad_s(excited, config["B_field"], gF_map)
+                    )
+                    s_total += s_channel / (1.0 + (2.0 * detuning / Gamma) ** 2)
             s_total_ground[ground.index] = s_total
 
         for ground in ground_states:
-            for q, pol_fraction in polarization_weights.items():
-                if pol_fraction <= 0.0:
-                    continue
-                m_excited = ground.m + q
-                if abs(m_excited) > F_EXCITED:
-                    continue
+            for F_excited in INCLUDED_EXCITED_F_VALUES:
+                for q, pol_fraction in polarization_weights.items():
+                    if pol_fraction <= 0.0:
+                        continue
+                    m_excited = ground.m + q
+                    if abs(m_excited) > F_excited:
+                        continue
 
-                excited = key_to_state[state_key("e", F_EXCITED, m_excited)]
-                bare_strength = dipole_strength(ground.F, ground.m, F_EXCITED, excited.m)
-                if bare_strength <= 0.0:
-                    continue
+                    excited = key_to_state[state_key("e", F_excited, m_excited)]
+                    bare_strength = dipole_strength(ground.F, ground.m, excited.F, excited.m)
+                    if bare_strength <= 0.0:
+                        continue
 
-                weighted_strength = pol_fraction * bare_strength
-                s_channel = (laser.intensity / saturation_intensity) * (weighted_strength / reference_strength)
-                detuning = (
-                    laser.detuning
-                    + zeeman_shift_rad_s(ground, config["B_field"], gF_map)
-                    - zeeman_shift_rad_s(excited, config["B_field"], gF_map)
-                )
-                s_total = s_total_ground[ground.index] if include_sat else 0.0
-                denominator = 1.0 + s_total + (2.0 * detuning / Gamma) ** 2
-                rate = 0.5 * Gamma * s_channel / denominator
+                    weighted_strength = pol_fraction * bare_strength
+                    s_channel = (laser.intensity / saturation_intensity) * (weighted_strength / reference_strength)
+                    detuning = (
+                        laser.detuning
+                        - transition_offset_rad_s(laser, ground.F, excited.F)
+                        + zeeman_shift_rad_s(ground, config["B_field"], gF_map)
+                        - zeeman_shift_rad_s(excited, config["B_field"], gF_map)
+                    )
+                    s_total = s_total_ground[ground.index] if include_sat else 0.0
+                    denominator = 1.0 + s_total + (2.0 * detuning / Gamma) ** 2
+                    rate = 0.5 * Gamma * s_channel / denominator
 
-                channel = Channel(
-                    laser_name=laser.name,
-                    ground_index=ground.index,
-                    excited_index=excited.index,
-                    q=q,
-                    bare_strength=bare_strength,
-                    weighted_strength=weighted_strength,
-                    saturation_parameter=s_channel,
-                    detuning=detuning,
-                    rate=rate,
-                )
-                channels.append(channel)
-                total_excitation_out[ground.index] += rate
+                    channel = Channel(
+                        laser_name=laser.name,
+                        ground_index=ground.index,
+                        excited_index=excited.index,
+                        q=q,
+                        bare_strength=bare_strength,
+                        weighted_strength=weighted_strength,
+                        saturation_parameter=s_channel,
+                        detuning=detuning,
+                        rate=rate,
+                    )
+                    channels.append(channel)
+                    total_excitation_out[ground.index] += rate
 
     return channels, total_excitation_out
 
@@ -491,14 +559,18 @@ def print_configuration_summary(lasers: Sequence[Laser], gF_map: Dict[Tuple[str,
     print(f"B field                         = {config['B_field'] / Gauss: .6f} G")
     print(f"Saturation intensity scale      = {config['saturation_intensity']:.6g} (arbitrary units)")
     print(f"Include sat broadening          = {config['include_saturation_broadening']}")
+    print(f"Included excited manifolds      = {INCLUDED_EXCITED_F_VALUES}")
+    print(f"Ground F=2 offset from F=3      = {GROUND_HYPERFINE_OFFSETS_MHZ[2]: .6f} MHz")
     print(f"gF(F=3, ground)                 = {gF_map[('g', 3)]: .8f}")
     print(f"gF(F=2, ground)                 = {gF_map[('g', 2)]: .8f}")
-    print(f"gF(F'=3, excited)               = {gF_map[('e', 3)]: .8f}")
+    for F in INCLUDED_EXCITED_F_VALUES:
+        print(f"gF(F'={F}, excited)              = {gF_map[('e', F)]: .8f}")
+        print(f"Excited F'={F} offset            = {EXCITED_HYPERFINE_OFFSETS_MHZ[F]: .6f} MHz")
 
     for laser in lasers:
         weights = laser.polarization_weights()
         print(f"\nLaser: {laser.name}")
-        print(f"  addressed manifold           = F={laser.ground_F} -> F'=3")
+        print(f"  nominal target              = F={laser.ground_F} -> F'={laser.excited_F}")
         print(f"  intensity                    = {laser.intensity:.6g} (same units as I_sat)")
         print(f"  sigma+ power fraction        = {weights[+1]:.6f}")
         print(f"  pi power fraction            = {weights[0]:.6f}")
@@ -568,6 +640,8 @@ def describe_transition_network(states: Sequence[State], absorption_channels: Se
     q_name = {+1: "sigma+", 0: "pi", -1: "sigma-"}
     print("\n=== Laser-Driven Transition Network ===")
     for channel in absorption_channels:
+        if not is_nominal_display_channel(states, channel):
+            continue
         ground = states[channel.ground_index]
         excited = states[channel.excited_index]
         print(
@@ -617,25 +691,34 @@ def plot_level_structure(
         "repump": "#2f9e44",
     }
     B_field = config["B_field"]
-    manifold_offsets_mhz = {
-        ("g", 2): -220.0,
-        ("g", 3): 0.0,
-        ("e", 3): 320.0,
-    }
+    displayed_states = [
+        state
+        for state in states
+        if state.manifold == "g" or (state.manifold == "e" and state.F in DISPLAYED_EXCITED_F_VALUES)
+    ]
+    displayed_channels = [
+        channel
+        for channel in absorption_channels
+        if states[channel.excited_index].F in DISPLAYED_EXCITED_F_VALUES and is_nominal_display_channel(states, channel)
+    ]
+    manifold_offsets_mhz = {("g", 2): -220.0, ("g", 3): 0.0}
+    for F in DISPLAYED_EXCITED_F_VALUES:
+        manifold_offsets_mhz[("e", F)] = 320.0 + EXCITED_HYPERFINE_OFFSETS_MHZ[F]
+
     x_offsets = {
-        ("g", 2): -0.14,
-        ("g", 3): +0.14,
+        ("g", 2): -0.18,
+        ("g", 3): +0.18,
         ("e", 3): 0.0,
     }
     manifold_colors = {
         ("g", 2): "tab:orange",
         ("g", 3): "tab:blue",
-        ("e", 3): "tab:green",
+        ("e", 3): "#2d6a4f",
     }
 
     fig, ax = plt.subplots(figsize=(11, 7))
 
-    for state in states:
+    for state in displayed_states:
         x_center = state.m + x_offsets[(state.manifold, state.F)]
         y = manifold_offsets_mhz[(state.manifold, state.F)] + zeeman_shift_rad_s(state, B_field, gF_map) / MHz
         ax.plot(
@@ -646,9 +729,9 @@ def plot_level_structure(
         )
         ax.text(x_center, y - 18.0, rf"$m_F={state.m:+d}$", ha="center", va="top", fontsize=10)
 
-    max_rate = max((channel.rate for channel in absorption_channels), default=1.0)
+    max_rate = max((channel.rate for channel in displayed_channels), default=1.0)
     laser_legend_drawn = set()
-    for channel in absorption_channels:
+    for channel in displayed_channels:
         ground = states[channel.ground_index]
         excited = states[channel.excited_index]
         x_ground = ground.m + x_offsets[(ground.manifold, ground.F)]
@@ -672,19 +755,21 @@ def plot_level_structure(
 
     y_values = [
         manifold_offsets_mhz[(state.manifold, state.F)] + zeeman_shift_rad_s(state, B_field, gF_map) / MHz
-        for state in states
+        for state in displayed_states
     ]
     ax.set_xlim(-3.85, 3.85)
     ax.set_ylim(min(y_values) - 45.0, max(y_values) + 55.0)
-    ax.set_xticks(np.arange(-3, 4, 1))
+    ax.set_xticks([])
+    ax.set_yticks([])
     ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.set_title("Laser coupling diagram in the |g/e, F, mF> basis")
+    ax.set_title("Level Structure")
     ax.grid(alpha=0.25)
     ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1.02, 1.0), borderaxespad=0.0)
     ax.text(-3.55, manifold_offsets_mhz[("g", 2)], r"$F=2$", color=manifold_colors[("g", 2)], fontsize=11, va="center")
     ax.text(-3.55, manifold_offsets_mhz[("g", 3)], r"$F=3$", color=manifold_colors[("g", 3)], fontsize=11, va="center")
-    ax.text(-3.55, manifold_offsets_mhz[("e", 3)], r"$F'=3$", color=manifold_colors[("e", 3)], fontsize=11, va="center")
+    for F in DISPLAYED_EXCITED_F_VALUES:
+        ax.text(-3.55, manifold_offsets_mhz[("e", F)], rf"$F'={F}$", color=manifold_colors[("e", F)], fontsize=11, va="center")
 
     plt.tight_layout()
 
@@ -713,13 +798,14 @@ def plot_population_dynamics(states: Sequence[State], solution: solve_ivp, confi
     axes_ground[1].grid(alpha=0.25)
     fig_ground.tight_layout()
 
-def run_detuning_sweep(
+def run_sweep(
     states: Sequence[State],
     gF_map: Dict[Tuple[str, int], float],
     base_config: Dict[str, float],
     tracked_states: Sequence[str],
     sweep_values: Sequence[float],
     parameter_name: str,
+    parameter_units: str,
 ) -> None:
     """Optional helper: sweep one parameter and plot final populations."""
     label_to_index = {state.label: state.index for state in states}
@@ -747,9 +833,9 @@ def run_detuning_sweep(
     fig, ax = plt.subplots(figsize=(9, 5))
     for label, values in final_values.items():
         ax.plot(sweep_axis_mhz, values, label=label)
-    ax.set_xlabel(f"{parameter_name} / (2 pi MHz)")
+    ax.set_xlabel(f"{parameter_name} [{parameter_units}]")
     ax.set_ylabel("Final population")
-    ax.set_title("Optional detuning sweep")
+    ax.set_title("Parameter Sweep Scan")
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
@@ -789,13 +875,14 @@ def save_open_figures_as_single_png(filename: str, dpi: int = 180, padding_px: i
 
 def main() -> None:
     """Run the optical-pumping simulation with the example configuration."""
-    states, _, excited_states = build_states()
+    states, _, _ = build_states()
 
     gF_map = {
         ("g", 3): linear_gF(3, J_GROUND, GJ_5S12, GI_RB85),
         ("g", 2): linear_gF(2, J_GROUND, GJ_5S12, GI_RB85),
-        ("e", 3): linear_gF(3, J_EXCITED, GJ_5P32, GI_RB85),
     }
+    for F in INCLUDED_EXCITED_F_VALUES:
+        gF_map[("e", F)] = linear_gF(F, J_EXCITED, GJ_5P32, GI_RB85)
 
     config = dict(SIMULATION_CONFIG)
     lasers = build_lasers(config)
@@ -821,14 +908,15 @@ def main() -> None:
     plot_level_structure(states, absorption_channels, gF_map, config)
     plot_population_dynamics(states, solution, config)
 
-    if RUN_DETUNING_SWEEP:
-        run_detuning_sweep(
+    if RUN_SWEEP:
+        run_sweep(
             states=states,
             gF_map=gF_map,
             base_config=config,
-            tracked_states=DETUNING_SWEEP["tracked_states"],
-            sweep_values=DETUNING_SWEEP["values"],
-            parameter_name=DETUNING_SWEEP["parameter"],
+            tracked_states=SWEEP_SCAN_PARAMS["tracked_states"],
+            sweep_values=SWEEP_SCAN_PARAMS["values"],
+            parameter_name=SWEEP_SCAN_PARAMS["parameter"],
+            parameter_units=SWEEP_SCAN_PARAMS["parameter_units"],
         )
 
     if config["save_plots"]:
