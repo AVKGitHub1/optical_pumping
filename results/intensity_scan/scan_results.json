@@ -1,0 +1,534 @@
+{
+  "title": "Pump/repump intensity vs Raman carrier Rabi (continuous, 5 ms)",
+  "axes": [
+    {
+      "param": [
+        "spin_pump.peak_intensity_w_m2",
+        "repump.peak_intensity_w_m2"
+      ],
+      "label": "pump & repump peak intensity (W/m^2)",
+      "values": [
+        0.01,
+        0.023403473193207163,
+        0.05477225575051662,
+        0.1281861019188702,
+        0.3
+      ],
+      "log": true
+    },
+    {
+      "param": "raman.carrier_rabi_hz",
+      "label": "carrier Rabi (Hz)",
+      "values": [
+        1000.0,
+        2500.0,
+        5000.0,
+        10000.0,
+        20000.0
+      ],
+      "log": false
+    }
+  ],
+  "series_labels": [
+    ""
+  ],
+  "series_overrides": [
+    {}
+  ],
+  "metrics": {
+    "P_up": [
+      [
+        [
+          0.7202858852786553,
+          0.6930078001111296,
+          0.6890969815526755,
+          0.6831931482887416,
+          0.6638478859095529
+        ],
+        [
+          0.9110543886248884,
+          0.8999307802807087,
+          0.9081162722648055,
+          0.9013414107192012,
+          0.8654627382389704
+        ],
+        [
+          0.9774218120641828,
+          0.967940912978764,
+          0.984777805699135,
+          0.978662227897348,
+          0.939027838542549
+        ],
+        [
+          0.9949337191677,
+          0.9849217015466025,
+          0.9918661775611027,
+          0.9841576702272564,
+          0.9428552812336112
+        ],
+        [
+          0.9989076212269765,
+          0.994782684292814,
+          0.9914456059648722,
+          0.9836906968088613,
+          0.94082390986943
+        ]
+      ]
+    ],
+    "P_n0": [
+      [
+        [
+          0.46244343904457974,
+          0.5771737474445617,
+          0.5954497624505816,
+          0.5944423517025219,
+          0.5727600209978119
+        ],
+        [
+          0.46557782039624646,
+          0.7955630407037724,
+          0.8624503197181816,
+          0.8714318877565052,
+          0.8506494247678255
+        ],
+        [
+          0.37067625078639443,
+          0.8076835027917835,
+          0.9698448500103066,
+          0.9819773520687585,
+          0.9650326523808
+        ],
+        [
+          0.301648179740508,
+          0.6006770064402631,
+          0.9598878229103478,
+          0.988508265726353,
+          0.9707761496638025
+        ],
+        [
+          0.2681806530049656,
+          0.40396795682636555,
+          0.7877498647704388,
+          0.9712911617588095,
+          0.9573243922298155
+        ]
+      ]
+    ],
+    "P_target": [
+      [
+        [
+          0.39787055004508,
+          0.5026333479077023,
+          0.5193249288465588,
+          0.5139428597280241,
+          0.4774941277307469
+        ],
+        [
+          0.44705758705525905,
+          0.7693308706816452,
+          0.8384513586927698,
+          0.839898781415492,
+          0.7881104444478337
+        ],
+        [
+          0.36691990146782977,
+          0.7971416881592333,
+          0.9634335514379481,
+          0.9666306561623321,
+          0.9127002987709769
+        ],
+        [
+          0.3009367196572755,
+          0.5964197028466484,
+          0.9548631705296093,
+          0.9740039401590705,
+          0.918077483100065
+        ],
+        [
+          0.2680229303146395,
+          0.4027964110016082,
+          0.783098071285381,
+          0.9564457433255313,
+          0.903314199790671
+        ]
+      ]
+    ],
+    "nbar": [
+      [
+        [
+          2.0421833657986497,
+          1.7248406089691632,
+          1.6731620198786854,
+          1.6700860884867919,
+          1.7092384093847062
+        ],
+        [
+          1.8235687789242945,
+          0.7876244229581576,
+          0.5810323108343068,
+          0.5389445154159984,
+          0.5648067009481212
+        ],
+        [
+          2.220464728057574,
+          0.5954360184929615,
+          0.13284742770952726,
+          0.06587615785569069,
+          0.07338668028660392
+        ],
+        [
+          2.646522966696402,
+          1.1788429816721844,
+          0.1428710924997194,
+          0.028807126884093134,
+          0.03756193271139465
+        ],
+        [
+          2.898553980350299,
+          2.017683789461337,
+          0.5572954064966502,
+          0.05932293747164377,
+          0.052479113625185494
+        ]
+      ]
+    ],
+    "photons_total": [
+      [
+        [
+          6.325959378640828,
+          7.058990404588714,
+          7.19790497461984,
+          7.265915750226791,
+          7.399659489368782
+        ],
+        [
+          7.564889078540117,
+          10.15546545036264,
+          10.76549423377454,
+          11.133476255394614,
+          12.004332193249972
+        ],
+        [
+          6.8760282195490685,
+          10.985838741663049,
+          12.408430916556705,
+          13.429228950435224,
+          16.483381346118385
+        ],
+        [
+          6.137838557446566,
+          9.932436391891938,
+          13.122534235909079,
+          15.722277375065904,
+          24.113502948048776
+        ],
+        [
+          6.187805456281033,
+          8.707136363780165,
+          13.706828051286749,
+          20.829915931214593,
+          42.39129851605121
+        ]
+      ]
+    ],
+    "target_state_scattering_rate_per_s": [
+      [
+        [
+          7.140962135577043,
+          7.140962135577043,
+          7.140962135577043,
+          7.140962135577043,
+          7.140962135577043
+        ],
+        [
+          16.712331591368464,
+          16.712331591368464,
+          16.712331591368464,
+          16.712331591368464,
+          16.712331591368464
+        ],
+        [
+          39.11266043945811,
+          39.11266043945811,
+          39.11266043945811,
+          39.11266043945811,
+          39.11266043945811
+        ],
+        [
+          91.53721001098718,
+          91.53721001098718,
+          91.53721001098718,
+          91.53721001098718,
+          91.53721001098718
+        ],
+        [
+          214.2288640673112,
+          214.2288640673112,
+          214.2288640673112,
+          214.2288640673112,
+          214.2288640673112
+        ]
+      ]
+    ]
+  },
+  "valid": [
+    [
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ]
+  ],
+  "status": [
+    [
+      [
+        "warning",
+        "warning",
+        "warning",
+        "warning",
+        "warning"
+      ],
+      [
+        "warning",
+        "warning",
+        "warning",
+        "warning",
+        "warning"
+      ],
+      [
+        "warning",
+        "warning",
+        "warning",
+        "warning",
+        "warning"
+      ],
+      [
+        "warning",
+        "warning",
+        "warning",
+        "warning",
+        "warning"
+      ],
+      [
+        "warning",
+        "warning",
+        "warning",
+        "warning",
+        "warning"
+      ]
+    ]
+  ],
+  "invalid_reasons": {},
+  "best_valid_P_target": {
+    "index": [
+      0,
+      3,
+      3
+    ],
+    "P_target": 0.9740039401590705
+  },
+  "base_config": {
+    "name": "default",
+    "trap": {
+      "frequency_hz": 70000.0,
+      "n_max": 40,
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "heating_rate_quanta_per_s": 0.0,
+      "depth_hz": null
+    },
+    "initial": {
+      "spin_preset": "uniform_all",
+      "f3_fraction": 0.5833333333333334,
+      "custom_spin_populations": [
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333
+      ],
+      "motion_mode": "thermal_nbar",
+      "nbar": 3.0,
+      "temperature_k": 1e-05,
+      "fock_n": 1,
+      "custom_pn": []
+    },
+    "magnetic": {
+      "magnitude_gauss": 0.5,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "raman": {
+      "enabled": true,
+      "carrier_rabi_hz": 5000.0,
+      "frequency_mode": "sideband_offset",
+      "red_sideband_offset_hz": 0.0,
+      "beat_frequency_hz": 3035802400.0,
+      "wavelength_nm": 783.0,
+      "beam_low_direction": [
+        0.70710678,
+        0.70710678,
+        0.0
+      ],
+      "beam_high_direction": [
+        -0.70710678,
+        0.70710678,
+        0.0
+      ],
+      "extra_coherence_decay_rate_s": 0.0,
+      "differential_light_shift_hz": 0.0,
+      "scattering_rate_s": 0.0,
+      "scattering_model": "spin_preserving",
+      "max_sideband_order": 3
+    },
+    "spin_pump": {
+      "enabled": true,
+      "intensity_mode": "intensity",
+      "peak_intensity_w_m2": 0.1,
+      "power_w": 1e-06,
+      "waist_m": 0.002,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "repump": {
+      "enabled": true,
+      "intensity_mode": "intensity",
+      "peak_intensity_w_m2": 0.1,
+      "power_w": 1e-06,
+      "waist_m": 0.002,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "optical": {
+      "excited_manifold": "all_D2",
+      "path_model": "independent",
+      "emission_pattern": "dipole",
+      "excited_state_shift_hz": 0.0,
+      "weak_excitation_warning": 0.02,
+      "weak_excitation_invalid": 0.1
+    },
+    "timing": {
+      "protocol": "continuous",
+      "total_duration_s": 0.005,
+      "prep_duration_s": 0.001,
+      "prep_pump_scale": 1.0,
+      "prep_repump_scale": 1.0,
+      "cooling_pump_scale": 1.0,
+      "cooling_repump_scale": 1.0,
+      "cooling_raman_amplitude": 1.0,
+      "raman_pulse_s": 0.0003,
+      "reset_pulse_s": 0.0001,
+      "reset_pump_scale": 1.0,
+      "reset_repump_scale": 1.0,
+      "repetitions": 0,
+      "pulsed_first": "reset",
+      "custom_segments": [],
+      "n_samples": 51
+    },
+    "numerics": {
+      "solver": "coherent",
+      "method": "DOP853",
+      "rtol": 1e-07,
+      "atol": 1e-10,
+      "recoil_quadrature_points": 24,
+      "boundary_tolerance": 0.0001,
+      "conservation_tolerance": 1e-06,
+      "positivity_tolerance": 1e-08,
+      "rate_validity_epsilon": 0.2,
+      "seed": 0
+    },
+    "analysis": {
+      "spin_threshold": 0.9,
+      "joint_threshold": 0.5,
+      "derivative_window": 11
+    }
+  },
+  "stopped": false,
+  "versions": {
+    "python": "3.14.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.6",
+    "scipy": "1.18.0",
+    "matplotlib": "3.11.0",
+    "qutip": "5.3.1",
+    "PyQt6": "6.11.0",
+    "ARC-Alkali-Rydberg-Calculator": "3.10.2",
+    "threadpoolctl": "3.5.0"
+  }
+}

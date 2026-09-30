@@ -1,0 +1,478 @@
+{
+  "config": {
+    "name": "default:raman_only",
+    "trap": {
+      "frequency_hz": 70000.0,
+      "n_max": 40,
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "heating_rate_quanta_per_s": 0.0,
+      "depth_hz": null
+    },
+    "initial": {
+      "spin_preset": "uniform_all",
+      "f3_fraction": 0.5833333333333334,
+      "custom_spin_populations": [
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333
+      ],
+      "motion_mode": "thermal_nbar",
+      "nbar": 3.0,
+      "temperature_k": 1e-05,
+      "fock_n": 1,
+      "custom_pn": []
+    },
+    "magnetic": {
+      "magnitude_gauss": 0.5,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "raman": {
+      "enabled": true,
+      "carrier_rabi_hz": 5000.0,
+      "frequency_mode": "sideband_offset",
+      "red_sideband_offset_hz": 0.0,
+      "beat_frequency_hz": 3035802400.0,
+      "wavelength_nm": 783.0,
+      "beam_low_direction": [
+        0.70710678,
+        0.70710678,
+        0.0
+      ],
+      "beam_high_direction": [
+        -0.70710678,
+        0.70710678,
+        0.0
+      ],
+      "extra_coherence_decay_rate_s": 0.0,
+      "differential_light_shift_hz": 0.0,
+      "scattering_rate_s": 0.0,
+      "scattering_model": "spin_preserving",
+      "max_sideband_order": 3
+    },
+    "spin_pump": {
+      "enabled": true,
+      "intensity_mode": "intensity",
+      "peak_intensity_w_m2": 0.1,
+      "power_w": 1e-06,
+      "waist_m": 0.002,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "repump": {
+      "enabled": true,
+      "intensity_mode": "intensity",
+      "peak_intensity_w_m2": 0.1,
+      "power_w": 1e-06,
+      "waist_m": 0.002,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "optical": {
+      "excited_manifold": "all_D2",
+      "path_model": "independent",
+      "emission_pattern": "dipole",
+      "excited_state_shift_hz": 0.0,
+      "weak_excitation_warning": 0.02,
+      "weak_excitation_invalid": 0.1
+    },
+    "timing": {
+      "protocol": "raman_only",
+      "total_duration_s": 0.01,
+      "prep_duration_s": 0.001,
+      "prep_pump_scale": 1.0,
+      "prep_repump_scale": 1.0,
+      "cooling_pump_scale": 1.0,
+      "cooling_repump_scale": 1.0,
+      "cooling_raman_amplitude": 1.0,
+      "raman_pulse_s": 0.0003,
+      "reset_pulse_s": 0.0001,
+      "reset_pump_scale": 1.0,
+      "reset_repump_scale": 1.0,
+      "repetitions": 0,
+      "pulsed_first": "reset",
+      "custom_segments": [],
+      "n_samples": 201
+    },
+    "numerics": {
+      "solver": "coherent",
+      "method": "DOP853",
+      "rtol": 1e-07,
+      "atol": 1e-10,
+      "recoil_quadrature_points": 24,
+      "boundary_tolerance": 0.0001,
+      "conservation_tolerance": 1e-06,
+      "positivity_tolerance": 1e-08,
+      "rate_validity_epsilon": 0.2,
+      "seed": 0
+    },
+    "analysis": {
+      "spin_threshold": 0.9,
+      "joint_threshold": 0.5,
+      "derivative_window": 11
+    }
+  },
+  "final": {
+    "P_up": 0.09194988469687018,
+    "P_n0": 0.24722401599688404,
+    "P_target": 0.020829747583966173,
+    "P_up_times_P_n0": 0.022732219765210677,
+    "P_n0_given_up": 0.226533699880487,
+    "nbar": 3.0083359527208833,
+    "nbar_initial": 2.999690757673838,
+    "fractional_energy_reduction": -0.0028820287641080355,
+    "T_equiv_K": 1.170591571309659e-05,
+    "T_equiv_note": "thermal-equivalent (p(n) near thermal)",
+    "final_pn_TVD_from_thermal": 0.005462666021789479,
+    "photons": {
+      "spin_pump": 0.0,
+      "repump": 0.0,
+      "raman_scatter": 0.0
+    },
+    "photons_total": 0.0,
+    "net_quanta_removed": -0.008645195047045195,
+    "net_quanta_removed_per_photon": null,
+    "mean_cooling_rate_quanta_per_s": -0.8645195047045195,
+    "target_state_scattering_rate_per_s": 0.0,
+    "target_state_scattering_by_beam_per_s": {
+      "spin_pump": 0.0,
+      "repump": 0.0
+    },
+    "time_to_spin_threshold_s": "not reached",
+    "time_to_joint_threshold_s": "not reached",
+    "spin_threshold": 0.9,
+    "joint_threshold": 0.5,
+    "spin_populations_initial": {
+      "|2,-2>": 0.08333333333333333,
+      "|2,-1>": 0.08333333333333333,
+      "|2,+0>": 0.08333333333333333,
+      "|2,+1>": 0.08333333333333333,
+      "|2,+2>": 0.08333333333333333,
+      "|3,-3>": 0.08333333333333333,
+      "|3,-2>": 0.08333333333333333,
+      "|3,-1>": 0.08333333333333333,
+      "|3,+0>": 0.08333333333333333,
+      "|3,+1>": 0.08333333333333333,
+      "|3,+2>": 0.08333333333333333,
+      "|3,+3>": 0.08333333333333333
+    },
+    "spin_populations_final": {
+      "|2,-2>": 0.08333333333333333,
+      "|2,-1>": 0.08333333333333333,
+      "|2,+0>": 0.08333333333333333,
+      "|2,+1>": 0.08333333333333333,
+      "|2,+2>": 0.07471678196979632,
+      "|3,-3>": 0.08333333333333333,
+      "|3,-2>": 0.08333333333333333,
+      "|3,-1>": 0.08333333333333333,
+      "|3,+0>": 0.08333333333333333,
+      "|3,+1>": 0.08333333333333333,
+      "|3,+2>": 0.08333333333333333,
+      "|3,+3>": 0.09194988469687018
+    },
+    "max_conservation_error": 4.440892098500626e-16,
+    "min_eigenvalue": 2.0951377111225915e-07,
+    "max_boundary_population": 5.959867386789395e-06,
+    "final_overflow": 0.0,
+    "initial_tail_discarded": 7.542438871228123e-06,
+    "solver": "coherent",
+    "wall_time_s": 16.976268199970946,
+    "rhs_evaluations": 67802
+  },
+  "validity_status": "warning",
+  "validity": [
+    {
+      "category": "magnetic field",
+      "status": "ok",
+      "message": "weak-field Zeeman OK (quadratic error on nu_ud 89.8 Hz, excited quadratic shift 0.0049 Gamma)"
+    },
+    {
+      "category": "ground coherences",
+      "status": "ok",
+      "message": "adjacent-mF Zeeman splitting / max pumping rate = inf (neglect of pump-induced Zeeman coherences needs >>1)"
+    },
+    {
+      "category": "motional secular",
+      "status": "ok",
+      "message": "max optical scattering rate / omega_t = 0 (secular recoil jumps need <<1)"
+    },
+    {
+      "category": "Raman isolation",
+      "status": "ok",
+      "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +2) is 163.4 kHz from the drive = 32.7 x carrier Rabi (assumes comparable coupling)"
+    },
+    {
+      "category": "Raman scattering",
+      "status": "warning",
+      "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+    },
+    {
+      "category": "Raman polarization",
+      "status": "ok",
+      "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+    },
+    {
+      "category": "Lamb-Dicke",
+      "status": "ok",
+      "message": "eta_R = 0.3309, eta_R^2(2 nbar0+1) = 0.766; exact displacement elements used (no LD expansion)"
+    },
+    {
+      "category": "harmonic approximation",
+      "status": "ok",
+      "message": "trap depth not given: anharmonicity/finite depth not assessed"
+    },
+    {
+      "category": "conservation",
+      "status": "ok",
+      "message": "max |trace + overflow - 1| = 4.44e-16"
+    },
+    {
+      "category": "positivity",
+      "status": "ok",
+      "message": "most negative eigenvalue/population = 2.1e-07"
+    },
+    {
+      "category": "motional boundary",
+      "status": "ok",
+      "message": "max population in n >= n_max-1: 5.96e-06"
+    },
+    {
+      "category": "numerical overflow",
+      "status": "ok",
+      "message": "probability pushed above n_max (numerical, not atom loss) = 0"
+    },
+    {
+      "category": "weak excitation",
+      "status": "ok",
+      "message": "max excited-state fraction for occupied ground states = 0"
+    },
+    {
+      "category": "initial state",
+      "status": "ok",
+      "message": "thermal nbar=3; discarded tail above n_max before normalization = 7.54e-06"
+    }
+  ],
+  "model_summary": {
+    "N_motional": 41,
+    "x0_m": 2.915919848038929e-08,
+    "eta_single_photon_D2_along_axis": 0.23481531429592023,
+    "eta_R": 0.3309090815297444,
+    "raman_dk_lab_per_m": [
+      11348359.995295955,
+      0.0,
+      0.0
+    ],
+    "nu_ud_zeeman_hz": 3036900111.0605316,
+    "nu_ud_ref_hz": 3036900111.0605316,
+    "nu_beat_hz": 3036970111.0605316,
+    "delta_beat_minus_nu_t_ref_hz": 0.0,
+    "cos_trap_axis_field": 0.0,
+    "pump_rates_per_s": {
+      "spin_pump": {
+        "gamma_out_up": 71.285973852201,
+        "gamma_out_down": 0.05060631261444028,
+        "gamma_out_max": 31559.280128031292,
+        "p_exc_max": 0.0008280415497655755,
+        "light_shift_up_hz": -226.95117232267515,
+        "light_shift_down_hz": -4.032523287741719,
+        "E0_V_per_m": 8.680210984381311,
+        "intensity_w_m2": 0.1,
+        "fractions": {
+          "0": 0.0,
+          "-1": 0.0,
+          "1": 1.0
+        },
+        "laser_hz": 384229067898998.9,
+        "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+      },
+      "repump": {
+        "gamma_out_up": 0.12364750356945102,
+        "gamma_out_down": 43029.65589071026,
+        "gamma_out_max": 43029.65589071026,
+        "p_exc_max": 0.0011289973283635166,
+        "light_shift_up_hz": 9.454932958932364,
+        "light_shift_down_hz": -1449.6818926895376,
+        "E0_V_per_m": 8.680210984381311,
+        "intensity_w_m2": 0.1,
+        "fractions": {
+          "0": 0.0,
+          "-1": 0.0,
+          "1": 1.0
+        },
+        "laser_hz": 384232103631437.9,
+        "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+      }
+    },
+    "illustrative_parameters": [
+      "initial.nbar",
+      "magnetic.magnitude_gauss",
+      "raman.carrier_rabi_hz",
+      "raman.beam_low_direction",
+      "raman.beam_high_direction",
+      "spin_pump.peak_intensity_w_m2",
+      "repump.peak_intensity_w_m2"
+    ]
+  },
+  "polarization": {
+    "spin_pump": {
+      "config": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "effective_fractions": {
+        "0": 0.0,
+        "-1": 0.0,
+        "1": 1.0
+      },
+      "direction_used": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "source": "spherical (realizable by a transverse wave along the configured direction)"
+    },
+    "repump": {
+      "config": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "effective_fractions": {
+        "0": 0.0,
+        "-1": 0.0,
+        "1": 1.0
+      },
+      "direction_used": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "source": "spherical (realizable by a transverse wave along the configured direction)"
+    }
+  },
+  "schedule": [
+    {
+      "t0": 0.0,
+      "t1": 0.01,
+      "raman": 1.0,
+      "pump": 0.0,
+      "repump": 0.0,
+      "label": "raman only"
+    }
+  ],
+  "cooling_rate_method": "Savitzky-Golay (cubic, window 11 samples) derivative of nbar(t)",
+  "assumptions": [
+    "Single atom, one-dimensional harmonic motion along trap.axis; P_n0 refers to the modeled axis only (not a 3D ground-state fraction).",
+    "Same harmonic potential for all ground spin states; no collisions, photon reabsorption, tunneling, finite-depth loss, or anharmonicity.",
+    "D2 excited manifold (F'=1..4, all sublevels) adiabatically eliminated in the weak-excitation limit; excited fraction is checked.",
+    "Spin-pump and repump beams (both on D2 near 780 nm; an explicit assumption) are mutually incoherent: two-frequency CPT/optical coherences excluded.",
+    "Rates through different excited sublevels are summed independently unless optical.path_model = kramers_heisenberg.",
+    "Pump-induced ground Zeeman coherences neglected (secular in the Zeeman splitting, checked).",
+    "Linear (weak-field) Zeeman shifts for ground and excited states; errors vs Breit-Rabi are reported.",
+    "Calibrated Raman mode: only the |3,3> <-> |2,2> pair is coupled; Raman polarization imperfections enter only through the calibrated decay, shift, and scattering inputs.",
+    "Raman coupling uses exact displacement matrix elements exp(i eta_R (a+a^+)); couplings with |n-m| > raman.max_sideband_order are dropped (convergence parameter).",
+    "Every optical scattering event applies absorption + emission recoil via a single displacement (excited lifetime << trap period); emission directions integrated over the dipole pattern.",
+    "Recoil jumps are secular (motional coherences between different n from spontaneous emission discarded; requires scattering rates << omega_t, checked).",
+    "Probability pushed above n_max is tallied as numerical overflow (not physical loss) and flagged; it is never reflected into the basis."
+  ],
+  "atomic_data_metadata": {
+    "source": "ARC-Alkali-Rydberg-Calculator, arc.Rubidium85()",
+    "arc_version": "3.10.2",
+    "functions": [
+      "getHFSCoefficients",
+      "getHFSEnergyShift",
+      "getDipoleMatrixElementHFS",
+      "getBranchingRatio",
+      "getStateLifetime",
+      "getTransitionFrequency",
+      "getLandegfExact"
+    ],
+    "dipole_units": "e*a0, <F',m'| e r_q |F,m> with q=m'-m (absorption)",
+    "generated_utc": "2026-09-29T22:50:42.195201+00:00",
+    "cache_format_version": 2,
+    "arc_reduced_dipole_symmetric_au": 5.9783
+  },
+  "constants_SI": {
+    "H": 6.62607015e-34,
+    "HBAR": 1.0545718176461565e-34,
+    "C_LIGHT": 299792458.0,
+    "EPS0": 8.8541878128e-12,
+    "E_CHARGE": 1.602176634e-19,
+    "A0": 5.29177210903e-11,
+    "MU_B": 9.2740100783e-24,
+    "K_B": 1.380649e-23
+  },
+  "versions": {
+    "python": "3.14.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.6",
+    "scipy": "1.18.0",
+    "matplotlib": "3.11.0",
+    "qutip": "5.3.1",
+    "PyQt6": "6.11.0",
+    "ARC-Alkali-Rydberg-Calculator": "3.10.2",
+    "threadpoolctl": "3.5.0"
+  },
+  "seed": 0,
+  "solver_notes": [],
+  "rate_validity": []
+}

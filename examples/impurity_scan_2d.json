@@ -1,0 +1,32 @@
+{
+  "base_config": "default.json",
+  "overrides": {
+    "timing.protocol": "continuous",
+    "timing.total_duration_s": 0.005,
+    "timing.n_samples": 51
+  },
+  "workers": 8,
+  "title": "Spin-pump vs repump impurity (equal pi/sigma- split, continuous, 5 ms)",
+  "axes": [
+    {
+      "param": "spin_pump.polarization.total_impurity",
+      "values": [
+        0,
+        0.001,
+        0.01,
+        0.05
+      ],
+      "label": "spin-pump total impurity"
+    },
+    {
+      "param": "repump.polarization.total_impurity",
+      "values": [
+        0,
+        0.001,
+        0.01,
+        0.05
+      ],
+      "label": "repump total impurity"
+    }
+  ]
+}

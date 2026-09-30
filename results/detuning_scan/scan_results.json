@@ -1,0 +1,429 @@
+{
+  "title": "Raman detuning scan: red_sideband_offset_hz (0 = cooling resonance; -70 kHz = carrier; -140 kHz = blue)",
+  "axes": [
+    {
+      "param": "raman.red_sideband_offset_hz",
+      "label": "red_sideband_offset (Hz)",
+      "values": [
+        -160000.0,
+        -150000.0,
+        -140000.0,
+        -130000.0,
+        -120000.0,
+        -110000.0,
+        -100000.0,
+        -90000.0,
+        -80000.0,
+        -70000.0,
+        -60000.0,
+        -50000.0,
+        -40000.0,
+        -30000.0,
+        -20000.0,
+        -10000.0,
+        0.0,
+        10000.0,
+        20000.0,
+        30000.0,
+        40000.0
+      ],
+      "log": false
+    }
+  ],
+  "series_labels": [
+    ""
+  ],
+  "series_overrides": [
+    {}
+  ],
+  "metrics": {
+    "P_up": [
+      [
+        0.9890967670892693,
+        0.9657183249085721,
+        0.8457619521797674,
+        0.9457830745896868,
+        0.9843652433386793,
+        0.9892452929020127,
+        0.9874516939403476,
+        0.9781318642195821,
+        0.9394926671932474,
+        0.7375131699083308,
+        0.9134615620638039,
+        0.9729703516304024,
+        0.9862087340099798,
+        0.9899977255894671,
+        0.9893055199636458,
+        0.9816633296221704,
+        0.9915909834312506,
+        0.9803169140521455,
+        0.9911267957387737,
+        0.9950947173069555,
+        0.996563769130811
+      ]
+    ],
+    "P_n0": [
+      [
+        0.1886915869179679,
+        0.10517047741497569,
+        7.864132338293886e-05,
+        0.06214176109162693,
+        0.17450068074807082,
+        0.21061084631448573,
+        0.22338449887592288,
+        0.2260856490183643,
+        0.21506928278490325,
+        0.17622451445602622,
+        0.21201466342073197,
+        0.237774393287851,
+        0.2496956839617126,
+        0.26307990177918616,
+        0.2932704959679788,
+        0.4250084303034592,
+        0.972020483816842,
+        0.5126750383744821,
+        0.3094315091278702,
+        0.27204366579970923,
+        0.2599674346150495
+      ]
+    ],
+    "P_target": [
+      [
+        0.1882858466984541,
+        0.10485968024802159,
+        7.794858730092213e-05,
+        0.06182046577870914,
+        0.17336751719330243,
+        0.20856415887426183,
+        0.21969798689239045,
+        0.21840523820238367,
+        0.19353367851541145,
+        0.10534643162654388,
+        0.18177159550757935,
+        0.2276003065547776,
+        0.2447308097133985,
+        0.25990426686483054,
+        0.29048034545554197,
+        0.42026332820978235,
+        0.9670489563256397,
+        0.5074381177337899,
+        0.3077872330321594,
+        0.27115606296259387,
+        0.25935925888351424
+      ]
+    ],
+    "nbar": [
+      [
+        3.7936480036722315,
+        5.3409822446389335,
+        17.932843171035366,
+        6.642039650215179,
+        3.944412089922184,
+        3.4619724611681457,
+        3.3063946996049554,
+        3.2585567794699655,
+        3.3346804054400145,
+        3.961827111818906,
+        3.3517840188286967,
+        3.1279073852344115,
+        3.035487481313946,
+        2.929159652388417,
+        2.702644791699491,
+        1.9288272848654882,
+        0.11352870453862834,
+        1.5125005493483585,
+        2.5737688280093227,
+        2.8330939747022628,
+        2.9039073060754257
+      ]
+    ],
+    "photons_total": [
+      [
+        6.651927331729784,
+        10.183466127317086,
+        38.64451825905627,
+        13.266720767894785,
+        7.433512477155203,
+        6.683077966113396,
+        6.988713494591641,
+        8.538138659958477,
+        15.037714193394622,
+        50.3352109418234,
+        19.41734897485183,
+        9.352818161444155,
+        7.161560636602859,
+        6.542413517727634,
+        6.6894306639014705,
+        8.399222019021238,
+        12.920752415283118,
+        9.183024635136015,
+        6.441577664582268,
+        5.728638430849471,
+        5.4793431693937205
+      ]
+    ],
+    "target_state_scattering_rate_per_s": [
+      [
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044,
+        71.40962135577044
+      ]
+    ]
+  },
+  "valid": [
+    [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  ],
+  "status": [
+    [
+      "invalid",
+      "invalid",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning",
+      "warning"
+    ]
+  ],
+  "invalid_reasons": {
+    "(0, 0)": [
+      "Raman isolation: only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +2) is 3.37 kHz from the drive = 0.674 x carrier Rabi (assumes comparable coupling)"
+    ],
+    "(0, 1)": [
+      "Raman isolation: only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +2) is 13.37 kHz from the drive = 2.67 x carrier Rabi (assumes comparable coupling)"
+    ]
+  },
+  "best_valid_P_target": {
+    "index": [
+      0,
+      16
+    ],
+    "P_target": 0.9670489563256397
+  },
+  "base_config": {
+    "name": "default",
+    "trap": {
+      "frequency_hz": 70000.0,
+      "n_max": 40,
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "heating_rate_quanta_per_s": 0.0,
+      "depth_hz": null
+    },
+    "initial": {
+      "spin_preset": "uniform_all",
+      "f3_fraction": 0.5833333333333334,
+      "custom_spin_populations": [
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333
+      ],
+      "motion_mode": "thermal_nbar",
+      "nbar": 3.0,
+      "temperature_k": 1e-05,
+      "fock_n": 1,
+      "custom_pn": []
+    },
+    "magnetic": {
+      "magnitude_gauss": 0.5,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "raman": {
+      "enabled": true,
+      "carrier_rabi_hz": 5000.0,
+      "frequency_mode": "sideband_offset",
+      "red_sideband_offset_hz": 0.0,
+      "beat_frequency_hz": 3035802400.0,
+      "wavelength_nm": 783.0,
+      "beam_low_direction": [
+        0.70710678,
+        0.70710678,
+        0.0
+      ],
+      "beam_high_direction": [
+        -0.70710678,
+        0.70710678,
+        0.0
+      ],
+      "extra_coherence_decay_rate_s": 0.0,
+      "differential_light_shift_hz": 0.0,
+      "scattering_rate_s": 0.0,
+      "scattering_model": "spin_preserving",
+      "max_sideband_order": 3
+    },
+    "spin_pump": {
+      "enabled": true,
+      "intensity_mode": "intensity",
+      "peak_intensity_w_m2": 0.1,
+      "power_w": 1e-06,
+      "waist_m": 0.002,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "repump": {
+      "enabled": true,
+      "intensity_mode": "intensity",
+      "peak_intensity_w_m2": 0.1,
+      "power_w": 1e-06,
+      "waist_m": 0.002,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "optical": {
+      "excited_manifold": "all_D2",
+      "path_model": "independent",
+      "emission_pattern": "dipole",
+      "excited_state_shift_hz": 0.0,
+      "weak_excitation_warning": 0.02,
+      "weak_excitation_invalid": 0.1
+    },
+    "timing": {
+      "protocol": "continuous",
+      "total_duration_s": 0.005,
+      "prep_duration_s": 0.001,
+      "prep_pump_scale": 1.0,
+      "prep_repump_scale": 1.0,
+      "cooling_pump_scale": 1.0,
+      "cooling_repump_scale": 1.0,
+      "cooling_raman_amplitude": 1.0,
+      "raman_pulse_s": 0.0003,
+      "reset_pulse_s": 0.0001,
+      "reset_pump_scale": 1.0,
+      "reset_repump_scale": 1.0,
+      "repetitions": 0,
+      "pulsed_first": "reset",
+      "custom_segments": [],
+      "n_samples": 51
+    },
+    "numerics": {
+      "solver": "coherent",
+      "method": "DOP853",
+      "rtol": 1e-07,
+      "atol": 1e-10,
+      "recoil_quadrature_points": 24,
+      "boundary_tolerance": 0.0001,
+      "conservation_tolerance": 1e-06,
+      "positivity_tolerance": 1e-08,
+      "rate_validity_epsilon": 0.2,
+      "seed": 0
+    },
+    "analysis": {
+      "spin_threshold": 0.9,
+      "joint_threshold": 0.5,
+      "derivative_window": 11
+    }
+  },
+  "stopped": false,
+  "versions": {
+    "python": "3.14.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.6",
+    "scipy": "1.18.0",
+    "matplotlib": "3.11.0",
+    "qutip": "5.3.1",
+    "PyQt6": "6.11.0",
+    "ARC-Alkali-Rydberg-Calculator": "3.10.2",
+    "threadpoolctl": "3.5.0"
+  }
+}

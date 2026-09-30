@@ -1,0 +1,37 @@
+{
+  "base_config": "default.json",
+  "overrides": {
+    "timing.protocol": "continuous",
+    "timing.total_duration_s": 0.005,
+    "timing.n_samples": 51
+  },
+  "workers": 8,
+  "title": "Repump polarization impurity: pi vs sigma- at equal total impurity (continuous, 5 ms)",
+  "axes": [
+    {
+      "param": "repump.polarization.total_impurity",
+      "values": [
+        0,
+        0.001,
+        0.01,
+        0.05
+      ],
+      "log": true,
+      "label": "repump total impurity (intensity fraction)"
+    }
+  ],
+  "series": [
+    {
+      "label": "pi contamination",
+      "overrides": {
+        "repump.polarization.pi_share_of_impurity": 1.0
+      }
+    },
+    {
+      "label": "sigma- contamination",
+      "overrides": {
+        "repump.polarization.pi_share_of_impurity": 0.0
+      }
+    }
+  ]
+}

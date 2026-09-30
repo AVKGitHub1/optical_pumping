@@ -1,0 +1,159 @@
+{
+  "name": "prep_then_continuous",
+  "trap": {
+    "frequency_hz": 70000.0,
+    "n_max": 40,
+    "axis": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "heating_rate_quanta_per_s": 0.0,
+    "depth_hz": null
+  },
+  "initial": {
+    "spin_preset": "uniform_all",
+    "f3_fraction": 0.5833333333333334,
+    "custom_spin_populations": [
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333,
+      0.08333333333333333
+    ],
+    "motion_mode": "thermal_nbar",
+    "nbar": 3.0,
+    "temperature_k": 1e-05,
+    "fock_n": 1,
+    "custom_pn": []
+  },
+  "magnetic": {
+    "magnitude_gauss": 0.5,
+    "direction": [
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "raman": {
+    "enabled": true,
+    "carrier_rabi_hz": 5000.0,
+    "frequency_mode": "sideband_offset",
+    "red_sideband_offset_hz": 0.0,
+    "beat_frequency_hz": 3035802400.0,
+    "wavelength_nm": 783.0,
+    "beam_low_direction": [
+      0.70710678,
+      0.70710678,
+      0.0
+    ],
+    "beam_high_direction": [
+      -0.70710678,
+      0.70710678,
+      0.0
+    ],
+    "extra_coherence_decay_rate_s": 0.0,
+    "differential_light_shift_hz": 0.0,
+    "scattering_rate_s": 0.0,
+    "scattering_model": "spin_preserving",
+    "max_sideband_order": 3
+  },
+  "spin_pump": {
+    "enabled": true,
+    "intensity_mode": "intensity",
+    "peak_intensity_w_m2": 0.1,
+    "power_w": 1e-06,
+    "waist_m": 0.002,
+    "detuning_mhz": 0.0,
+    "direction": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "polarization": {
+      "mode": "spherical",
+      "pi_fraction": 0.0,
+      "sigma_minus_fraction": 0.0,
+      "beam_angle_deg": 0.0,
+      "beam_azimuth_deg": 0.0,
+      "ellipticity_deg": 45.0,
+      "orientation_deg": 0.0
+    },
+    "light_shift_override_up_hz": null,
+    "light_shift_override_down_hz": null
+  },
+  "repump": {
+    "enabled": true,
+    "intensity_mode": "intensity",
+    "peak_intensity_w_m2": 0.1,
+    "power_w": 1e-06,
+    "waist_m": 0.002,
+    "detuning_mhz": 0.0,
+    "direction": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "polarization": {
+      "mode": "spherical",
+      "pi_fraction": 0.0,
+      "sigma_minus_fraction": 0.0,
+      "beam_angle_deg": 0.0,
+      "beam_azimuth_deg": 0.0,
+      "ellipticity_deg": 45.0,
+      "orientation_deg": 0.0
+    },
+    "light_shift_override_up_hz": null,
+    "light_shift_override_down_hz": null
+  },
+  "optical": {
+    "excited_manifold": "all_D2",
+    "path_model": "independent",
+    "emission_pattern": "dipole",
+    "excited_state_shift_hz": 0.0,
+    "weak_excitation_warning": 0.02,
+    "weak_excitation_invalid": 0.1
+  },
+  "timing": {
+    "protocol": "prep_then_continuous",
+    "total_duration_s": 0.01,
+    "prep_duration_s": 0.001,
+    "prep_pump_scale": 1.0,
+    "prep_repump_scale": 1.0,
+    "cooling_pump_scale": 0.5,
+    "cooling_repump_scale": 0.5,
+    "cooling_raman_amplitude": 1.0,
+    "raman_pulse_s": 0.0003,
+    "reset_pulse_s": 0.0001,
+    "reset_pump_scale": 1.0,
+    "reset_repump_scale": 1.0,
+    "repetitions": 0,
+    "pulsed_first": "reset",
+    "custom_segments": [],
+    "n_samples": 201
+  },
+  "numerics": {
+    "solver": "coherent",
+    "method": "DOP853",
+    "rtol": 1e-07,
+    "atol": 1e-10,
+    "recoil_quadrature_points": 24,
+    "boundary_tolerance": 0.0001,
+    "conservation_tolerance": 1e-06,
+    "positivity_tolerance": 1e-08,
+    "rate_validity_epsilon": 0.2,
+    "seed": 0
+  },
+  "analysis": {
+    "spin_threshold": 0.9,
+    "joint_threshold": 0.5,
+    "derivative_window": 11
+  }
+}

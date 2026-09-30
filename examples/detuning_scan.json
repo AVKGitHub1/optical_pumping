@@ -1,0 +1,19 @@
+{
+  "base_config": "default.json",
+  "overrides": {
+    "timing.protocol": "continuous",
+    "timing.total_duration_s": 0.005,
+    "timing.n_samples": 51
+  },
+  "workers": 8,
+  "title": "Raman detuning scan: red_sideband_offset_hz (0 = cooling resonance; -70 kHz = carrier; -140 kHz = blue)",
+  "axes": [
+    {
+      "param": "raman.red_sideband_offset_hz",
+      "start": -160000.0,
+      "stop": 40000.0,
+      "num": 21,
+      "label": "red_sideband_offset (Hz)"
+    }
+  ]
+}

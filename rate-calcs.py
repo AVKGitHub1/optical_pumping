@@ -63,7 +63,7 @@ SIMULATION_CONFIG = {
     "detuning_rp": 10 * MHz,
     "intensity_op": 10,
     "intensity_rp": 100,
-    "B_field": 2.35 * Gauss,
+    "B_field": 0 * Gauss,
     "total_time": 120.0e-6,
     "num_time_points": 1200,
     "Gamma": 2.0 * np.pi * 6.065e6,
@@ -80,15 +80,15 @@ SIMULATION_CONFIG = {
 # and normalizes the three components so the listed laser intensity is the total
 # intensity for that beam.
 OPTICAL_PUMP_POLARIZATION = {
-    "epsilon_plus": 0.99 + 0.0j,
+    "epsilon_plus": 0.90 + 0.0j,
     "epsilon_pi": 0.0 + 0.0j,
-    "epsilon_minus": 0.01 + 0.0j,
+    "epsilon_minus": 0.1 + 0.0j,
 }
 
 REPUMP_POLARIZATION = {
-    "epsilon_plus": 1.0 + 0.0j,
+    "epsilon_plus": 0.0 + 0.0j,
     "epsilon_pi": 1 + 0.0j,
-    "epsilon_minus": 1.0 + 0.0j,
+    "epsilon_minus": 0.0 + 0.0j,
 }
 
 # Example initial condition: uniform across F=3, zero elsewhere.
@@ -97,10 +97,10 @@ REPUMP_POLARIZATION = {
 INITIAL_POPULATIONS: Dict[str, float] = {}
 
 # Optional parameter sweep helper.
-RUN_SWEEP = False
+RUN_SWEEP = True
 OP_DETUNING_PARAMS = {
     "parameter": "detuning_op",
-    "values": np.linspace(-100, 100, 200) * MHz,
+    "values": np.linspace(-50, 50, 200) * MHz,
     "tracked_states": ["|g, F=3, mF=+3>", "|g, F=3, mF=+2>", "|g, F=2, mF=+2>"],
     "parameter_units": "2pi MHz",
 }
@@ -110,7 +110,7 @@ RP_POWER_PARAMS = {
     "tracked_states": ["|g, F=3, mF=+3>", "|g, F=3, mF=+2>", "|g, F=2, mF=+2>"],
     "parameter_units": "2pi MHz",
 }
-SWEEP_SCAN_PARAMS = RP_POWER_PARAMS
+SWEEP_SCAN_PARAMS = OP_DETUNING_PARAMS
 
 
 # -----------------------------------------------------------------------------
@@ -786,6 +786,17 @@ def plot_population_dynamics(states: Sequence[State], solution: solve_ivp, confi
     """Generate separate F=3 and F=2 ground-state population plots."""
     times_us = solution.t * 1.0e6
     populations = solution.y
+    sweep_title_suffix = ""
+    if RUN_SWEEP:
+        sweep_parameter = SWEEP_SCAN_PARAMS["parameter"]
+        sweep_value = config[sweep_parameter]
+        if "detuning" in sweep_parameter:
+            sweep_value_text = f"{sweep_value / MHz:.3f} (2pi MHz)"
+        elif "B_field" in sweep_parameter:
+            sweep_value_text = f"{sweep_value / Gauss:.6f} G"
+        else:
+            sweep_value_text = f"{sweep_value:.6g}"
+        sweep_title_suffix = f" at {sweep_parameter} = {sweep_value_text}"
 
     ground_f3 = [state for state in states if state.manifold == "g" and state.F == 3]
     ground_f2 = [state for state in states if state.manifold == "g" and state.F == 2]
@@ -795,7 +806,7 @@ def plot_population_dynamics(states: Sequence[State], solution: solve_ivp, confi
         ax_f3.plot(times_us, populations[state.index], label=state.label)
     ax_f3.set_ylabel("Population")
     ax_f3.set_xlabel("Time (us)")
-    ax_f3.set_title(r"Ground $F=3$ populations vs time")
+    ax_f3.set_title(rf"Ground $F=3$ populations vs time{sweep_title_suffix}")
     ax_f3.legend(ncol=2, fontsize=8)
     ax_f3.grid(alpha=0.25)
     fig_f3.tight_layout()
@@ -805,7 +816,7 @@ def plot_population_dynamics(states: Sequence[State], solution: solve_ivp, confi
         ax_f2.plot(times_us, populations[state.index], label=state.label)
     ax_f2.set_ylabel("Population")
     ax_f2.set_xlabel("Time (us)")
-    ax_f2.set_title(r"Ground $F=2$ populations vs time")
+    ax_f2.set_title(rf"Ground $F=2$ populations vs time{sweep_title_suffix}")
     ax_f2.legend(ncol=2, fontsize=8)
     ax_f2.grid(alpha=0.25)
     fig_f2.tight_layout()
