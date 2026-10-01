@@ -27,10 +27,21 @@ from .far_detuned import DLineResponse, calibrate_carrier, envelope, raman_field
 from .model import Model, Validity
 
 
+# Populations always have layout [spin, nx, ny, nz]. These are exactly the
+# permutations used by moveaxis, without its repeated generic axis validation.
+_AXIS_PERMUTATIONS = (
+    ((0, 1, 2, 3), (0, 1, 2, 3)),
+    ((1, 0, 2, 3), (1, 0, 2, 3)),
+    ((2, 0, 1, 3), (1, 2, 0, 3)),
+    ((3, 0, 1, 2), (1, 2, 3, 0)),
+)
+
+
 def axis_apply(K, P, axis):
-    moved = np.moveaxis(P, axis, 0)
+    forward, backward = _AXIS_PERMUTATIONS[axis]
+    moved = P.transpose(forward)
     result = (K @ moved.reshape(moved.shape[0], -1)).reshape((K.shape[0],) + moved.shape[1:])
-    return np.moveaxis(result, 0, axis)
+    return result.transpose(backward)
 
 
 @dataclass
@@ -52,9 +63,48 @@ class RecoilTerm:
         return np.einsum('s,i,j,k->sijk', self.W.sum(axis=1), *k).real
 
 
+class _RecoilGain:
+    """Reuse identical contraction prefixes without regrouping the term sum.
+
+    Every path still applies x, y, z, then spin, then the segment scale. Exact
+    array keys (including layout) preserve distinct interference kernels and
+    floating-point evaluation order; no extra rounding or pruning is used.
+    """
+
+    def __init__(self, active):
+        self.transforms = []
+        self.terms = []
+        prefixes = {}
+        for term, scale in active:
+            parent = 0  # the input population tensor
+            for axis, kernel in enumerate(term.kernels, 1):
+                key = (parent, axis, kernel.dtype.str, kernel.shape,
+                       kernel.strides, kernel.tobytes())
+                if key not in prefixes:
+                    self.transforms.append((parent, axis, kernel))
+                    prefixes[key] = len(self.transforms)
+                parent = prefixes[key]
+            self.terms.append((parent, term.W.T, scale))
+
+    def __call__(self, P):
+        values = [P]
+        for parent, axis, kernel in self.transforms:
+            values.append(axis_apply(kernel, values[parent], axis))
+        gain = np.zeros_like(P)
+        for leaf, spin, scale in self.terms:
+            contribution = scale * (spin @ values[leaf].reshape(12, -1)).reshape(P.shape).real
+            if gain.dtype == contribution.dtype:
+                gain += contribution
+            else:
+                # Preserve the original sum's per-term dtype promotion for
+                # standalone callers; simulator populations are float64.
+                gain = gain + contribution
+        return gain
+
+
 def cross_kernel(site, kabs1, kabs2, kemit, bprojection, pattern, nq):
     """One-axis coherent absorption pair, integrated over emitted projection."""
-    c, w = np.polynomial.legendre.leggauss(nq)
+    c, w = mo.gauss_legendre(nq)
     weights = w * mo.emission_weight(c, bprojection, pattern)
     K = np.zeros((site.N, site.N), complex)
     for direction, weight in zip(c, weights):
@@ -255,46 +305,71 @@ class LocalExperiment:
         return active, gout, hazard, counts, H
 
 
-def uniform_step(P, active, gout, hazard, count_rates, dt):
-    """Exact positive Markov exponential by uniformization, including rewards.
+class _UniformizedScattering:
+    """Prepare a segment's Markov generator and exact-timestep Poisson weights."""
 
-    Returns updated populations, integrated well-loss flux by source energy,
-    and photon counts. Poisson tail is bounded below 1e-13 per step.
+    def __init__(self, active, gout, hazard, count_rates):
+        self.rate = float(gout.max())
+        self.stay = 1 - gout / self.rate if self.rate else None
+        self.hazard = hazard
+        self.count_rates = count_rates
+        self.gain = _RecoilGain(active)
+        self._weights = {}
+
+    def _poisson_weights(self, dt):
+        # Unlike the unitary's existing rounded timestep cache, scattering
+        # previously used the exact dt. Retain that convention here.
+        if dt not in self._weights:
+            mu = self.rate * dt
+            if mu > 10:
+                raise ValueError("time_step_us too large for the scattering rate")
+            weight = np.exp(-mu)
+            weights = [weight]
+            cumulative = weight
+            for n in range(1, 100):
+                weight *= mu / n
+                weights.append(weight)
+                cumulative += weight
+                if n > mu and weight < 1e-14:
+                    break
+            self._weights[dt] = (weights, max(1 - cumulative, 0.))
+        return self._weights[dt]
+
+    def step(self, P, dt):
+        rate = self.rate
+        if rate == 0:
+            return P.copy(), np.zeros_like(P), np.zeros(4)
+        weights, tail = self._poisson_weights(dt)
+        term = P
+        result = weights[0] * term
+        losses = np.zeros_like(P)
+        counts = np.zeros(4)
+        term_loss = np.zeros_like(P)
+        term_counts = np.zeros(4)
+        for weight in weights[1:]:
+            # Keep multiply-then-divide and the original ordered sum, including
+            # nonunit pulse scales and signed coherent scattering cross terms.
+            term_loss += self.hazard * term / rate
+            term_counts += np.einsum('csijk,sijk->c', self.count_rates, term) / rate
+            gain = self.gain(term)
+            term = self.stay * term + gain / rate
+            result += weight * term
+            losses += weight * term_loss
+            counts += weight * term_counts
+        # Preserve the original Poisson-tail correction and positivity bound.
+        result += tail * term
+        losses += tail * term_loss
+        counts += tail * term_counts
+        return result, losses, counts
+
+
+def uniform_step(P, active, gout, hazard, count_rates, dt):
+    """Exact positive Markov exponential, loss flux, and photon counts.
+
+    Poisson tail is bounded below 1e-13 per step. The solver prepares this
+    operation once per segment; this entry point also supports standalone use.
     """
-    rate = float(gout.max())
-    if rate == 0:
-        return P.copy(), np.zeros_like(P), np.zeros(4)
-    mu = rate * dt
-    if mu > 10:
-        raise ValueError("time_step_us too large for the scattering rate")
-    term = P.copy()
-    weight = np.exp(-mu)
-    result = weight * term
-    losses = np.zeros_like(P)
-    counts = np.zeros(4)
-    term_loss = np.zeros_like(P)
-    term_counts = np.zeros(4)
-    cumulative = weight
-    stay = 1 - gout / rate
-    for n in range(1, 100):
-        term_loss += hazard * term / rate
-        term_counts += np.einsum('csijk,sijk->c', count_rates, term) / rate
-        gain = sum((scale * t.gain(term) for t, scale in active), np.zeros_like(P))
-        term = stay * term + gain / rate
-        weight *= mu / n
-        result += weight * term
-        losses += weight * term_loss
-        counts += weight * term_counts
-        cumulative += weight
-        if n > mu and weight < 1e-14:
-            break
-    # Include missing Poisson weight in the last term to avoid cumulative trace
-    # erosion. This is at roundoff / tail tolerance and preserves positivity.
-    tail = max(1 - cumulative, 0.)
-    result += tail * term
-    losses += tail * term_loss
-    counts += tail * term_counts
-    return result, losses, counts
+    return _UniformizedScattering(active, gout, hazard, count_rates).step(P, dt)
 
 
 def solve_local(local, cfg, stop=None, progress=None):
@@ -331,6 +406,7 @@ def solve_local(local, cfg, stop=None, progress=None):
     sample_index, steps = 1, 0
     for seg in m.schedule:
         active, gout, hazard, count_rates, H = local.operators(seg)
+        scattering = _UniformizedScattering(active, gout, hazard, count_rates)
         current_hazard = hazard
         gamma = m.cfg.raman.extra_coherence_decay_rate_s
         # Phenomenological extra gamma acts only on the Raman spin coherence.
@@ -348,7 +424,7 @@ def solve_local(local, cfg, stop=None, progress=None):
             # population-resolving dissipator: no splitting substeps are needed.
             max_dt = cfg.ensemble.time_step_us * 1e-6 if seg.raman > 0 and m.cfg.raman.enabled else np.inf
             nsteps = max(1, int(np.ceil((target - now) / max_dt)),
-                         int(np.ceil((target - now) * float(gout.max()) / 5)))
+                         int(np.ceil((target - now) * scattering.rate / 5)))
             dt = (target - now) / nsteps
             key = round(dt, 15)
             if key not in cache:
@@ -356,10 +432,12 @@ def solve_local(local, cfg, stop=None, progress=None):
             U, decay = cache[key]
             Uh = U.conj().swapaxes(-1, -2)
             for _ in range(nsteps):
+                if stop is not None and stop.is_set():
+                    raise SimulationStopped()
                 rho = U @ rho @ Uh
                 pd = rho[..., di, di].real
                 P[at.UP], P[at.DOWN] = pd[..., :nz], pd[..., nz:]
-                P, lf, dc = uniform_step(P, active, gout, hazard, count_rates, dt)
+                P, lf, dc = scattering.step(P, dt)
                 loss += lf.sum()
                 cn += dc
                 rho *= decay
@@ -409,13 +487,86 @@ def mixture_temperature(mean_hz, components, axis):
     return float(np.exp(brentq(f, -40., 10.)))
 
 
-def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None):
+def _check_stop(stop):
+    if stop is not None and stop.is_set():
+        raise SimulationStopped()
+
+
+_WORKER_STOP = None
+
+
+def _initialize_ensemble_worker(stop):
+    """Share cancellation at process startup (spawn-safe on Windows and Qt)."""
+    global _WORKER_STOP
+    _WORKER_STOP = stop
+
+
+def _parallel_components(cfg, calibration, xyz, phases, beat, workers, stop, progress):
+    from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, as_completed, wait
+
+    options = {}
+    process_stop = None
+    if stop is not None:
+        import multiprocessing
+
+        # A GUI QThread must not fork a process containing Qt/BLAS threads.
+        # Pass the shared Event through the initializer, not the task queue.
+        context = multiprocessing.get_context("spawn")
+        process_stop = context.Event()
+        options = dict(mp_context=context, initializer=_initialize_ensemble_worker,
+                       initargs=(process_stop,))
+    _check_stop(stop)
+    if progress:
+        progress(0., f"starting {workers} workers for {len(xyz)} ensemble samples")
+    _check_stop(stop)
+    with ProcessPoolExecutor(max_workers=workers, **options) as pool:
+        futures, ordered = {}, {}
+        try:
+            data = cfg.to_dict()
+            for i, (position, phase) in enumerate(zip(xyz, phases)):
+                _check_stop(stop)
+                futures[pool.submit(_solve_node, data, calibration, position, phase, beat)] = i
+
+            def collect(future):
+                _check_stop(stop)
+                ordered[futures[future]] = future.result()
+                if progress:
+                    progress(len(ordered) / len(xyz), f"ensemble atoms {len(ordered)}/{len(xyz)} complete")
+
+            if stop is None:
+                for future in as_completed(futures):
+                    collect(future)
+            else:
+                pending = set(futures)
+                while pending:
+                    _check_stop(stop)
+                    completed, pending = wait(pending, timeout=.05, return_when=FIRST_COMPLETED)
+                    for future in completed:
+                        collect(future)
+            _check_stop(stop)
+        except BaseException:
+            # Signal running work BEFORE the context manager joins workers.
+            # Cancel queued tasks and wait for cleanup before allowing a rerun.
+            if process_stop is not None:
+                process_stop.set()
+            for future in futures:
+                future.cancel()
+            raise
+    return [ordered[i] for i in range(len(xyz))]
+
+
+def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=None):
     started = time.perf_counter()
     cfg.validate()
+    worker_count = cfg.ensemble.workers if workers is None else workers
+    if isinstance(worker_count, bool) or not isinstance(worker_count, (int, np.integer)) or worker_count < 1:
+        raise ValueError("ensemble workers must be a positive integer")
+    _check_stop(stop)
     with _single_thread():
         atom = at.load_atomic_data()
         response = DLineResponse(atom, cfg.magnetic.magnitude_gauss, cfg.magnetic.direction)
         calibration = calibrate_carrier(cfg, response)
+        _check_stop(stop)
         central = LocalExperiment(cfg, response, calibration, [0, 0, 0], 0.)
         # One fixed experimental beat, resonant with the central n=1->0 red
         # sideband including phase-AVERAGED Raman and lattice differential shift.
@@ -432,24 +583,20 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None):
                     + lattice_delta + cfg.raman.differential_light_shift_hz + cfg.raman.red_sideband_offset_hz)
         xyz, phases = spatial_samples(cfg)
         components = []
-        if cfg.ensemble.workers > 1 and stop is None:
-            from concurrent.futures import ProcessPoolExecutor, as_completed
-            with ProcessPoolExecutor(max_workers=cfg.ensemble.workers) as pool:
-                futures = {pool.submit(_solve_node, cfg.to_dict(), calibration, p, ph, beat): i for i, (p, ph) in enumerate(zip(xyz, phases))}
-                ordered = {}
-                for future in as_completed(futures):
-                    ordered[futures[future]] = future.result()
-                    if progress:
-                        progress(len(ordered) / len(xyz), f"ensemble atoms {len(ordered)}/{len(xyz)} complete")
-                components = [ordered[i] for i in range(len(xyz))]
+        if worker_count > 1:
+            components = _parallel_components(cfg, calibration, xyz, phases, beat,
+                                              worker_count, stop, progress)
         else:
             for i, (p, ph) in enumerate(zip(xyz, phases)):
+                _check_stop(stop)
                 if progress:
                     progress(i / len(xyz), f"ensemble atom {i + 1}/{len(xyz)}")
                 local = LocalExperiment(cfg, response, calibration, p, ph, beat)
                 result = solve_local(local, cfg, stop)
                 components.append((local, result))
+        _check_stop(stop)
         analysis = analyze_ensemble(cfg, central, components, calibration, beat)
+        _check_stop(stop)
         analysis["final"]["node_solver_time_sum_s"] = analysis["final"]["wall_time_s"]
         analysis["final"]["wall_time_s"] = time.perf_counter() - started
         analysis["result"].wall_time_s = analysis["final"]["wall_time_s"]
@@ -458,11 +605,13 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None):
 
 def _solve_node(data, calibration, position, phase, beat):
     from .config import SimConfig
+    _check_stop(_WORKER_STOP)
     cfg = SimConfig.from_dict(data)
     with _single_thread():
         response = DLineResponse(at.load_atomic_data(), cfg.magnetic.magnitude_gauss, cfg.magnetic.direction)
         local = LocalExperiment(cfg, response, calibration, position, phase, beat)
-        return local, solve_local(local, cfg)
+        _check_stop(_WORKER_STOP)
+        return local, solve_local(local, cfg, _WORKER_STOP)
 
 
 def analyze_ensemble(cfg, central, components, calibration, beat):

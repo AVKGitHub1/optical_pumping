@@ -1,8 +1,8 @@
 """PyQt6 desktop interface.  Physics lives in the other modules; this file only builds widgets.
 
 Simulation work runs in a QThread; results and progress come back through signals.
-Stop sets a threading.Event checked inside every ODE right-hand-side evaluation,
-so it interrupts long integrations and scans, not only between runs.
+Ensemble samples use the configured worker processes. Stop is shared with those
+workers and checked between split steps; the 1D solver checks every ODE evaluation.
 """
 from __future__ import annotations
 
@@ -335,6 +335,7 @@ class MainWindow(QMainWindow):
         self.last = None
         self.thread = None
         self.stop = threading.Event()
+        self._close_when_finished = False
 
         # left: parameters
         self.toolbox = QToolBox()
@@ -524,10 +525,12 @@ class MainWindow(QMainWindow):
         for b in (self.run_btn, self.cmp_btn, self.scan_btn):
             b.setEnabled(True)
         self.stop_btn.setEnabled(False)
+        if self._close_when_finished:
+            self.close()
 
     def _failed(self, msg):
         self.status.setText(msg.splitlines()[0])
-        if not msg.startswith("Stopped"):
+        if not msg.startswith("Stopped") and not self._close_when_finished:
             QMessageBox.critical(self, "Simulation error", msg[:3000])
 
     def on_run(self):
@@ -581,6 +584,14 @@ class MainWindow(QMainWindow):
     def on_stop(self):
         self.stop.set()
         self.status.setText("Stopping...")
+
+    def closeEvent(self, event):
+        if self.thread is not None:
+            self._close_when_finished = True
+            self.on_stop()
+            event.ignore()
+        else:
+            super().closeEvent(event)
 
     def on_reset(self):
         cfg, msg = SimConfig(), "Parameters reset to built-in defaults."

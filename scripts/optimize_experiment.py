@@ -32,7 +32,9 @@ def output_root(cfg):
 def evaluate(item):
     tag, data = item
     c = SimConfig.from_dict(data)
-    a = run(c)
+    # The batch pool owns the worker budget; retain the requested config for
+    # result provenance and resume matching rather than rewriting its workers.
+    a = run(c, ensemble_workers=1)
     return dict(tag=tag, config=data, final=a['final'], validity=a['validity'].items,
                 status=a['validity'].status)
 

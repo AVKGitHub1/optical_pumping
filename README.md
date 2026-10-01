@@ -18,6 +18,8 @@ For the GUI:
 conda run --no-capture-output -n scripts python rb85_rsc_sim.py --config examples/experiment.json --gui
 ```
 
+In the GUI, open **3D spatial ensemble**, set **workers** to **8**, and click **Run**. Stop cancels the worker processes; closing a running window also stops and cleans them up. Use **Save config...** to retain the selected worker count.
+
 The GUI also opens this config by default and returns to it on Reset. For headless runs, pass `--config` explicitly: omitting it retains the legacy built-in defaults. `python -m rb85rsc` accepts the same options as `python rb85_rsc_sim.py`.
 
 If dependencies need installing into the existing environment:
@@ -40,6 +42,7 @@ Runs export configuration and metadata JSON, time-series CSV, population arrays,
 | --- | --- |
 | [Documentation index](docs/README.md) | Find current references and historical material |
 | [Experiment workflow](docs/experiment-workflow.md) | Run, inspect, check convergence, and repeat optimization |
+| [Performance](docs/performance.md) | Computational optimizations, benchmarks, and worker settings |
 | [Current physics report](docs/astra-physics-corrections.md) | Experiment inputs, selected polarizations, results, validation, and limitations |
 | [Simulator reference](docs/simulator-reference.md) | Detailed legacy 1D equations, configuration fields, outputs, and benchmarks |
 | [Physics audit history](docs/astra-physics-history.md) | Original audit and intermediate calculations |

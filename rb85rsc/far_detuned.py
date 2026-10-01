@@ -13,6 +13,7 @@ import json
 import os
 import sqlite3
 import tempfile
+from collections import OrderedDict
 from functools import lru_cache
 from pathlib import Path
 
@@ -96,14 +97,43 @@ class DLineResponse:
         self.ee = np.asarray([r["energy_hz"] + r["g"] * r["m"] * at.MU_B * b_gauss * 1e-4 / at.H for r in rows])
         self.eg = atom.ground_energy_hz(b_gauss * 1e-4)
         self.eunit = np.sqrt(2 / (at.C_LIGHT * at.EPS0))  # electric field at 1 W/m²
+        self._response_cache = OrderedDict()
+
+    def _response_key(self, kind, frequency_hz, eps):
+        """Exact value keys also detect changes to mutable polarization inputs."""
+        dependencies = (eps, self.bdir, self.d, self.me, self.mg, self.eunit)
+        if kind != "absorption":
+            dependencies += (self.ee, self.eg, frequency_hz)
+        arrays = tuple((a.dtype.str, a.shape, a.tobytes()) for a in map(np.asarray, dependencies))
+        return kind, arrays
+
+    def _cached_response(self, key, compute):
+        """Bound per-instance setup reuse; return copies to protect cached arrays."""
+        if key in self._response_cache:
+            value = self._response_cache.pop(key)
+        else:
+            value = compute()
+            value.setflags(write=False)
+        self._response_cache[key] = value
+        if len(self._response_cache) > 128:
+            self._response_cache.popitem(last=False)
+        return value.copy()
 
     def absorption(self, eps):
+        key = self._response_key("absorption", None, eps)
+        return self._cached_response(key, lambda: self._absorption_uncached(eps))
+
+    def _absorption_uncached(self, eps):
         qs = spherical_amplitudes(eps, self.bdir)
         q = self.me[:, None] - self.mg
         return self.d * sum(np.where(q == k, v, 0) for k, v in qs.items())
 
     def shift_hz(self, frequency_hz, eps):
         """Ground-state shift in Hz per W/m², including counter-rotation."""
+        key = self._response_key("shift", frequency_hz, eps)
+        return self._cached_response(key, lambda: self._shift_hz_uncached(frequency_hz, eps))
+
+    def _shift_hz_uncached(self, frequency_hz, eps):
         d = self.absorption(eps)
         nu = self.ee[:, None] - self.eg
         denom = 1 / (2 * np.pi * (frequency_hz - nu)) - 1 / (2 * np.pi * (frequency_hz + nu))
@@ -123,6 +153,10 @@ class DLineResponse:
         D1/D2 interference is kept. Different emitted spherical components are
         treated as resolved dipole channels, as in the pump model.
         """
+        key = self._response_key("scattering", frequency_hz, eps)
+        return self._cached_response(key, lambda: self._scattering_amplitudes_uncached(frequency_hz, eps))
+
+    def _scattering_amplitudes_uncached(self, frequency_hz, eps):
         da = self.absorption(eps)
         den = 2 * np.pi * (frequency_hz - (self.ee[:, None] - self.eg))
         out = np.zeros((12, 12, 3), complex)

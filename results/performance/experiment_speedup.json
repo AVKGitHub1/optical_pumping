@@ -1,0 +1,99 @@
+{
+  "recorded_utc": "2026-10-01T07:43:57.484812+00:00",
+  "baseline_commit": "2779a10efab5b8463ce70577e8e230a52f5fbbf8",
+  "config": "examples/experiment.json",
+  "config_sha256": "f13e18574eef1519033dd1903b822236d8a5b6c8d367eecc2ce21c0aadf77c09",
+  "config_unchanged": true,
+  "environment": {
+    "conda_environment": "scripts",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+    "logical_cpus": 24,
+    "python": "3.13.10",
+    "packages": {
+      "numpy": "2.3.5",
+      "scipy": "1.18.1",
+      "threadpoolctl": "3.5.0",
+      "ARC-Alkali-Rydberg-Calculator": "3.10.2"
+    },
+    "blas_threads_per_worker": 1
+  },
+  "unchanged_numerical_settings": {
+    "spatial_samples": 64,
+    "time_step_us": 2.0,
+    "calibration_samples": 128,
+    "output_time_samples": 201,
+    "n_max": 16,
+    "max_sideband_order": 3,
+    "recoil_quadrature_points": 24,
+    "seed": 0,
+    "configured_workers": 4,
+    "real_dtype": "float64",
+    "complex_dtype": "complex128",
+    "uniformization_poisson_weight_cutoff": 1e-14,
+    "uniformization_tail_correction_unchanged": true
+  },
+  "benchmark": {
+    "repetitions_per_variant": 1,
+    "timing_scope": "runner.run including setup, process pool, integration and analysis; excludes export/plotting and validation artifact serialization",
+    "caches": "Existing atomic and carrier calibration caches available to all variants",
+    "parallelism": "The 8-worker measurement uses a runtime override; the config retains workers=4",
+    "runs": [
+      {
+        "variant": "baseline",
+        "runtime_workers": 4,
+        "elapsed_s": 268.8309082998894
+      },
+      {
+        "variant": "optimized",
+        "runtime_workers": 4,
+        "elapsed_s": 179.38130340003408
+      },
+      {
+        "variant": "optimized",
+        "runtime_workers": 8,
+        "elapsed_s": 92.33780539990403
+      }
+    ],
+    "optimized_4_workers_speedup": 1.4986562323074208,
+    "optimized_4_workers_elapsed_reduction_fraction": 0.33273556774235,
+    "optimized_8_workers_speedup": 2.911385072837878
+  },
+  "validation": {
+    "optimized_4_workers": {
+      "reference": "baseline, 4 workers",
+      "compared_arrays": 39735,
+      "compared_physical_scalars": 8869,
+      "arrays_bitwise_equal": true,
+      "physical_scalars_exactly_equal": true,
+      "changed_arrays": 0,
+      "changed_physical_scalars": 0,
+      "excluded_timing_scalars": 67
+    },
+    "optimized_8_workers": {
+      "reference": "optimized, 4 workers",
+      "compared_arrays": 39735,
+      "compared_physical_scalars": 8869,
+      "arrays_bitwise_equal": true,
+      "physical_scalars_exactly_equal": true,
+      "changed_arrays": 0,
+      "changed_physical_scalars": 0,
+      "excluded_timing_scalars": 67
+    },
+    "includes": [
+      "Every saved per-node population and coherence history, final joint 3D populations and density matrices",
+      "Photon counts, loss, energy, positivity diagnostics and all derived ensemble series",
+      "Final metrics, temperatures, selected physics/config metadata and node ordering"
+    ],
+    "exclusions": [
+      "wall_time_s",
+      "node_solver_time_sum_s"
+    ],
+    "tolerance_used_for_success": "Exact array byte equality and exact physical scalar equality; no numerical tolerance needed"
+  },
+  "reference_observables": {
+    "P_target_absolute": 0.2709468323881649,
+    "P_trapped": 0.5210623455553516
+  },
+  "note": "Single-machine timings are indicative, not a portable speed guarantee. No scientific result files were overwritten."
+}

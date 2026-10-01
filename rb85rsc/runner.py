@@ -62,10 +62,11 @@ def estimate(cfg: SimConfig) -> dict:
     return estimate_cost(Model(cfg))
 
 
-def run(cfg: SimConfig, stop=None, progress=None, estimate_cb=None):
+def run(cfg: SimConfig, stop=None, progress=None, estimate_cb=None, *, ensemble_workers=None):
+    """Run physics unchanged, optionally sharing an outer scan's worker budget."""
     if cfg.ensemble.enabled:
         from .ensemble import run_ensemble
-        return run_ensemble(cfg, stop, progress, estimate_cb)
+        return run_ensemble(cfg, stop, progress, estimate_cb, workers=ensemble_workers)
     model = Model(cfg)
     if estimate_cb is not None:
         estimate_cb(estimate_cost(model))

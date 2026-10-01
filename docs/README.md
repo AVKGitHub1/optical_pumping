@@ -7,6 +7,7 @@ Start with the [repository README](../README.md) to run **[examples/experiment.j
 | Document | Contents |
 | --- | --- |
 | [Experiment workflow](experiment-workflow.md) | Running the active config, outputs, optimization, controls, and numerical checks |
+| [Performance](performance.md) | Exact computational optimizations, benchmarks, validation, and worker settings |
 | [RSC physics corrections and current results](astra-physics-corrections.md) | Agreed experimental inputs, implemented model, current results, validation, and unresolved physical uncertainties |
 
 The current config uses a spatial 3D ensemble with coherent axial Raman cooling and modeled carrier decay. Read the current physics report before interpreting temperature or loss estimates.

@@ -27,7 +27,11 @@ The main objective is `P_target_absolute`: initially loaded atoms that remain in
 
 ## Numerical controls and calibration
 
-`ensemble.samples` controls deterministic Sobol spatial quadrature. `ensemble.time_step_us` controls the split integrator; legacy ODE tolerances `rtol` and `atol` do not control this backend. `ensemble.workers` enables parallel headless samples; cancellable interactive runs are sequential.
+`ensemble.samples` controls deterministic Sobol spatial quadrature. `ensemble.time_step_us` controls the split integrator; legacy ODE tolerances `rtol` and `atol` do not control this backend. `ensemble.workers` enables parallel samples in both GUI and headless runs. In the GUI, expand **3D spatial ensemble**, set **workers** to **8**, and click **Run**. Stop cancels queued and active samples, and the GUI waits for worker cleanup before allowing another run. Closing a running window also cancels and joins the workers. **Save config...** retains your worker choice; the active example continues to default to four.
+
+Parallel parameter scans and optimization stages use one outer process pool, with sequential spatial samples within each point. Their `--workers` setting controls the total simulation-worker budget without changing the saved point config. See [performance and validation](performance.md) for benchmarks and direct-run worker overrides.
+
+GUI scans visit parameter points sequentially and use the chosen ensemble workers within each point. GUI protocol comparisons also honor this worker count.
 
 When `trap.wavelength_nm` is supplied, depth and wavelength determine the bottom trap frequency; the retained `frequency_hz` field is inactive. `n_max` must include all local bound levels for ensemble runs.
 

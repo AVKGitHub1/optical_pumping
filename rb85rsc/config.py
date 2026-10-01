@@ -276,7 +276,7 @@ class AnalysisConfig:
 class EnsembleConfig:
     enabled: bool = P(False, "", "Spatial/phase ensemble with coherent axial Raman dynamics and three-axis bound-state recoil/loss.")
     samples: int = P(32, "", "Deterministic scrambled Sobol samples of Gaussian position and uniform Raman spatial phase; refine to check convergence.", min=1)
-    workers: int = P(1, "", "Processes for independent spatial samples in headless runs; interactive cancellable runs use one process.", min=1, max=8)
+    workers: int = P(1, "", "Worker processes for spatial samples in GUI and headless runs. Set 8 for eight workers, or 1 for sequential execution. Stop cancels all workers.", min=1, max=8)
     cloud_radius_um: float = P(150.0, "um", "Spherical Gaussian 1/e^2 DENSITY radius (coordinate standard deviation = radius/2).", min=0.0)
     lattice_waist_um: float = P(200.0, "um", "All lattice beams' 1/e^2 intensity radius.", min=1.0)
     transverse_wavelength_nm: float = P(1188.0, "nm", "Optical wavelength of both transverse standing waves.", min=100.0)

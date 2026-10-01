@@ -117,6 +117,16 @@ The [single-photon recoil check](../results/astra_modeled_decay/one_photon_recoi
 
 Cleanup fixes: scan reuse now requires matching full configs; controls must match in physics and numerics; invalid objectives fail before propagation; unknown scan runtime is described without `nan`; cache publication is atomic; initial-state metadata reflects actual inputs. `--stage final` reruns the current config and needs explicit `--use-selected` to restore an optimization winner. Temporary test/smoke outputs are removed, while historical scientific results are preserved.
 
+## Performance validation (2026-10-01)
+
+The computational optimization pass retains the current physics, config, numerical settings, and precision. The full 64-node experiment took 268.83 s before the changes and 179.38 s afterward with four workers, a 33.3% reduction. An eight-worker execution override took 92.34 s; the config still defaults to four workers.
+
+Both comparisons reproduced all 39,735 compared arrays bit-for-bit and all 8,869 non-timing scalar entries exactly, including complete node trajectories, final density matrices, loss, photon counts, and temperature proxies. Existing scientific outputs were preserved. See [performance implementation and validation](performance.md) and the [benchmark record](../results/performance/experiment_speedup.json) for the measured environment and details.
+
+After the final performance edits, the complete suite passed **125 tests in 140.50 s** in `scripts`.
+
+The GUI now honors `ensemble.workers`, including eight workers, with cancellation between integration steps and cleanup before restarting or closing. Tests with eight real spawned workers reproduce sequential results exactly and cover Stop, restart, window close, sparse output times, and worker failures. The expanded suite passed **130 tests in 122.59 s** in `scripts`. Select **3D spatial ensemble → workers → 8** in the GUI; the config's default remains four.
+
 ## Outputs and reproduction
 
 - [Current metadata and all 12 absolute/conditional spin populations](../results/astra_modeled_decay/final/run_metadata.json), [time series](../results/astra_modeled_decay/final/run_timeseries.csv), [3D populations and local spectra](../results/astra_modeled_decay/final/run_ensemble.npz), and [exact run config](../results/astra_modeled_decay/final/run_config.json).

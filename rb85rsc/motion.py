@@ -9,6 +9,15 @@ from scipy.special import eval_genlaguerre, gammaln
 from .atomic import HBAR, H, K_B
 
 
+@lru_cache(maxsize=32, typed=True)
+def gauss_legendre(n_quad: int) -> tuple[np.ndarray, np.ndarray]:
+    """Read-only quadrature nodes and weights, cached by the exact order."""
+    nodes, weights = np.polynomial.legendre.leggauss(n_quad)
+    nodes.setflags(write=False)
+    weights.setflags(write=False)
+    return nodes, weights
+
+
 def x0_m(mass_kg: float, trap_hz: float) -> float:
     """Ground-state extent x0 = sqrt(hbar / (2 m omega_t))."""
     return float(np.sqrt(HBAR / (2.0 * mass_kg * 2.0 * np.pi * trap_hz)))
@@ -89,7 +98,7 @@ def recoil_kernel(
     overflow[n] = 1 - sum_n' K[n', n] (probability pushed above n_max).
     The arrays are marked read-only because they are cached.
     """
-    c, w = np.polynomial.legendre.leggauss(n_quad)
+    c, w = gauss_legendre(n_quad)
     wt = w * emission_weight(c, cos_beta, pattern)
     K = np.zeros((n_states, n_states))
     for ci, wi in zip(c, wt):
@@ -103,7 +112,7 @@ def recoil_kernel(
 
 def mean_c2(cos_beta: float, pattern: str) -> float:
     """<c^2> for the emission pattern: per-photon emission recoil is eta^2 <c^2>."""
-    c, w = np.polynomial.legendre.leggauss(16)
+    c, w = gauss_legendre(16)
     return float(np.sum(w * c**2 * emission_weight(c, cos_beta, pattern)))
 
 
@@ -262,7 +271,7 @@ class LatticeSite:
     def recoil_kernel(self, eta_photon, abs_projection, cos_beta, pattern, n_quad):
         key = ("K", float(eta_photon), float(abs_projection), float(cos_beta), pattern, int(n_quad))
         if key not in self._cache:
-            c, w = np.polynomial.legendre.leggauss(n_quad)
+            c, w = gauss_legendre(n_quad)
             wt = w * emission_weight(c, cos_beta, pattern)
             K = np.zeros((self.N, self.N))
             for ci, wi in zip(c, wt):

@@ -93,7 +93,9 @@ def _run_point(cfg_dict: dict):
     rejected = _reject_weak_excitation(cfg)
     if rejected is not None:
         return rejected
-    a = run(cfg)
+    # This function runs inside the scan's pool. Let that pool own the worker
+    # budget without changing the requested config or its saved provenance.
+    a = run(cfg, ensemble_workers=1)
     f = a["final"]
     return {
         **{k: f[k] for k in METRIC_KEYS},
