@@ -5,12 +5,13 @@ Coherent solver (reference)
 Lindblad master equation for the {up, down} x motion density-matrix block plus
 motional populations of the 10 spectator sublevels.  Dissipators:
 
-* optical/Raman scattering: secular jump operators sqrt(r) |s',n'><s,n| with
+* optical/Raman scattering: population-resolving jump operators sqrt(r) |s',n'><s,n| with
   r = W(s->s', emitted class) * K(n'|n); the anticommutator term damps every
   up-down coherence at (Gamma_out(up,n) + Gamma_out(down,m))/2, including events
   that return to the same spin state.  No separate phenomenological term is added
   for this scattering (``extra_coherence_decay_rate_s`` is only for *additional*
-  mechanisms);
+  mechanisms). Resolving each n separately drops coherence transfer even for
+  degenerate transitions; this is an extra approximation beyond secular averaging;
 * background heating: L = sqrt(G_h) a, sqrt(G_h) a^+ acting on motion for every spin;
 * extra up-down dephasing gamma_x (calibrated input).
 

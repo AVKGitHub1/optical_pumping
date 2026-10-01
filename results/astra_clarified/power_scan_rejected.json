@@ -1,0 +1,1506 @@
+[
+  {
+    "tag": "p3_r30_linear0_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.0037965335555040372,
+    "motional_secular_ratio": 1.0847147896935838,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r100_linear0_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012655109631096367,
+    "motional_secular_ratio": 3.61571533119809,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r300_linear0_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.037965326989931596,
+    "motional_secular_ratio": 10.847145449782394,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r1000_linear0_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.1265510877458549,
+    "motional_secular_ratio": 36.15715086482746,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r3000_linear0_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796532613342072,
+    "motional_secular_ratio": 108.47145205067051,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.0012514979950410381,
+    "motional_secular_ratio": 0.7206469774663441,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r10_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.0012655140402042704,
+    "motional_secular_ratio": 0.7206473136627787,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r30_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.0037965357760877936,
+    "motional_secular_ratio": 1.0847154241407726,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r100_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012655111851680122,
+    "motional_secular_ratio": 3.615715965645279,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r300_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.037965329210515354,
+    "motional_secular_ratio": 10.847146084229582,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r1000_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655108996643866,
+    "motional_secular_ratio": 36.15715149927465,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3000_linear0_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.37965326355479095,
+    "motional_secular_ratio": 108.47145268511768,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.0037544919748949018,
+    "motional_secular_ratio": 2.1619406442306595,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r10_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.00375449432016115,
+    "motional_secular_ratio": 2.1619409804270946,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r30_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.0037965421206128114,
+    "motional_secular_ratio": 2.161941940988336,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r100_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.01265511819620514,
+    "motional_secular_ratio": 3.615717778351533,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r300_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.03796533555504037,
+    "motional_secular_ratio": 10.847147896935837,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r1000_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655109631096367,
+    "motional_secular_ratio": 36.157153311980906,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3000_linear0_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.37965326989931597,
+    "motional_secular_ratio": 108.47145449782394,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.012514970904383424,
+    "motional_secular_ratio": 7.206468477905764,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r10_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.012514973249649673,
+    "motional_secular_ratio": 7.206468814102198,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r30_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.012514979950410381,
+    "motional_secular_ratio": 7.206469774663441,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r100_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012655140402042703,
+    "motional_secular_ratio": 7.206473136627786,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r300_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.037965357760877935,
+    "motional_secular_ratio": 10.847154241407726,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r1000_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655111851680123,
+    "motional_secular_ratio": 36.15715965645279,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3000_linear0_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.37965329210515353,
+    "motional_secular_ratio": 108.47146084229583,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.037544910702922055,
+    "motional_secular_ratio": 21.619405145548924,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r10_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.03754491304818831,
+    "motional_secular_ratio": 21.61940548174536,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r30_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.03754491974894902,
+    "motional_secular_ratio": 21.619406442306598,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r100_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.037544943201611496,
+    "motional_secular_ratio": 21.619409804270944,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r300_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.037965421206128114,
+    "motional_secular_ratio": 21.619419409883363,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r1000_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655118196205142,
+    "motional_secular_ratio": 36.15717778351534,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3000_linear0_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796533555504037,
+    "motional_secular_ratio": 108.47147896935837,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.12514969999780728,
+    "motional_secular_ratio": 72.06468348229997,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r10_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.12514970234307354,
+    "motional_secular_ratio": 72.06468381849639,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r30_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.12514970904383424,
+    "motional_secular_ratio": 72.06468477905764,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r100_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.12514973249649672,
+    "motional_secular_ratio": 72.06468814102199,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r300_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.12514979950410382,
+    "motional_secular_ratio": 72.06469774663441,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r1000_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655140402042706,
+    "motional_secular_ratio": 72.06473136627787,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3000_linear0_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796535776087793,
+    "motional_secular_ratio": 108.47154241407728,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.3754490979831936,
+    "motional_secular_ratio": 216.19405015873153,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r10_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.37544910032845985,
+    "motional_secular_ratio": 216.194050494928,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r30_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.3754491070292206,
+    "motional_secular_ratio": 216.19405145548922,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r100_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.37544913048188305,
+    "motional_secular_ratio": 216.19405481745358,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r300_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.3754491974894901,
+    "motional_secular_ratio": 216.19406442306598,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r1000_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.37544943201611497,
+    "motional_secular_ratio": 216.19409804270944,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3000_linear0_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.37965421206128114,
+    "motional_secular_ratio": 216.19419409883363,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r30_linear0_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.003796533555504102,
+    "motional_secular_ratio": 1.0847147896936022,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r100_linear0_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012655109631096432,
+    "motional_secular_ratio": 3.6157153311981087,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r300_linear0_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.037965326989931665,
+    "motional_secular_ratio": 10.847145449782412,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r1000_linear0_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655108774585497,
+    "motional_secular_ratio": 36.15715086482748,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r3000_linear0_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.37965326133420724,
+    "motional_secular_ratio": 108.47145205067052,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.0012503914594462783,
+    "motional_secular_ratio": 0.7200098034429089,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r10_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.0012655140402044864,
+    "motional_secular_ratio": 0.7200101396393433,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r30_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.003796535776088009,
+    "motional_secular_ratio": 1.0847154241408345,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r100_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.01265511185168034,
+    "motional_secular_ratio": 3.6157159656453404,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r300_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.03796532921051557,
+    "motional_secular_ratio": 10.847146084229644,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r1000_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655108996643888,
+    "motional_secular_ratio": 36.15715149927471,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3000_linear0_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796532635547912,
+    "motional_secular_ratio": 108.47145268511775,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.003751172368110622,
+    "motional_secular_ratio": 2.1600291221603536,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r10_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.00375117471337687,
+    "motional_secular_ratio": 2.1600294583567883,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r30_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.003796542120613459,
+    "motional_secular_ratio": 2.16003041891803,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r100_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.01265511819620579,
+    "motional_secular_ratio": 3.6157177783517183,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r300_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.03796533555504102,
+    "motional_secular_ratio": 10.847147896936022,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r1000_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.1265510963109643,
+    "motional_secular_ratio": 36.157153311981084,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3000_linear0_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.37965326989931664,
+    "motional_secular_ratio": 108.47145449782414,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.012503905548435825,
+    "motional_secular_ratio": 7.200096737671411,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r10_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.012503907893702074,
+    "motional_secular_ratio": 7.2000970738678465,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r30_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.012503914594462782,
+    "motional_secular_ratio": 7.200098034429089,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r100_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012655140402044863,
+    "motional_secular_ratio": 7.200101396393435,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r300_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.03796535776088009,
+    "motional_secular_ratio": 10.847154241408344,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r1000_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.1265511185168034,
+    "motional_secular_ratio": 36.15715965645341,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3000_linear0_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796532921051557,
+    "motional_secular_ratio": 108.47146084229645,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.03751171463507926,
+    "motional_secular_ratio": 21.600289924845864,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r10_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.037511716980345514,
+    "motional_secular_ratio": 21.6002902610423,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r30_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.037511723681106224,
+    "motional_secular_ratio": 21.600291221603538,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r100_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.0375117471337687,
+    "motional_secular_ratio": 21.600294583567884,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r300_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.03796542120613459,
+    "motional_secular_ratio": 21.600304189180303,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r1000_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.1265511819620579,
+    "motional_secular_ratio": 36.157177783517184,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3000_linear0_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796533555504102,
+    "motional_secular_ratio": 108.47147896936023,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.1250390464383313,
+    "motional_secular_ratio": 72.00096607995644,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r10_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.12503904878359756,
+    "motional_secular_ratio": 72.00096641615286,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r30_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.12503905548435826,
+    "motional_secular_ratio": 72.00096737671412,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r100_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.12503907893702074,
+    "motional_secular_ratio": 72.00097073867846,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r300_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.12503914594462784,
+    "motional_secular_ratio": 72.00098034429088,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r1000_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12655140402044862,
+    "motional_secular_ratio": 72.00101396393434,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3000_linear0_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796535776088009,
+    "motional_secular_ratio": 108.47154241408344,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.37511713730476565,
+    "motional_secular_ratio": 216.00289795170093,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r10_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.3751171396500319,
+    "motional_secular_ratio": 216.00289828789738,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r30_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.37511714635079263,
+    "motional_secular_ratio": 216.00289924845862,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r100_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.3751171698034551,
+    "motional_secular_ratio": 216.00290261042298,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r300_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.3751172368110622,
+    "motional_secular_ratio": 216.00291221603538,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r1000_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.375117471337687,
+    "motional_secular_ratio": 216.00294583567884,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3000_linear0_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3796542120613459,
+    "motional_secular_ratio": 216.003041891803,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r30_linear90_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.002462263984466984,
+    "motional_secular_ratio": 0.7034981045298834,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r100_linear90_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.00820754439430619,
+    "motional_secular_ratio": 2.344993047319089,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r300_linear90_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.024622631279561064,
+    "motional_secular_ratio": 7.034978598145392,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r1000_linear90_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207543537795313,
+    "motional_secular_ratio": 23.449928026037448,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r3000_linear90_imp0",
+    "pump_nw": 3.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.2462263042305019,
+    "motional_secular_ratio": 70.34978353430047,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.001251497978421418,
+    "motional_secular_ratio": 0.7206469750839037,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r10_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.001251500284908553,
+    "motional_secular_ratio": 0.7206473057213109,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r30_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.0024622662050507406,
+    "motional_secular_ratio": 0.7206482503996168,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r100_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.008207546614889946,
+    "motional_secular_ratio": 2.344993681766278,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r300_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.02462263350014482,
+    "motional_secular_ratio": 7.03497923259258,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r1000_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207543759853689,
+    "motional_secular_ratio": 23.449928660484638,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3000_linear90_imp0",
+    "pump_nw": 10.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622630645108565,
+    "motional_secular_ratio": 70.34978416874765,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.0037544919582752816,
+    "motional_secular_ratio": 2.1619406418482194,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r10_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.0037544942647624166,
+    "motional_secular_ratio": 2.1619409724856267,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r30_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.003754500854725659,
+    "motional_secular_ratio": 2.161941917163932,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r100_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.008207552959414964,
+    "motional_secular_ratio": 2.344995494472532,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r300_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.02462263984466984,
+    "motional_secular_ratio": 7.034981045298834,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r1000_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.0820754439430619,
+    "motional_secular_ratio": 23.449930473190893,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3000_linear90_imp0",
+    "pump_nw": 30.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622631279561066,
+    "motional_secular_ratio": 70.3497859814539,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.012514970887763804,
+    "motional_secular_ratio": 7.206468475523324,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r10_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.012514973194250939,
+    "motional_secular_ratio": 7.206468806160731,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r30_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.012514979784214182,
+    "motional_secular_ratio": 7.2064697508390365,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r100_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012515002849085532,
+    "motional_secular_ratio": 7.206473057213107,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r300_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.0246226620505074,
+    "motional_secular_ratio": 7.206482503996166,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r1000_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207546614889948,
+    "motional_secular_ratio": 23.449936817662785,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3000_linear90_imp0",
+    "pump_nw": 100.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622633500144822,
+    "motional_secular_ratio": 70.34979232592579,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.03754491068630244,
+    "motional_secular_ratio": 21.61940514316648,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r10_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.03754491299278957,
+    "motional_secular_ratio": 21.619405473803887,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r30_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.037544919582752814,
+    "motional_secular_ratio": 21.619406418482193,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r100_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.03754494264762417,
+    "motional_secular_ratio": 21.61940972485627,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r300_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.03754500854725659,
+    "motional_secular_ratio": 21.619419171639326,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r1000_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207552959414965,
+    "motional_secular_ratio": 23.449954944725327,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3000_linear90_imp0",
+    "pump_nw": 300.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.2462263984466984,
+    "motional_secular_ratio": 70.34981045298834,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.12514969998118766,
+    "motional_secular_ratio": 72.06468347991752,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r10_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.1251497022876748,
+    "motional_secular_ratio": 72.06468381055494,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r30_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.12514970887763804,
+    "motional_secular_ratio": 72.06468475523323,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r100_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.1251497319425094,
+    "motional_secular_ratio": 72.0646880616073,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r300_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.12514979784214184,
+    "motional_secular_ratio": 72.06469750839037,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r1000_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12515002849085533,
+    "motional_secular_ratio": 72.06473057213107,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3000_linear90_imp0",
+    "pump_nw": 1000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622662050507405,
+    "motional_secular_ratio": 72.06482503996166,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.375449097966574,
+    "motional_secular_ratio": 216.19405015634914,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r10_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.3754491002730611,
+    "motional_secular_ratio": 216.19405048698653,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r30_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.37544910686302435,
+    "motional_secular_ratio": 216.1940514316648,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r100_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.3754491299278957,
+    "motional_secular_ratio": 216.1940547380389,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r300_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.3754491958275281,
+    "motional_secular_ratio": 216.19406418482197,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r1000_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.37544942647624163,
+    "motional_secular_ratio": 216.19409724856266,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3000_linear90_imp0",
+    "pump_nw": 3000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.3754500854725659,
+    "motional_secular_ratio": 216.19419171639325,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r30_linear90_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.002462263984467049,
+    "motional_secular_ratio": 0.7034981045299019,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r100_linear90_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.008207544394306255,
+    "motional_secular_ratio": 2.344993047319108,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r300_linear90_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.02462263127956113,
+    "motional_secular_ratio": 7.034978598145409,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r1000_linear90_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.0820754353779532,
+    "motional_secular_ratio": 23.449928026037465,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3_r3000_linear90_imp0.00488619",
+    "pump_nw": 3.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622630423050196,
+    "motional_secular_ratio": 70.34978353430049,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.0012503914428266582,
+    "motional_secular_ratio": 0.7200098010604684,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r10_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.0012503937493137931,
+    "motional_secular_ratio": 0.7200101316978755,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r30_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.002462266205050956,
+    "motional_secular_ratio": 0.7200110763761814,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r100_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.008207546614890163,
+    "motional_secular_ratio": 2.34499368176634,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r300_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.024622633500145034,
+    "motional_secular_ratio": 7.034979232592642,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r1000_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207543759853711,
+    "motional_secular_ratio": 23.4499286604847,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p10_r3000_linear90_imp0.00488619",
+    "pump_nw": 10.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622630645108587,
+    "motional_secular_ratio": 70.34978416874772,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.0037511723514910018,
+    "motional_secular_ratio": 2.1600291197779136,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r10_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.0037511746579781367,
+    "motional_secular_ratio": 2.1600294504153204,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r30_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.0037511812479413794,
+    "motional_secular_ratio": 2.160030395093626,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r100_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.008207552959415613,
+    "motional_secular_ratio": 2.3449954944727174,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r300_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.024622639844670485,
+    "motional_secular_ratio": 7.03498104529902,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r1000_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207544394306256,
+    "motional_secular_ratio": 23.449930473191078,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p30_r3000_linear90_imp0.00488619",
+    "pump_nw": 30.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.2462263127956113,
+    "motional_secular_ratio": 70.3497859814541,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.012503905531816205,
+    "motional_secular_ratio": 7.200096735288971,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r10_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.01250390783830334,
+    "motional_secular_ratio": 7.2000970659263785,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r30_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.012503914428266583,
+    "motional_secular_ratio": 7.200098010604685,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r100_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.012503937493137933,
+    "motional_secular_ratio": 7.200101316978754,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r300_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.02462266205050956,
+    "motional_secular_ratio": 7.200110763761814,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r1000_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207546614890163,
+    "motional_secular_ratio": 23.4499368176634,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p100_r3000_linear90_imp0.00488619",
+    "pump_nw": 100.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622633500145039,
+    "motional_secular_ratio": 70.34979232592642,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.037511714618459646,
+    "motional_secular_ratio": 21.60028992246342,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r10_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.03751171692494678,
+    "motional_secular_ratio": 21.600290253100827,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r30_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.03751172351491002,
+    "motional_secular_ratio": 21.600291197779132,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r100_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.037511746579781374,
+    "motional_secular_ratio": 21.600294504153208,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r300_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.0375118124794138,
+    "motional_secular_ratio": 21.600303950936265,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r1000_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.08207552959415612,
+    "motional_secular_ratio": 23.449954944727175,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p300_r3000_linear90_imp0.00488619",
+    "pump_nw": 300.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.24622639844670488,
+    "motional_secular_ratio": 70.3498104529902,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.12503904642171168,
+    "motional_secular_ratio": 72.00096607757399,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r10_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.12503904872819882,
+    "motional_secular_ratio": 72.00096640821141,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r30_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.12503905531816206,
+    "motional_secular_ratio": 72.0009673528897,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r100_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.1250390783830334,
+    "motional_secular_ratio": 72.00097065926377,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r300_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.12503914428266585,
+    "motional_secular_ratio": 72.00098010604684,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r1000_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.12503937493137934,
+    "motional_secular_ratio": 72.00101316978754,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p1000_r3000_linear90_imp0.00488619",
+    "pump_nw": 1000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.2462266205050956,
+    "motional_secular_ratio": 72.00110763761813,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 3.0,
+    "max_excited_fraction": 0.37511713728814605,
+    "motional_secular_ratio": 216.0028979493185,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r10_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 10.0,
+    "max_excited_fraction": 0.37511713959463316,
+    "motional_secular_ratio": 216.00289827995593,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r30_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 30.0,
+    "max_excited_fraction": 0.3751171461845964,
+    "motional_secular_ratio": 216.0028992246342,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r100_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 100.0,
+    "max_excited_fraction": 0.37511716924946775,
+    "motional_secular_ratio": 216.0029025310083,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r300_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 300.0,
+    "max_excited_fraction": 0.37511723514910017,
+    "motional_secular_ratio": 216.00291197779137,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r1000_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 1000.0,
+    "max_excited_fraction": 0.3751174657978137,
+    "motional_secular_ratio": 216.00294504153206,
+    "reason": "outside weak-excitation or motional-secular domain"
+  },
+  {
+    "tag": "p3000_r3000_linear90_imp0.00488619",
+    "pump_nw": 3000.0,
+    "repump_nw": 3000.0,
+    "max_excited_fraction": 0.375118124794138,
+    "motional_secular_ratio": 216.00303950936265,
+    "reason": "outside weak-excitation or motional-secular domain"
+  }
+]

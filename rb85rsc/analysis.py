@@ -7,7 +7,7 @@ from scipy.signal import savgol_filter
 from .atomic import DOWN, GROUND_STATES, K_B, UP, H, ground_label
 from .dynamics import RunResult
 from .model import BEAMS, COUNTERS, Model, Validity
-from .motion import temperature_from_nbar
+from .motion import boltzmann_pn, temperature_from_energy, temperature_from_nbar
 
 NOT_REACHED = "not reached"
 
@@ -53,20 +53,44 @@ def analyze(model: Model, res: RunResult) -> dict:
         p_n0_given_up = np.where(p_up > 0, p_target / np.where(p_up > 0, p_up, 1), np.nan)
     nbar = pn @ n
     nbar0 = nbar[0]
-    frac_red = 1.0 - nbar / nbar0 if nbar0 > 0 else np.full_like(nbar, np.nan)
+    # Energy above the motional ground state, conditional on remaining in basis.
+    # n is a level index in a lattice; its spacings are not h*nu_t.
+    levels_hz = model.motion.energies_hz - model.motion.energies_hz[0]
+    energy_hz = pn @ levels_hz
+    energy_j = H * energy_hz
+    frac_red = 1.0 - energy_hz / energy_hz[0] if energy_hz[0] > 0 else np.full_like(nbar, np.nan)
     dndt = _derivative(t, nbar, cfg.analysis.derivative_window)
     cooling_rate = -dndt  # quanta/s removed (positive = cooling)
-    energy_rate = cooling_rate * H * model.nu_t  # J/s
-    temps = np.array([temperature_from_nbar(x, model.nu_t) for x in nbar])
-    # thermality of final p(n): total-variation distance from thermal with same nbar
-    nb = max(nbar[-1], 0)
-    r = nb / (1 + nb) if nb > 0 else 0.0
-    th = (1 - r) * r**n if nb > 0 else (n == 0).astype(float)
-    tvd = 0.5 * np.abs(pn[-1] / max(pn[-1].sum(), 1e-300) - th / th.sum()).sum()
+    energy_rate = -H * _derivative(t, energy_hz, cfg.analysis.derivative_window)
+    if model.motion.kind == "lattice":
+        temps = np.array([temperature_from_energy(x, levels_hz) for x in energy_hz])
+    else:
+        temps = np.array([temperature_from_nbar(x, model.nu_t) for x in nbar])
+    # Compare to the canonical distribution of the actual modeled spectrum.
+    th = boltzmann_pn(levels_hz, temps[-1]) if not np.isnan(temps[-1]) else np.full(N, np.nan)
+    tvd = 0.5 * np.abs(pn[-1] / max(pn[-1].sum(), 1e-300) - th).sum()
+    # Selection alone changes conditional energy when preferentially hot atoms
+    # leave. This covariance is its exact instantaneous contribution.
+    selection_power = np.zeros_like(t)
+    # Cache only the small loss vectors, not one dense transfer matrix per pulse.
+    loss_rates = {}
+    ends = [seg.t1 for seg in model.schedule]
+    for seg in model.schedule:
+        if seg.key not in loss_rates:
+            op = model.ops(seg)
+            hazard = op.ovr.reshape(12, N).copy()
+            hazard[:, -1] += op.heating * N
+            loss_rates[seg.key] = hazard
+    for it, tt in enumerate(t):
+        oi = min(np.searchsorted(ends, tt, side="right"), len(model.schedule) - 1)
+        loss_rate = loss_rates[model.schedule[oi].key]
+        flux = (loss_rate * P_abs[it]).sum(axis=0)
+        selection_power[it] = H * (flux @ levels_hz - energy_hz[it] * flux.sum()) / safe[it]
     counts = res.counts
     total_photons = counts[-1].sum()
     removed = nbar0 - nbar[-1]
-    per_photon = removed / total_photons if total_photons > 0 else np.nan
+    appreciable_loss = res.overflow[-1] > cfg.numerics.boundary_tolerance
+    per_photon = removed / total_photons if total_photons > 0 and not appreciable_loss else np.nan
     # target-state (|3,3>) scattering rate for the final segment configuration
     last = model.schedule[-1]
     o = model.ops(last)
@@ -89,9 +113,12 @@ def analyze(model: Model, res: RunResult) -> dict:
         "P_n0_absolute": p_n0 * trace,
         "P_target_absolute": p_target * trace,
         "nbar": nbar,
+        "mean_excitation_energy_J": energy_j,
+        "mean_excitation_energy_hz": energy_hz,
         "fractional_energy_reduction": frac_red,
         "cooling_rate_quanta_per_s": cooling_rate,
         "cooling_power_W": energy_rate,
+        "selection_cooling_power_W": selection_power,
         "T_equiv_K": temps,
         "photons_spin_pump": counts[:, 0],
         "photons_repump": counts[:, 1],
@@ -116,9 +143,16 @@ def analyze(model: Model, res: RunResult) -> dict:
     if model.lattice_full:  # basis = every bound level: the top levels and the overflow are physical
         v.add("motional boundary", "ok", f"max population in the top two bound levels: {bmax:.3g} (physical; above them the atom is unbound)")
         v.add("lattice loss", "ok" if ov < 1e-2 else "warning", f"probability promoted above the lattice depth (atom leaves its site) = {ov:.3g}")
+        if appreciable_loss:
+            v.add("cooling observables", "warning", "energy, nbar and their derivatives describe surviving atoms and include loss selection; "
+                  "selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable")
     else:
         v.add("motional boundary", "ok" if bmax < num.boundary_tolerance else "invalid", f"max population in n >= n_max-1: {bmax:.3g}")
-        v.add("numerical overflow", "ok" if ov < num.boundary_tolerance else "invalid", f"probability pushed above n_max (numerical, not atom loss) = {ov:.3g}")
+        if model.motion.kind == "lattice":
+            v.add("unresolved overflow", "ok" if ov < num.boundary_tolerance else "invalid",
+                  f"probability outside the capped lattice basis = {ov:.3g}; omitted bound states and physical escape are mixed, so survival is not resolved")
+        else:
+            v.add("numerical overflow", "ok" if ov < num.boundary_tolerance else "invalid", f"probability pushed above n_max (numerical, not atom loss) = {ov:.3g}")
     # high-energy validity: harmonic, infinitely deep trap (the lattice entry comes from the model)
     if model.motion.kind == "lattice":
         pass
@@ -149,7 +183,10 @@ def analyze(model: Model, res: RunResult) -> dict:
     for note in model.initial_notes:
         v.add("initial state", "ok", note)
 
-    therm_note = "thermal-equivalent (p(n) near thermal)" if tvd < 0.05 else f"PROXY ONLY: final p(n) non-thermal (TVD from thermal {tvd:.2f})"
+    if np.isnan(temps[-1]):
+        therm_note = "no positive-temperature canonical distribution has this mean energy in the bound spectrum"
+    else:
+        therm_note = "thermal-equivalent (p(n) near thermal)" if tvd < 0.05 else f"PROXY ONLY: final p(n) non-thermal (TVD from thermal {tvd:.2f})"
     final = {
         "P_up": float(p_up[-1]),
         "P_n0": float(p_n0[-1]),
@@ -162,10 +199,14 @@ def analyze(model: Model, res: RunResult) -> dict:
         "P_target_absolute": float(p_target[-1] * trace[-1]),
         "nbar": float(nbar[-1]),
         "nbar_initial": float(nbar0),
-        "fractional_energy_reduction": float(frac_red[-1]) if nbar0 > 0 else None,
-        "T_equiv_K": float(temps[-1]),
+        "mean_excitation_energy_J": float(energy_j[-1]),
+        "mean_excitation_energy_initial_J": float(energy_j[0]),
+        "mean_excitation_energy_hz": float(energy_hz[-1]),
+        "fractional_energy_reduction": float(frac_red[-1]) if energy_hz[0] > 0 else None,
+        "T_equiv_K": float(temps[-1]) if not np.isnan(temps[-1]) else None,
         "T_equiv_note": therm_note,
-        "final_pn_TVD_from_thermal": float(tvd),
+        "final_pn_TVD_from_thermal": float(tvd) if np.isfinite(tvd) else None,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
         "photons": {c: float(counts[-1, i]) for i, c in enumerate(COUNTERS)},
         "photons_total": float(total_photons),
         "net_quanta_removed": float(removed),
@@ -185,6 +226,7 @@ def analyze(model: Model, res: RunResult) -> dict:
         "final_overflow": ov,
         "lattice_loss": ov if model.lattice_full else None,
         "initial_tail_discarded": float(model.initial_tail),
+        "initial_unbound_fraction": None if model.motion.kind == "lattice" else 0.0,
         "solver": res.solver,
         "wall_time_s": res.wall_time_s,
         "rhs_evaluations": res.n_rhs,

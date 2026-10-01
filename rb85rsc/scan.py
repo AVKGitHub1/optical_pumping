@@ -33,8 +33,6 @@ from pathlib import Path
 import numpy as np
 
 from .config import SimConfig, set_param
-from .model import Model
-from .dynamics import estimate_cost
 
 METRIC_KEYS = ("P_up", "P_n0", "P_target", "nbar", "photons_total", "target_state_scattering_rate_per_s",
                "P_trapped", "P_target_absolute")
@@ -92,6 +90,9 @@ def _run_point(cfg_dict: dict):
     from .runner import run
 
     cfg = SimConfig.from_dict(cfg_dict)
+    rejected = _reject_weak_excitation(cfg)
+    if rejected is not None:
+        return rejected
     a = run(cfg)
     f = a["final"]
     return {
@@ -103,6 +104,27 @@ def _run_point(cfg_dict: dict):
     }
 
 
+def _reject_weak_excitation(cfg):
+    """Skip invalid high-power ensemble points before expensive propagation."""
+    if not cfg.ensemble.enabled:
+        return None
+    from .atomic import load_atomic_data
+    from .optical import beam_spec, beam_rates
+    from .protocols import build_schedule
+    atom = load_atomic_data()
+    rates = {name: beam_rates(atom, beam_spec(name, getattr(cfg, name), atom, cfg.magnetic.direction),
+                              cfg.magnetic.magnitude_gauss * 1e-4, cfg.optical.excited_state_shift_hz,
+                              cfg.optical.excited_manifold, cfg.optical.path_model)
+             for name in ("spin_pump", "repump")}
+    peak = max(float((s.pump * rates["spin_pump"].p_exc + s.repump * rates["repump"].p_exc).max())
+               for s in build_schedule(cfg.timing))
+    if peak < cfg.optical.weak_excitation_invalid:
+        return None
+    return {**{key: np.nan for key in METRIC_KEYS}, "status": "invalid",
+            "invalid_reasons": [f"central weak-excitation fraction {peak:.3g} exceeds {cfg.optical.weak_excitation_invalid}; not propagated"],
+            "solver": "not run: weak-excitation limit", "wall_time_s": 0.}
+
+
 def run_scan(spec: dict, base: SimConfig, stop: threading.Event | None = None, progress=None, log=print, workers=None) -> dict:
     stop = stop or threading.Event()
     axes = spec["axes"]
@@ -110,9 +132,19 @@ def run_scan(spec: dict, base: SimConfig, stop: threading.Event | None = None, p
     series = spec.get("series") or [{"label": "", "overrides": {}}]
     shape = (len(series), *[len(v) for v in vals])
     pts = list(point_configs(spec, base))
-    est = estimate_cost(Model(pts[0][1]))
-    log(f"scan: {len(pts)} points; coherent estimate ~{est['est_coherent_runtime_s']:.1f} s/point "
-        f"(rate backend is much faster where valid); total <= ~{len(pts) * est['est_coherent_runtime_s'] / 60:.1f} min serial")
+    objective = spec.get("objective", "P_target_absolute" if base.ensemble.enabled else "P_target")
+    if objective not in METRIC_KEYS:
+        raise ValueError(f"unknown scan objective {objective!r}")
+    if not pts:
+        raise ValueError("scan must contain at least one point")
+    from .runner import estimate
+    est = estimate(pts[0][1])
+    if base.ensemble.enabled:
+        log(f"scan: {len(pts)} points; {est['ensemble_samples']} spatial samples/point; "
+            "runtime depends on local bound-state counts")
+    else:
+        log(f"scan: {len(pts)} points; coherent estimate ~{est['est_coherent_runtime_s']:.1f} s/point "
+            f"(rate backend is much faster where valid); total <= ~{len(pts) * est['est_coherent_runtime_s'] / 60:.1f} min serial")
     metrics = {k: np.full(shape, np.nan) for k in METRIC_KEYS}
     valid = np.zeros(shape, bool)
     status = np.full(shape, "not run", dtype=object)
@@ -147,6 +179,10 @@ def run_scan(spec: dict, base: SimConfig, stop: threading.Event | None = None, p
         for idx, c in pts:
             if stop.is_set():
                 break
+            rejected = _reject_weak_excitation(c)
+            if rejected is not None:
+                store(idx, rejected)
+                continue
             a = run(c, stop)
             f = a["final"]
             store(idx, {**{k: f[k] for k in METRIC_KEYS}, "status": a["validity"].status,
@@ -154,10 +190,13 @@ def run_scan(spec: dict, base: SimConfig, stop: threading.Event | None = None, p
                         "solver": f["solver"], "wall_time_s": f["wall_time_s"]})
             log(f"  {idx}: P_target={f['P_target']:.4f} nbar={f['nbar']:.4g} [{a['validity'].status}, {f['solver']}, {f['wall_time_s']:.1f}s]")
     best = None
-    if valid.any():
-        m = np.where(valid, metrics["P_target"], -np.inf)
+    rankable = valid & np.isfinite(metrics[objective])
+    if rankable.any():
+        m = np.where(rankable, metrics[objective], -np.inf)
         bi = np.unravel_index(np.argmax(m), shape)
-        best = {"index": [int(i) for i in bi], "P_target": float(metrics["P_target"][bi])}
+        best = {"index": [int(i) for i in bi], "P_target": float(metrics["P_target"][bi]),
+                "objective": objective, "value": float(metrics[objective][bi]),
+                "P_target_absolute": float(metrics["P_target_absolute"][bi])}
     return {
         "title": spec.get("title", "scan"),
         "axes": [
@@ -172,6 +211,7 @@ def run_scan(spec: dict, base: SimConfig, stop: threading.Event | None = None, p
         "status": status.tolist(),
         "invalid_reasons": reasons,
         "best_valid_P_target": best,
+        "best_valid_objective": best,
         "base_config": base.to_dict(),
         "stopped": stop.is_set(),
     }

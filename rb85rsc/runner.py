@@ -17,21 +17,23 @@ from .model import Model
 from .protocols import COMPARISON_SET
 
 ASSUMPTIONS = [
-    "Single atom, one-dimensional harmonic motion along trap.axis; P_n0 refers to the modeled axis only (not a 3D ground-state fraction).",
-    "Same harmonic potential for all ground spin states; no collisions, photon reabsorption, tunneling, finite-depth loss, or anharmonicity.",
+    "Single atom, one-dimensional motion along trap.axis; P_n0 refers to the modeled axis only (not a 3D ground-state fraction).",
+    "Same configured potential for all ground spin states; no collisions or photon reabsorption. Harmonic motion is infinitely deep; lattice motion uses anharmonic bound levels and recoil escape.",
     "D2 excited manifold (F'=1..4, all sublevels) adiabatically eliminated in the weak-excitation limit; excited fraction is checked.",
     "Spin-pump and repump beams (both on D2 near 780 nm; an explicit assumption) are mutually incoherent: two-frequency CPT/optical coherences excluded.",
     "Rates through different excited sublevels are summed independently unless optical.path_model = kramers_heisenberg.",
     "Pump-induced ground Zeeman coherences neglected (secular in the Zeeman splitting, checked).",
-    "Linear (weak-field) Zeeman shifts for ground and excited states; errors vs Breit-Rabi are reported.",
+    "Ground energies use analytic Breit-Rabi with cached ARC constants. Excited energies and all dipoles use the weak-field basis; excited-state mixing is diagnosed.",
     "Calibrated Raman mode: only the |3,3> <-> |2,2> pair is coupled; Raman polarization imperfections enter only through the calibrated decay, shift, and scattering inputs.",
-    "Raman coupling uses exact displacement matrix elements exp(i eta_R (a+a^+)); couplings with |n-m| > raman.max_sideband_order are dropped (convergence parameter).",
+    "The up->down Raman operator imparts hbar*(k_low-k_high); its adjoint occupies the |up><down| Hamiltonian block. Exact motional overlaps are used; |n-m| > raman.max_sideband_order is dropped.",
     "raman.tone_layout = both_tones_both_beams: the four tone pathways add coherently (co-propagating ones carrier-only); the result depends on raman.lattice_phase_deg.",
     "Every optical scattering event applies absorption + emission recoil via a single displacement (excited lifetime << trap period); emission directions integrated over the dipole pattern.",
-    "Recoil jumps are secular (motional coherences between different n from spontaneous emission discarded; requires scattering rates << omega_t, checked).",
-    "Probability pushed above n_max is tallied as numerical overflow (not physical loss) and flagged; it is never reflected into the basis.",
+    "Recoil uses individual |s,n> population jumps. This omits coherence transfer even between degenerate motional transitions and elastic-spin interference, an additional approximation beyond secular averaging.",
+    "Overflow is numerical in a harmonic basis, physical escape when all isolated-site bound levels are kept, and a mixture when the lattice basis is capped; it is never reflected into the basis.",
     "trap.potential = lattice: motion is one isolated site of V0 sin^2(k_L z) (V0 = trap.depth_uk, k_L from frequency_hz) with exact bound levels; "
     "promotion above V0 is counted as loss (overflow). Tunnelling, coherent Raman coupling into unbound states, and anharmonic heating matrix elements are neglected.",
+    "Lattice thermal_temperature initializes a canonical distribution conditional on initially bound atoms; the initially unbound fraction is unspecified. Initial tail means discarded bound-state weight in this mode.",
+    "Energy is mean excitation above the motional ground state per survivor, using actual level energies. Its change includes loss selection; selection_cooling_power_W reports that contribution. Lattice temperature is an energy-matched canonical proxy on the bound spectrum.",
 ]
 
 
@@ -51,7 +53,19 @@ def constants() -> dict:
     return {k: getattr(atomic, k) for k in ("H", "HBAR", "C_LIGHT", "EPS0", "E_CHARGE", "A0", "MU_B", "K_B")}
 
 
+def estimate(cfg: SimConfig) -> dict:
+    if cfg.ensemble.enabled:
+        return {"backend": "coherent_3d_split_ensemble", "ensemble_samples": cfg.ensemble.samples,
+                "time_step_us": cfg.ensemble.time_step_us,
+                "note": "Runtime depends on local bound-state counts; legacy 1D ODE estimates do not apply.",
+                "est_coherent_runtime_s": float("nan")}
+    return estimate_cost(Model(cfg))
+
+
 def run(cfg: SimConfig, stop=None, progress=None, estimate_cb=None):
+    if cfg.ensemble.enabled:
+        from .ensemble import run_ensemble
+        return run_ensemble(cfg, stop, progress, estimate_cb)
     model = Model(cfg)
     if estimate_cb is not None:
         estimate_cb(estimate_cost(model))
@@ -105,7 +119,8 @@ def metadata(a: dict) -> dict:
         },
         "schedule": [s.__dict__ for s in a["segments"]],
         "cooling_rate_method": a["cooling_rate_method"],
-        "assumptions": ASSUMPTIONS,
+        "assumptions": a.get("ensemble_details", {}).get("assumptions", ASSUMPTIONS),
+        "ensemble_details": a.get("ensemble_details"),
         "atomic_data_metadata": m.atom.metadata,
         "constants_SI": constants(),
         "versions": versions(),
@@ -134,17 +149,33 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
         P=res.P,
         overflow=res.overflow,
         counts=res.counts,
+        photon_counter_labels=np.array(["spin_pump", "repump", "raman_scatter"] + (["lattice_scatter"] if res.counts.shape[1] == 4 else [])),
         spin_labels=np.array([atomic.ground_label(i) for i in range(12)]),
         rho_raman_block_final=res.rho_final if res.rho_final is not None else np.zeros(0),
-        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n, "
+        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and axial vibrational level n (transverse states marginalized in ensemble mode), "
                              "as fractions of all atoms (sum = 1 - overflow); divide by P[t].sum() for per-trapped-atom values"),
     )
     (outdir / f"{stem}_metadata.json").write_text(json.dumps(metadata(a), indent=2, default=_json_default))
     (outdir / f"{stem}_config.json").write_text(a["model"].cfg.to_json())
+    if "ensemble_nodes" in a:
+        arrays = {}
+        for i, (local, result) in enumerate(a["ensemble_nodes"]):
+            arrays[f"node_{i}_position_um"] = local.position
+            arrays[f"node_{i}_phase_rad"] = np.asarray(local.phase)
+            arrays[f"node_{i}_P_final_spin_nx_ny_nz"] = result["P_final_3d"]
+            for axis, site in enumerate(local.sites):
+                arrays[f"node_{i}_{'xyz'[axis]}_energies_hz"] = site.energies_hz
+                arrays[f"node_{i}_{'xyz'[axis]}_pn_absolute_t"] = np.asarray(result["pn_axes"][axis])
+        np.savez_compressed(outdir / f"{stem}_ensemble.npz", **arrays)
     if figures:
         fig = dashboard(a, title=f"{a['model'].cfg.name} - protocol {a['model'].cfg.timing.protocol}")
         fig.savefig(outdir / f"{stem}_dashboard.png", dpi=130)
         fig.savefig(outdir / f"{stem}_dashboard.pdf")
+        if "ensemble_details" in a:
+            from .plotting import carrier_calibration_figure
+            fig = carrier_calibration_figure(a["ensemble_details"]["calibration"])
+            fig.savefig(outdir / f"{stem}_carrier_calibration.png", dpi=140)
+            fig.savefig(outdir / f"{stem}_carrier_calibration.pdf")
     return outdir
 
 

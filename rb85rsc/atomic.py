@@ -115,6 +115,31 @@ class AtomicData:
         return np.array([self.g_excited[f] * m for f, m in EXCITED_STATES]) * MU_B * b_tesla / H
 
     def ground_energy_hz(self, b_tesla: float) -> np.ndarray:
+        """Ground energies from Breit-Rabi, with labels adiabatic from B=0.
+
+        Infer g_I and g_J from the cached weak-field g_F values, so no ARC
+        database access is needed at runtime. Dipoles still use the weak-field
+        basis; the magnetic validity check bounds that approximation.
+        """
+        e0 = np.array([self.ground_hfs_hz[f] for f, _ in GROUND_STATES])
+        gi = 0.5 * (self.g_ground[3] + self.g_ground[2])
+        gj_minus_gi = (self.nuclear_spin + 0.5) * (self.g_ground[3] - self.g_ground[2])
+        ze = MU_B * b_tesla / H
+        split = self.hfs_ground_splitting_hz
+        x = gj_minus_gi * ze / split
+        shifts = []
+        for f, m in GROUND_STATES:
+            if abs(m) == self.nuclear_spin + 0.5:
+                shifts.append(self.g_ground[f] * m * ze)
+                continue
+            y = 4 * m * x / (2 * self.nuclear_spin + 1) + x * x
+            # Rationalized sqrt(1+y)-1 is accurate even at very small B.
+            sign = 1 if f == 3 else -1
+            shifts.append(gi * m * ze + sign * split / 2 * y / (np.sqrt(1 + y) + 1))
+        return e0 + np.asarray(shifts)
+
+    def ground_energy_linear_hz(self, b_tesla: float) -> np.ndarray:
+        """Linear approximation, retained for the magnetic validity diagnostic."""
         e0 = np.array([self.ground_hfs_hz[f] for f, _ in GROUND_STATES])
         return e0 + self.ground_zeeman_hz(b_tesla)
 
@@ -246,24 +271,17 @@ def load_atomic_data(cache_path: str | None = None, regenerate: bool = False) ->
 # Magnetic-field validity
 # ---------------------------------------------------------------------------
 def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float) -> dict:
-    """Compare the linear Zeeman model against ARC Breit-Rabi and excited splittings.
+    """Report the included Breit-Rabi correction and weak-field dipole validity.
 
-    Returns quadratic-Zeeman error on the up-down Raman frequency and the ratio of
-    the excited-state Zeeman energy to the smallest excited hyperfine interval.
+    The legacy quadratic-error key is the correction relative to linear ground
+    energies, now included in the dynamics. Excited energies remain linear.
     """
     out = {"B_gauss": b_tesla * 1e4}
-    lin = ad.ground_energy_hz(b_tesla)
-    err_ud = 0.0
-    if b_tesla > 0:
-        try:
-            en, f_arr, m_arr = _breit_rabi_ground(float(b_tesla))
-            exact = {(int(round(f)), int(round(m))): en[0, i] for i, (f, m) in enumerate(zip(f_arr, m_arr))}
-            nu_exact = exact[(3, 3)] - exact[(2, 2)]
-            nu_lin = lin[UP] - lin[DOWN]
-            err_ud = float(nu_exact - nu_lin)
-            out["breit_rabi_source"] = "ARC breitRabi"
-        except Exception as exc:  # pragma: no cover
-            out["breit_rabi_source"] = f"unavailable ({exc})"
+    lin = ad.ground_energy_linear_hz(b_tesla)
+    exact = ad.ground_energy_hz(b_tesla)
+    err_ud = float((exact[UP] - exact[DOWN]) - (lin[UP] - lin[DOWN]))
+    out["breit_rabi_source"] = "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors"
+    out["ground_energy_model"] = "Breit-Rabi"
     out["raman_quadratic_zeeman_error_hz"] = err_ud
     spacing = min(
         abs(ad.excited_hfs_hz[f + 1] - ad.excited_hfs_hz[f]) for f in (1, 2, 3)
@@ -283,12 +301,7 @@ def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float) -> dict:
     elif out["excited_quadratic_over_gamma"] > 0.05:
         status = "warning"
         notes.append("neglected quadratic 5P3/2 Zeeman shift >5% of Gamma")
-    if abs(err_ud) > 0.1 * trap_hz:
-        status = "invalid"
-        notes.append("quadratic Zeeman error on Raman frequency >10% of trap frequency")
-    elif abs(err_ud) > 0.01 * trap_hz and status == "ok":
-        status = "warning"
-        notes.append("quadratic Zeeman error on Raman frequency >1% of trap frequency")
+    # err_ud is the correction now INCLUDED, not an error in the dynamics.
     out["status"] = status
     out["notes"] = notes
     return out

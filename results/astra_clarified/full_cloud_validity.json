@@ -1,0 +1,22 @@
+[
+  {
+    "repump_nw": 3.0,
+    "max_motional_secular_ratio_64_nodes": 0.21619419171639329,
+    "admissible": true
+  },
+  {
+    "repump_nw": 6.0,
+    "max_motional_secular_ratio_64_nodes": 0.3843484994280033,
+    "admissible": true
+  },
+  {
+    "repump_nw": 7.5,
+    "max_motional_secular_ratio_64_nodes": 0.48043560753500647,
+    "admissible": true
+  },
+  {
+    "repump_nw": 10.0,
+    "max_motional_secular_ratio_64_nodes": 0.640580787713345,
+    "admissible": false
+  }
+]

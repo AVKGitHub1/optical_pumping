@@ -1,0 +1,228 @@
+{
+  "name": "clarified_3d_experiment",
+  "trap": {
+    "wavelength_nm": 785.0,
+    "frequency_hz": 69043.70137324317,
+    "potential": "lattice",
+    "n_max": 16,
+    "axis": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "heating_rate_quanta_per_s": 0.0,
+    "depth_uk": 15.0
+  },
+  "initial": {
+    "spin_preset": "uniform_F3",
+    "f3_fraction": 1.0,
+    "custom_spin_populations": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.14285714285714285,
+      0.14285714285714285,
+      0.14285714285714285,
+      0.14285714285714285,
+      0.14285714285714285,
+      0.14285714285714285,
+      0.14285714285714285
+    ],
+    "motion_mode": "thermal_temperature",
+    "nbar": 3.0,
+    "temperature_k": 1e-05,
+    "fock_n": 1,
+    "custom_pn": []
+  },
+  "magnetic": {
+    "magnitude_gauss": 1.0,
+    "direction": [
+      1.0,
+      0.0,
+      0.0
+    ]
+  },
+  "raman": {
+    "calibration": "measured_carrier",
+    "beam_helicities": [
+      1,
+      -1
+    ],
+    "waist_um": 200.0,
+    "flop_contrast": 0.9,
+    "flop_decay_periods": 3.5,
+    "enabled": true,
+    "carrier_rabi_hz": 5000.0,
+    "frequency_mode": "sideband_offset",
+    "red_sideband_offset_hz": 0.0,
+    "beat_frequency_hz": 3035802400.0,
+    "wavelength_nm": 783.0,
+    "beam_low_direction": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "beam_high_direction": [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    "tone_layout": "both_tones_both_beams",
+    "tone_powers_low": [
+      1.0,
+      1.0
+    ],
+    "tone_powers_high": [
+      1.0,
+      1.0
+    ],
+    "lattice_phase_deg": 0.0,
+    "beam_beat_phase_deg": 0.0,
+    "extra_coherence_decay_rate_s": 0.0,
+    "differential_light_shift_hz": 0.0,
+    "scattering_rate_s": 0.0,
+    "scattering_model": "spin_preserving",
+    "max_sideband_order": 3
+  },
+  "spin_pump": {
+    "enabled": true,
+    "intensity_mode": "power_waist",
+    "peak_intensity_w_m2": 0.1,
+    "power_mw": 3e-06,
+    "waist_um": 200.0,
+    "detuning_mhz": 0.0,
+    "direction": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "polarization": {
+      "mode": "spherical",
+      "pi_fraction": 0.0,
+      "sigma_minus_fraction": 0.0,
+      "beam_angle_deg": 0.0,
+      "beam_azimuth_deg": 0.0,
+      "ellipticity_deg": 45.0,
+      "orientation_deg": 0.0,
+      "linked_pi_share": 0.0
+    },
+    "light_shift_override_up_hz": null,
+    "light_shift_override_down_hz": null
+  },
+  "repump": {
+    "enabled": true,
+    "intensity_mode": "power_waist",
+    "peak_intensity_w_m2": 0.1,
+    "power_mw": 7.499999999999999e-06,
+    "waist_um": 200.0,
+    "detuning_mhz": 0.0,
+    "direction": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "polarization": {
+      "mode": "geometry",
+      "pi_fraction": 0.0,
+      "sigma_minus_fraction": 0.0,
+      "beam_angle_deg": 90.0,
+      "beam_azimuth_deg": 90.0,
+      "ellipticity_deg": 0.0,
+      "orientation_deg": 90.0,
+      "linked_pi_share": 0.5
+    },
+    "light_shift_override_up_hz": null,
+    "light_shift_override_down_hz": null
+  },
+  "optical": {
+    "excited_manifold": "all_D2",
+    "path_model": "kramers_heisenberg",
+    "emission_pattern": "dipole",
+    "excited_state_shift_hz": 0.0,
+    "weak_excitation_warning": 0.02,
+    "weak_excitation_invalid": 0.1
+  },
+  "timing": {
+    "protocol": "custom",
+    "total_duration_ms": 5.0,
+    "prep_duration_ms": 1.0,
+    "prep_pump_scale": 1.0,
+    "prep_repump_scale": 1.0,
+    "cooling_pump_scale": 1.0,
+    "cooling_repump_scale": 1.0,
+    "cooling_raman_amplitude": 1.0,
+    "raman_pulse_ms": 0.3,
+    "reset_pulse_ms": 0.1,
+    "reset_pump_scale": 1.0,
+    "reset_repump_scale": 1.0,
+    "repetitions": 0,
+    "pulsed_first": "reset",
+    "custom_segments": [
+      {
+        "duration_ms": 4,
+        "raman": 1.0,
+        "pump": 1.0,
+        "repump": 1.0,
+        "label": "continuous cooling"
+      },
+      {
+        "duration_ms": 1,
+        "raman": 0.0,
+        "pump": 1.0,
+        "repump": 1.0,
+        "label": "final pumping"
+      }
+    ],
+    "n_samples": 201
+  },
+  "numerics": {
+    "solver": "coherent",
+    "method": "DOP853",
+    "rtol": 1e-07,
+    "atol": 1e-10,
+    "recoil_quadrature_points": 24,
+    "boundary_tolerance": 0.0001,
+    "conservation_tolerance": 1e-06,
+    "positivity_tolerance": 1e-08,
+    "rate_validity_epsilon": 0.2,
+    "seed": 0
+  },
+  "analysis": {
+    "spin_threshold": 0.9,
+    "joint_threshold": 0.5,
+    "derivative_window": 11
+  },
+  "ensemble": {
+    "enabled": true,
+    "samples": 64,
+    "workers": 4,
+    "cloud_radius_um": 150.0,
+    "lattice_waist_um": 200.0,
+    "transverse_wavelength_nm": 1188.0,
+    "transverse_depth_uk": 15.0,
+    "transverse_temperature_k": 1e-05,
+    "transverse_frequency_offset_hz": 160000000.0,
+    "lattice_linear_polarizations": [
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "phase_offset_deg": 0.0,
+    "time_step_us": 2.0,
+    "calibration_samples": 128
+  }
+}

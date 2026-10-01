@@ -1,0 +1,77 @@
+{
+  "note": "Single-photon check of the Cartesian-marginal approximation at cloud center.\n\nThis diagnoses one recoil event on the initial thermal state. It does not bound\nthe cumulative error of a cooling sequence or the resolved-dipole approximation.\n",
+  "cases": [
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "x",
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9092774804758224,
+      "marginal_product_survival": 0.9093757817623899,
+      "difference": 9.83012865675148e-05
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "x",
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.8982340629838035,
+      "marginal_product_survival": 0.8984432982347188,
+      "difference": 0.00020923525091531836
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "z",
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.900137414266087,
+      "marginal_product_survival": 0.9002467280035287,
+      "difference": 0.00010931373744171857
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "z",
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9059914775457538,
+      "marginal_product_survival": 0.9060331452203623,
+      "difference": 4.166767460844767e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "x",
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.909277480475823,
+      "marginal_product_survival": 0.9093757817623895,
+      "difference": 9.83012865665156e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "x",
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.8982340629838023,
+      "marginal_product_survival": 0.8984432982347182,
+      "difference": 0.0002092352509159845
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "z",
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9001374142660876,
+      "marginal_product_survival": 0.9002467280035283,
+      "difference": 0.00010931373744071937
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "z",
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9059914775457524,
+      "marginal_product_survival": 0.9060331452203619,
+      "difference": 4.166767460955789e-05
+    }
+  ]
+}

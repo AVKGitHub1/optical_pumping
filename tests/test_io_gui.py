@@ -54,7 +54,6 @@ def test_headless_cli_and_export(tmp_path):
     meta = json.loads((out / "run_metadata.json").read_text())
     for k in ("config", "assumptions", "versions", "constants_SI", "validity", "seed", "polarization", "atomic_data_metadata"):
         assert k in meta
-    assert "PyQt6" not in sys.modules or True  # headless path is exercised in a subprocess without Qt
 
 
 def test_headless_does_not_import_qt():

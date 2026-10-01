@@ -1,6 +1,6 @@
 # Rb-85 optical pumping + Raman sideband cooling simulator
 
-A tunable, single-atom, **one-dimensional** simulator for this question: how efficiently can an initially unpolarized
+A tunable, single-atom simulator with a legacy **one-dimensional** backend and an experimental **3D recoil / spatial ensemble** backend: how efficiently can an initially unpolarized
 Rb-85 sample be pumped into `|up> = |F=3, mF=3>` and cooled to the vibrational ground state when Raman driving,
 repumping, and spin pumping run simultaneously? It also compares that with staged and pulsed operation.
 
@@ -8,15 +8,50 @@ repumping, and spin pumping run simultaneously? It also compares that with stage
 * The earlier population-rate script is still available as [rate-calcs.py](rate-calcs.py), with its own documentation in [README_rate_calcs.md](README_rate_calcs.md) and [physics.md](physics.md).
 
 > **Scope.** `P_n0` and `P_target` refer to the *modeled trap axis only*. They are not three-dimensional ground-state
-> fractions. All ground spin states share one harmonic potential. Collisions, reabsorption, tunneling, finite-depth
-> loss, and anharmonicity are outside the model. When the trap depth is not supplied, high-energy results carry a
+> fractions. All ground spin states share one configured potential. Lattice mode includes anharmonic bound levels
+> and recoil escape from an isolated site; collisions, reabsorption and tunneling are outside the model. For harmonic motion without a supplied depth, high-energy results carry a
 > "harmonic approximation not assessed" diagnostic.
+
+### Clarified experiment
+
+`examples/experiment.json` uses the experimental ensemble backend. Run commands in the `scripts` conda environment:
+
+```powershell
+conda run --no-capture-output -n scripts python rb85_rsc_sim.py --config examples/experiment.json --headless --output results/experiment
+conda run --no-capture-output -n scripts python scripts/optimize_experiment.py --stage screen
+conda run --no-capture-output -n scripts python scripts/optimize_experiment.py --stage refine
+conda run --no-capture-output -n scripts python scripts/optimize_experiment.py --stage detuning
+conda run --no-capture-output -n scripts python scripts/optimize_experiment.py --stage spatial_refine
+conda run --no-capture-output -n scripts python scripts/optimize_experiment.py --stage polarizations
+conda run --no-capture-output -n scripts python scripts/optimize_experiment.py --stage final --use-selected
+conda run --no-capture-output -n scripts python scripts/check_experiment_controls.py
+conda run --no-capture-output -n scripts python scripts/finalize_experiment.py
+```
+
+Use `--stage final` without `--use-selected` to rerun the current example config. The explicit flag promotes the saved optimization winner. Scan resumes reuse only matching configs; detuning selection requires controls with matching physics and numerical settings. Current results and limitations are summarized in [astra-physics-corrections.md](astra-physics-corrections.md); intermediate calculations are preserved in the [audit history](docs/astra-physics-history.md).
+
+This mode includes 785 nm z and 1188 nm x/y lattices, a Gaussian cloud and beam envelopes, static Raman registration averaging, and joint `P(spin,nx,ny,nz)` populations. It retains coherent axial Raman dynamics at each transverse occupation. Exiting any local bound manifold counts as **well loss with no recapture**. All yields refer to initially loaded atoms; no loading-efficiency prediction is made.
+
+When `trap.wavelength_nm` is supplied, wavelength and depth determine the bottom frequency. The retained `frequency_hz` field is inactive. At 15 uK the central bottom frequencies are 69.04 kHz (z) and 45.62 kHz (x/y). `n_max` must retain every local bound level for ensemble runs.
+
+`raman.calibration = measured_carrier` uses the supplied 5 kHz carrier reference. The example sets `raman.carrier_decay_mode = modeled`: spatial/thermal averaging predicts the decay, and **no homogeneous damping is fitted to the reported envelope**. With no raw trace, 5 kHz is interpreted as the RMS local carrier frequency, fixing the initial quadratic rise of the ensemble population. Cached ARC D1+D2 amplitudes, thermal carrier overlaps, beam envelopes and spatial phases then imply 1.363 mW per tone per Raman beam. The modeled nonexponential envelope first crosses 1/e at about 89 us. The reported 3.5-period decay is retained only for comparison; it does not constrain intensity or dynamics. Contrast is preparation/readout visibility and never removes atoms. Explicit `extra_coherence_decay_rate_s` remains available for independently specified technical noise (zero in this config).
+
+For backward compatibility, configs without `carrier_decay_mode` retain `measured_envelope`, which fits a synthetic trace reconstructed from the reported frequency/contrast/decay and flags poor fits. Modeling the decay does not establish experimental agreement: the new calibration convention is an explicit assumption. The optimization/check scripts separate modeled-decay outputs under `results/astra_modeled_decay/` from the earlier measured-envelope results under `results/astra_clarified/`. The current power/polarization settings are retained from the earlier search; the revised calibration alone does not establish a new optimum.
+
+`ensemble.samples` controls deterministic Sobol spatial quadrature. `ensemble.time_step_us` controls the positivity-preserving split integrator; halve it to check convergence. Legacy ODE `rtol`/`atol` do not control this backend. `ensemble.workers` permits parallel headless samples; interactive cancellable runs remain sequential. ARC's temporary database is kept in memory; portable atomic and calibration results are saved under `rb85rsc/cache/`.
+
+The optimized observable is `P_target_absolute = P(remaining in all three wells AND spin=3,3 AND nz=0)` per initially loaded atom. Spin populations are exported both absolutely and conditional on survival. `T_equiv_axes_K` gives energy-matched finite-bound-spectrum mixture proxies for x/y/z, not thermometry or proof of a thermal state. `run_ensemble.npz` stores each node's local spectra, axis distributions and final joint 3D populations.
+
+Remaining approximations include separable scalar well shapes, population-resolving recoil, factorized Cartesian emission marginals, omitted tunnelling and coherent Raman escape into the continuum, and D-line-only trap optical estimates. Excited-state lattice Stark shifts of the near-resonant pumping transitions remain the configurable `optical.excited_state_shift_hz` approximation. Power scans exclude points outside weak-excitation or motional-secular validity; the finite search does not establish an optimum in the saturated regime. See [the physics audit](astra-physics-corrections.md) for numerical checks, selected settings and limitations.
+
+The remaining sections describe the legacy 1D backend unless explicitly stated otherwise.
 
 ---
 
 ## 1. Install and run
 
 ```text
+conda activate scripts
 pip install -r requirements.txt
 python rb85_rsc_sim.py --gui                     # opens examples/experiment.json (Reset returns to it); --config overrides
 python rb85_rsc_sim.py --config examples/continuous.json --headless --output results/continuous
@@ -40,9 +75,11 @@ micro-benchmarked cost per evaluation. The GUI shows the same estimate in its st
 
 | File | Contents |
 | --- | --- |
-| `rb85rsc/atomic.py` | ARC wrapper and cache, SI constants, Steck cross-check, Zeeman validity (ARC Breit-Rabi) |
+| `rb85rsc/atomic.py` | ARC wrapper and cache, SI constants, Steck cross-check, analytic Breit-Rabi ground energies and magnetic validity |
 | `rb85rsc/polarization.py` | spherical fractions, Jones-vector geometry mode, realizability test |
 | `rb85rsc/motion.py` | exact displacement matrix elements, recoil kernels, thermal states |
+| `rb85rsc/ensemble.py` | spatial ensemble, joint 3D recoil/loss, coherent axial Raman dynamics and temperature mixtures |
+| `rb85rsc/far_detuned.py` | ARC D1+D2 estimates, modeled/measured-envelope carrier calibration and atomic cache publication |
 | `rb85rsc/optical.py` | weak-excitation rates, branching, light shifts, Kramers-Heisenberg option |
 | `rb85rsc/model.py` | assembles operators for one configuration, static validity checks |
 | `rb85rsc/dynamics.py` | coherent Lindblad reference solver, checked rate solver, cost estimate |
@@ -62,7 +99,7 @@ All 12 ground sublevels (`F=2, mF=-2..2`; `F=3, mF=-3..3`) are included, togethe
 * The **Raman pair** `{up=|3,3>, down=|2,2>} ⊗ motion` carries a full density matrix of dimension 2N (N = n_max+1),
   because the calibrated Raman coupling acts only there.
 * The other **10 sublevels** carry motional populations only. Nothing couples them coherently, and
-  the secular approximations below remove the coherences that spontaneous emission would create.
+  the population recoil approximation below drops coherence transfer into these states. This goes beyond secular averaging.
 
 For the default n_max = 40 this is 3N² + 10N ≈ 5.5k complex numbers. The excited states are adiabatically eliminated, so
 optical-frequency oscillations are never propagated.
@@ -78,7 +115,9 @@ beams (90° apart, Δk ∥ x) it is 0.331.
 With `raman.tone_layout = "both_tones_both_beams"`, each beam carries both tones. The four pathways (low tone from beam i,
 high tone from beam j) are resonant at the same beat, so they add coherently in the coupling matrix:
 
-`D → √(p₁ˡp₂ʰ) e^{iθ} D(η_R) + √(p₂ˡp₁ʰ) e^{i(χ−θ)} D(−η_R) + [√(p₁ˡp₁ʰ) + √(p₂ˡp₂ʰ) e^{iχ}] 𝟙`
+`D_raise = √(p₁ˡp₂ʰ) e^{-iθ} D(−η_R) + √(p₂ˡp₁ʰ) e^{i(χ+θ)} D(η_R) + [√(p₁ˡp₁ʰ) + √(p₂ˡp₂ʰ) e^{iχ}] 𝟙`
+
+Here `D(η) = exp(iη(a+a†))`, θ is the phase of the **up→down** crossed pathway, and χ is the beam-2 minus beam-1 **high-minus-low** tone phase. The lowering operator is `D_raise†`: absorption from the low tone and emission into the high tone impart momentum `ħ(k_low−k_high)`.
 
 The two co-propagating pathways have Δk = 0, so they drive only the carrier. The tone powers are
 `raman.tone_powers_low/high` (each is [beam 1, beam 2]), and `carrier_rabi_hz` is the Rabi frequency of one pathway at unit
@@ -116,8 +155,8 @@ R_ge  = Γ |c_ge|² = Γ Ω_ge² / (Γ² + 4 Δ_ge²)          (isolated weak-ex
 ```
 
 * **All** D2 levels `F'=1,2,3,4` and every sublevel are included for **both** beams. This covers cross-excitation, such as the
-  spin pump acting on F=2 3 GHz away, and off-resonant F'=4 scattering of `|3,3>`. Zeeman shifts use weak-field linear
-  g_F for ground and excited levels. `optical.excited_state_shift_hz` shifts every optical transition, for example to represent a differential
+  spin pump acting on F=2 3 GHz away, and off-resonant F'=4 scattering of `|3,3>`. Ground energies use analytic Breit-Rabi;
+  excited shifts and all dipoles retain the weak-field basis. `optical.excited_state_shift_hz` shifts every optical transition, for example to represent a differential
   trap shift. Detunings are defined relative to the named *zero-field* hyperfine lines, and sublevel shifts are added per
   transition.
 * Each absorption is routed through the actual decay probabilities. The default `path_model = "independent"`
@@ -155,8 +194,8 @@ Polarization is specified relative to the bias-field axis in one of two exclusiv
 
 ```
 Ω_c = 2π · raman.carrier_rabi_hz        (before motional overlap)
-H_R/ħ = (Ω_c/2) [ |up><down| ⊗ D + h.c. ],  D = exp(i η_R (a + a†))   (exact Laguerre matrix elements)
-ν_ud = (E_up − E_down)/h = hyperfine + linear Zeeman + (calibrated Raman shift) + (pump light shifts)
+H_R/ħ = (Ω_c/2) [ |up><down| ⊗ D + h.c. ],  D = exp(-i η_R (a + a†))   (one pathway, raising block)
+ν_ud = (E_up − E_down)/h = hyperfine + Breit-Rabi Zeeman + (calibrated Raman shift) + (pump light shifts)
 ν_beat = |ν_high − ν_low|,   δ_beat = ν_beat − ν_ud
 ```
 
@@ -182,9 +221,8 @@ shown as a warning on every result. The Raman amplitude multiplier in a schedule
 linearly, which corresponds to both beam intensities scaling together. Raman polarization imperfections are *not* inferred from Ω_c. They enter only
 through these calibrated inputs, and a validity line states so.
 
-**Only the up/down pair** is coupled. The code lists every other `|3,m>↔|2,m'>` channel (|Δm| ≤ 2, sidebands ±2) and
-flags the result when the nearest one lies within 20× (warning) or 3× (invalid) of the carrier Rabi frequency from the drive. At 0.5 G the
-nearest is `|3,2>↔|2,2>` second sideband, 163 kHz away (33× Ω_c). The optional microscopic Raman mode, with amplitude
+**Only the up/down pair** is coupled. The isolation diagnostic checks every other `|3,m>↔|2,m'>` channel (|Δm| ≤ 2), using actual motional energy differences through `max_sideband_order`, and
+flags the result when the nearest one lies within 20× (warning) or 3× (invalid) of the summed carrier Rabi scale at the largest scheduled amplitude. This is a conservative bound: unmodeled polarization strengths and light shifts are unknown. The optional microscopic Raman mode, with amplitude
 sums over D1 and D2, is **not implemented**.
 
 ### 2.7 Recoil and motion
@@ -205,15 +243,14 @@ to 1e-6 (`test_red_pi_pulse_removes_one_quantum_then_reset_adds_predicted_recoil
 
 **Secular approximations**, documented and checked:
 
-* The jump operators are `sqrt(W K(n'|n)) |s',n'><s,n|`. Motional coherences between different n created by emission are
-  dropped, which requires scattering rates ≪ ω_t. The default ratio is 0.098, just under the 0.1 warning level.
+* The jump operators are `sqrt(W K(n'|n)) |s',n'><s,n|`. They resolve individual motional levels, dropping coherence transfer even between degenerate transitions. Scattering rates much smaller than the minimum motional angular spacing are necessary but **not sufficient** to justify this extra approximation. A separate recoil-coherence warning is always shown when scattering is active.
 * Their anticommutator damps every Raman coherence at (Γ_out(up,n) + Γ_out(down,m))/2. This is the
   *only* place optical scattering enters Raman decoherence. `extra_coherence_decay_rate_s` is purely additional, so nothing is counted twice
   (`test_optical_scattering_damps_raman_coherence_consistently`).
 * Background heating uses L = sqrt(Γ_h) a and sqrt(Γ_h) a†, acting identically on both spins, so it preserves the Raman coherence structure.
 
 **Truncation.** Kernel probability that would land above n_max, and heating out of n_max, goes into an explicit
-**numerical-overflow** bin. It is never reflected back into the basis and is never counted as physical loss. The diagnostics report the
+**overflow** bin. It is never reflected back into the basis. In harmonic mode it is numerical; in a complete lattice bound basis it is physical escape; a capped lattice basis mixes both. The diagnostics report the
 overflow, the population in the top two levels, `|trace + overflow − 1|`, and the thermal tail discarded before normalization.
 
 **Lattice trap** (`trap.potential = "lattice"`). The motion is one site of a 1D lattice `V0 sin²(k_L z)` along `trap.axis`,
@@ -234,8 +271,8 @@ bound level (E < V0), capped by `n_max`. Then:
   `P_n0_absolute`, `P_target_absolute` are fractions of all atoms (= per-trapped value × P_trapped). The dashboard draws
   P_trapped and prints the absolute values when there is loss; scans gain a survival panel. The `_joint.npz` export keeps the raw
   absolute P[t, s, n]. In a harmonic trap P_trapped is 1 − numerical overflow, so the normalization changes values by < 1e-4 in a valid run.
-* `thermal_temperature` initial states are Boltzmann over the exact bound energies. The part of a thermal state above the depth is
-  not represented and is reported.
+* `thermal_temperature` initial states are Boltzmann over the exact bound energies, conditional on initially bound atoms. `initial_tail_discarded` measures omitted **bound-state** weight if the basis is capped. The initially unbound fraction is unspecified; a harmonic geometric tail cannot determine it.
+* Lattice `nbar` is a mean level index. Energy and cooling power use the actual `E_n-E_0`; `T_equiv_K` matches that mean energy to a canonical distribution on the bound spectrum. It is only a proxy for nonthermal distributions, and is undefined above the positive-temperature energy range. `selection_cooling_power_W` separates the instantaneous contribution from preferential loss of hot atoms.
 
 Example: 15 µK and 70 kHz give E_r = 3.92 kHz (λ_L ≈ 774 nm) and 6 bound levels with spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz.
 Levels n = 0–3 agree with the exact Mathieu band centres to within 0.1 kHz. Not modeled: tunnelling between sites (negligible for the
@@ -309,11 +346,11 @@ These are computed directly from `P(F, mF, n, t)`:
 | `p(n,t)`, `nbar`, `P_n0` | motional marginal over all spins |
 | `P_target` | P(3,3,0) **computed directly**. It generally differs from P_up·P_n0 (both are reported) because spin and motion correlate |
 | `P_n0_given_up` | P_target/P_up (undefined when P_up = 0) |
-| `fractional_energy_reduction` | 1 − n̄(t)/n̄(0); negative when the atom heats |
-| cooling rate | −dn̄/dt from a Savitzky-Golay (cubic, 11-sample) derivative, in quanta/s and in W (× hν_t) |
-| photons | integrated scattered photons per atom for the spin pump, repump, and Raman scattering; quanta removed per photon (None if 0) |
+| `fractional_energy_reduction` | 1 − ⟨E−E_0⟩(t)/⟨E−E_0⟩(0), conditional on survival; includes loss selection |
+| cooling rate | −dn̄/dt and separately −d⟨E−E_0⟩/dt in W, from Savitzky-Golay derivatives; only a harmonic ladder permits multiplication by hν_t |
+| photons | integrated scattered photons per initially trapped atom; quanta removed per photon is None for zero photons or appreciable overflow/loss |
 | thresholds | time to `spin_threshold`, and to `joint_threshold`, or "not reached" |
-| `T_equiv` | hν_t/(k_B ln(1+1/n̄)), labeled *PROXY* when the final p(n) is non-thermal (total-variation distance > 0.05) |
+| `T_equiv_K` | harmonic formula hν_t/(k_B ln(1+1/n̄)); lattice: canonical fit to actual mean energy; labeled *PROXY* for nonthermal p(n) (TVD > 0.05) |
 
 Figures (dashboard PNG/PDF and GUI tabs): initial and final spin bars, time traces, n̄(t) on its own axis, p(n,t) and
 final P(F,mF,n) heatmaps on a log color scale, photon counts, cooling rate, and a text block with every validity item.
@@ -402,8 +439,7 @@ faulthandler so that it doesn't print a spurious stack dump. It does not affect 
 * 1D motion only; the same potential for all spins. Harmonic traps have no depth or anharmonicity (a diagnostic is shown when
   `trap.depth_uk` is given); `trap.potential = "lattice"` adds both for one isolated lattice site, without tunnelling.
 * Calibrated Raman mode only. The microscopic Raman mode (D1+D2 amplitude sums from beam powers and polarizations), D1 pumping,
-  and high-field (Breit-Rabi) state mixing are not implemented. Weak-field errors are reported instead: at 0.5 G, the quadratic Zeeman
-  shift of ν_ud is 90 Hz and the neglected excited quadratic shift is 0.005 Γ.
+  and high-field dipole mixing are not implemented. Ground-state Breit-Rabi energies are included: at 0.5 G, the correction to linear ν_ud is about 90 Hz. The neglected excited quadratic shift is about 0.005 Γ.
 * Pump beams are incoherent with each other; pump-induced ground Zeeman coherences are neglected (checked).
 * Raman scattering has no coherence-preserving Rayleigh component, which is conservative. The rate backend omits the AC-Stark shift of the sideband
   and approximates heating-induced coherence decay.

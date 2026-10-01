@@ -14,6 +14,12 @@ def x0_m(mass_kg: float, trap_hz: float) -> float:
     return float(np.sqrt(HBAR / (2.0 * mass_kg * 2.0 * np.pi * trap_hz)))
 
 
+def lattice_frequency_hz(mass_kg: float, wavelength_nm: float, depth_uk: float) -> float:
+    """Bottom frequency of V0 sin²(kz), using the optical wavelength."""
+    recoil_hz = H / (2 * mass_kg * (wavelength_nm * 1e-9) ** 2)
+    return float(2 * np.sqrt(depth_uk * 1e-6 * K_B / H * recoil_hz))
+
+
 def lamb_dicke(wavelength_m: float, mass_kg: float, trap_hz: float, projection: float = 1.0) -> float:
     return float(abs(2.0 * np.pi / wavelength_m * projection) * x0_m(mass_kg, trap_hz))
 
@@ -127,6 +133,46 @@ def temperature_from_nbar(nbar: float, trap_hz: float) -> float:
     if nbar <= 0:
         return 0.0
     return float(H * trap_hz / (K_B * np.log1p(1.0 / nbar)))
+
+
+def boltzmann_pn(energies_hz: np.ndarray, temp_k: float) -> np.ndarray:
+    """Canonical distribution conditional on the supplied discrete levels."""
+    e = np.asarray(energies_hz, float) - np.min(energies_hz)
+    if temp_k <= 0:
+        p = (e == 0).astype(float)
+    else:
+        p = np.exp(-e * H / (K_B * temp_k))
+    return p / p.sum()
+
+
+def temperature_from_energy(mean_hz: float, energies_hz: np.ndarray) -> float:
+    """Positive canonical temperature matching energy above the lowest level.
+
+    Uses the finite, actual spectrum (essential for a bound lattice basis).
+    Above the infinite-temperature mean there is no positive-temperature fit;
+    return NaN instead of assigning a misleading harmonic temperature.
+    """
+    from scipy.optimize import brentq
+
+    e = np.asarray(energies_hz, float) - np.min(energies_hz)
+    if mean_hz <= 0:
+        return 0.0
+    if mean_hz > e.mean() + 1e-12 * e[-1]:
+        return np.nan
+    if mean_hz >= e.mean() - 1e-12 * e[-1]:
+        return np.inf
+    scaled = e / e[-1]
+    target = mean_hz / e[-1]
+
+    def residual(beta):
+        w = np.exp(-beta * scaled)
+        return float(w @ scaled / w.sum() - target)
+
+    upper = 1.0
+    while residual(upper) > 0:
+        upper *= 2
+    beta = brentq(residual, 0.0, upper, xtol=1e-13)
+    return float(H * e[-1] / (K_B * beta))
 
 
 def annihilation(n_states: int) -> np.ndarray:

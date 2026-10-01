@@ -55,7 +55,7 @@ def plot_spin_bars(ax, a):
     ax.bar(x - w / 2 - 0.01, list(fin["spin_populations_initial"].values()), w, color=SERIES[0], label="initial")
     ax.bar(x + w / 2 + 0.01, list(fin["spin_populations_final"].values()), w, color=SERIES[1], label="final")
     ax.set_xticks(x, labels, rotation=60, fontsize=7)
-    ax.set_ylabel("population")
+    ax.set_ylabel("fraction among survivors")
     ax.set_title("Spin sublevels (F=2 left, F=3 right)", fontsize=9)
     ax.axvline(4.5, color=MUTED, lw=0.8)
     ax.legend(fontsize=7, frameon=False)
@@ -64,6 +64,10 @@ def plot_spin_bars(ax, a):
 def plot_traces(ax, a, keys=(("P_up", "P_up"), ("P_n0", "P_n0"), ("P_target", "P_target = P(3,3,0)"), ("P_F3", "P(F=3)"))):
     s = a["series"]
     t = _ms(s["t_s"])
+    ensemble = "T_equiv_axes_K" in a["final"]
+    if ensemble:
+        keys = (("P_up", "spin |3,3>, among survivors"), ("P_n0", "axial n=0, among survivors"),
+                ("P_target_absolute", "target / initially loaded atoms"))
     for i, (k, lab) in enumerate(keys):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
     m = a.get("model")
@@ -73,8 +77,8 @@ def plot_traces(ax, a, keys=(("P_up", "P_up"), ("P_n0", "P_n0"), ("P_target", "P
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("probability")
     ax.set_ylim(-0.02, 1.02)
-    ax.set_title("Spin polarization and motional ground state", fontsize=9)
-    ax.legend(fontsize=7, frameon=False, loc="center right")
+    ax.set_title("Survival and absolute target yield" if ensemble else "Spin polarization and motional ground state", fontsize=9)
+    ax.legend(fontsize=7, frameon=False, loc="lower right" if ensemble else "center right")
     _shade_segments(ax, a)
 
 
@@ -125,8 +129,8 @@ def plot_nbar(ax, a):
     t = _ms(s["t_s"])
     ax.plot(t, s["nbar"], color=SERIES[0], lw=2)
     ax.set_xlabel("time (ms)")
-    ax.set_ylabel("nbar (quanta)")
-    ax.set_title("Mean vibrational occupation (modeled 1D axis)", fontsize=9)
+    ax.set_ylabel("mean vibrational level index")
+    ax.set_title("Mean axial occupation, among survivors", fontsize=9)
 
 
 def plot_photons(ax, a):
@@ -134,6 +138,8 @@ def plot_photons(ax, a):
     t = _ms(s["t_s"])
     for i, (k, lab) in enumerate((("photons_spin_pump", "spin pump"), ("photons_repump", "repump"), ("photons_raman_scatter", "Raman scatter"))):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
+    if "photons_lattice_scatter" in s:
+        ax.plot(t, s["photons_lattice_scatter"], color=SERIES[3], lw=2, label="lattice scatter")
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("photons scattered / atom")
     ax.set_title("Integrated scattered photons", fontsize=9)
@@ -187,17 +193,48 @@ def diagnostics_text(a) -> str:
         f"P_up={f['P_up']:.4f}  P_n0={f['P_n0']:.4f}  P_target={f['P_target']:.4f}  (P_up*P_n0={f['P_up_times_P_n0']:.4f})",
         *([f"populations are per trapped atom: trapped {f['P_trapped']:.4f} (lost {f['lattice_loss']:.4f}); of all atoms: "
            f"P_up={f['P_up_absolute']:.4f}  P_n0={f['P_n0_absolute']:.4f}  P_target={f['P_target_absolute']:.4f}"] if f.get("lattice_loss") is not None else []),
-        f"nbar (trapped atoms) {f['nbar_initial']:.4g} -> {f['nbar']:.4g}   T_equiv={f['T_equiv_K'] * 1e6:.3g} uK [{f['T_equiv_note']}]",
+        f"nbar (trapped atoms) {f['nbar_initial']:.4g} -> {f['nbar']:.4g}   "
+        + (f"T_equiv={f['T_equiv_K'] * 1e6:.3g} uK" if f['T_equiv_K'] is not None else "T_equiv undefined")
+        + f" [{f['T_equiv_note']}]",
         f"photons/atom: pump {f['photons']['spin_pump']:.3g}, repump {f['photons']['repump']:.3g}, Raman {f['photons']['raman_scatter']:.3g}",
-        f"target |3,3> scattering rate {f['target_state_scattering_rate_per_s']:.3g} /s; quanta removed per photon {f['net_quanta_removed_per_photon']}",
+        f"target |3,3> scattering rate {_fmt_number(f['target_state_scattering_rate_per_s'])} /s; quanta removed per photon {f['net_quanta_removed_per_photon']}",
         f"t(P_up>={f['spin_threshold']}) = {_fmt_t(f['time_to_spin_threshold_s'])};  t(P_target>={f['joint_threshold']}) = {_fmt_t(f['time_to_joint_threshold_s'])}",
-        f"conservation err {f['max_conservation_error']:.2g}; min eig {f['min_eigenvalue']:.2g}; boundary pop {f['max_boundary_population']:.2g}; overflow {f['final_overflow']:.2g}",
+        f"conservation err {f['max_conservation_error']:.2g}; min eig {f['min_eigenvalue']:.2g}; boundary pop {_fmt_number(f['max_boundary_population'])}; overflow {f['final_overflow']:.2g}",
         f"solver {f['solver']}, wall {f['wall_time_s']:.1f} s",
         "",
     ]
+    if "T_equiv_axes_K" in f:
+        lines.insert(4, "Axis temperature proxies (uK): " + ", ".join(f"{axis}={_fmt_number(temp * 1e6 if temp is not None else None)}" for axis, temp in f["T_equiv_axes_K"].items()))
+        lines.insert(4, f["loss_label"] + f": {f['well_loss_fraction_no_recapture']:.4f}")
     for cat, st, msg in v.items:
         lines.append(f"[{STATUS_TEXT[st]:7s}] {cat}: {msg}")
     return "\n".join(lines)
+
+
+def _fmt_number(value):
+    return "unspecified" if value is None else f"{value:.3g}"
+
+
+def carrier_calibration_figure(calibration) -> Figure:
+    fig = Figure(figsize=(8, 4.5), facecolor="white", layout="constrained")
+    ax = _new(fig, 111)
+    t = np.asarray(calibration["times_s"]) * 1e3
+    modeled = calibration.get("carrier_decay_mode") == "modeled"
+    ax.plot(t, calibration["summary_trace"], lw=1.5, ls="--" if modeled else "-", color=SERIES[0],
+            label="Reported summary (comparison only)" if modeled else "Measured summary reconstructed (not raw data)")
+    ax.plot(t, calibration["fitted_trace"], lw=2, color=SERIES[1],
+            label="Modeled spatial/thermal decay" if modeled else "Spatial/thermal model fit")
+    ax.set_xlabel("Carrier pulse duration (ms)")
+    ax.set_ylabel("Apparent transferred population (visibility included)")
+    ax.set_ylim(-.02, 1.02)
+    ax.legend(fontsize=8, frameon=False)
+    if modeled:
+        ax.set_title(f"Modeled carrier decay; RMS Rabi {calibration['modeled_rms_carrier_hz'] / 1e3:.3g} kHz\n"
+                     "Initial-curvature intensity calibration; no fitted damping", fontsize=10)
+    else:
+        ax.set_title(f"Carrier calibration: RMS mismatch {calibration['synthetic_trace_rmse']:.3f}; "
+                     f"residual dephasing {calibration['residual_coherence_decay_rate_s']:.2g}/s", fontsize=10)
+    return fig
 
 
 def _fmt_t(x):
@@ -205,8 +242,15 @@ def _fmt_t(x):
 
 
 def dashboard(a, title="") -> Figure:
-    fig = Figure(figsize=(15, 11), facecolor="white", layout="constrained")
-    gs = fig.add_gridspec(4, 3, height_ratios=[0.22, 1, 1, 1])
+    import textwrap
+
+    # Explicit wrapping stays within the diagnostics axes when saving a figure;
+    # matplotlib's automatic wrap uses the figure edge and can clip long audits.
+    diagnostic_lines = [textwrap.fill(line, width=132) for line in diagnostics_text(a).splitlines()]
+    diagnostic_text = "\n".join(diagnostic_lines)
+    text_height = max(2.5, len(diagnostic_text.splitlines()) * 8.0 / 72 + 0.3)
+    fig = Figure(figsize=(15, 8 + text_height), facecolor="white", layout="constrained")
+    gs = fig.add_gridspec(4, 3, height_ratios=[0.22, 1, 1, text_height / 2.5])
     plot_schedule(_new(fig, gs[0, :]), a)
     plot_spin_bars(_new(fig, gs[1, 0]), a)
     plot_traces(_new(fig, gs[1, 1]), a)
@@ -217,7 +261,7 @@ def dashboard(a, title="") -> Figure:
     plot_cooling_rate(_new(fig, gs[3, 0]), a)
     axt = fig.add_subplot(gs[3, 1:])
     axt.axis("off")
-    axt.text(0, 1, diagnostics_text(a), family="monospace", fontsize=6.5, va="top", color=TEXT, wrap=True)
+    axt.text(0, 1, diagnostic_text, family="monospace", fontsize=6.5, va="top", color=TEXT)
     fig.suptitle(title, fontsize=11, color=TEXT)
     return fig
 

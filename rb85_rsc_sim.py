@@ -83,9 +83,13 @@ def main(argv=None) -> int:
         set_param(cfg, k, val)
     cfg.validate()
 
-    est = estimate_cost(Model(cfg))
+    est = runner.estimate(cfg)
     n_runs = 7 if args.compare_protocols else 1
-    print(f"Resource estimate: state dim {est['state_dimension_complex']} complex, "
+    if cfg.ensemble.enabled:
+        print(f"3D ensemble: {cfg.ensemble.samples} spatial/phase samples, maximum split step {cfg.ensemble.time_step_us:g} us. "
+              "Use sample and timestep refinements to check convergence.")
+    else:
+        print(f"Resource estimate: state dim {est['state_dimension_complex']} complex, "
           f"{est['memory_transfer_matrices_MB']:.1f} MB operators, ~{est['est_rhs_evals']:.3g} RHS evals x "
           f"{est['rhs_eval_s'] * 1e6:.0f} us = ~{est['est_coherent_runtime_s']:.1f} s per coherent run"
           + (f" (x{n_runs} protocols)" if n_runs > 1 else ""))

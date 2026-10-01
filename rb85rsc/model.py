@@ -7,10 +7,10 @@ levels n = 0..n_max (N = n_max + 1).  Population index = s*N + n.
 
 * The Raman pair {up=|3,3>, down=|2,2>} (x motion) keeps a full density matrix,
   because the calibrated Raman coupling acts only there.
-* The other 10 sublevels keep motional populations only: nothing couples them
-  coherently, and the secular approximation (all optical rates << omega_t, all
-  pumping rates << ground Zeeman splittings) removes coherences created by
-  spontaneous emission.  Both conditions are checked in the diagnostics.
+* The other 10 sublevels keep motional populations only. Coherence transfer
+  through scattering is omitted, including degenerate motional transitions.
+  Rate/secular conditions are checked, but do not justify this additional
+  population-recoil approximation; it carries a separate diagnostic warning.
 
 Frame
 -----
@@ -19,7 +19,7 @@ respect to H0 = omega_t (a^+a - |up><up|).  The residual Hamiltonian is
 
   H_I(t)/hbar = -delta |up><up| + sum_{n,m} (Omega_c/2) D_nm e^{i(n-m-1) omega_t t} |up,n><down,m| + h.c.
 
-with D = exp(i eta_R (a + a^+)) (exact matrix elements) and
+with D = exp(-i eta_R (a + a^+)) for the raising block (exact matrix elements) and
 delta = 2 pi (nu_beat - nu_ud - nu_t).  The first red sideband n -> n-1 is static;
 the carrier rotates at -omega_t and the blue sideband at -2 omega_t, so they are
 retained as off-resonant terms rather than dropped.
@@ -28,7 +28,7 @@ With raman.tone_layout = both_tones_both_beams,
 the four pathways (low tone from beam i, high tone from beam j) drive the same
 resonance and add coherently:
 
-  D -> sqrt(p1l p2h) e^{i theta} D(eta) + sqrt(p2l p1h) e^{i(chi - theta)} D(-eta)
+  D -> sqrt(p1l p2h) e^{-i theta} D(-eta) + sqrt(p2l p1h) e^{i(chi + theta)} D(eta)
        + [sqrt(p1l p1h) + sqrt(p2l p2h) e^{i chi}] 1,
 
 where the co-propagating pathways have dk = 0 (carrier only), theta is the atom
@@ -104,8 +104,10 @@ class Validity:
 
 
 class Model:
-    def __init__(self, cfg: SimConfig, atom: AtomicData | None = None):
+    def __init__(self, cfg: SimConfig, atom: AtomicData | None = None, raman_path_coefficients=None):
         cfg.validate()
+        if cfg.raman.calibration == "measured_carrier" and raman_path_coefficients is None:
+            raise ConfigError("measured_carrier configs must run through runner.run (spatial calibration and 3D ensemble), not the legacy 1D Model")
         self.cfg = cfg
         self.atom = atom or load_atomic_data()
         at = self.atom
@@ -113,13 +115,14 @@ class Model:
         self.B = cfg.magnetic.magnitude_gauss * 1e-4
         self.u = pol.unit(cfg.trap.axis)
         self.cos_beta = float(np.dot(self.u, self.b_dir))
-        self.nu_t = cfg.trap.frequency_hz
+        self.nu_t = (mo.lattice_frequency_hz(at.mass_kg, cfg.trap.wavelength_nm, cfg.trap.depth_uk)
+                     if cfg.trap.potential == "lattice" and cfg.trap.wavelength_nm is not None else cfg.trap.frequency_hz)
         self.omega_t = 2 * np.pi * self.nu_t
         self.x0 = mo.x0_m(at.mass_kg, self.nu_t)
         tc = cfg.trap
         if tc.potential == "lattice":
             self.motion = mo.lattice_site(at.mass_kg, self.nu_t, tc.depth_uk * 1e-6 * K_B / H, tc.n_max + 1)
-            if self.motion.N < 2:
+            if self.motion.N < 2 and not cfg.ensemble.enabled:
                 raise ConfigError(f"lattice of depth {tc.depth_uk} uK holds {self.motion.n_bound} bound level(s) at nu_t = {self.nu_t:g} Hz; need >= 2")
         else:
             self.motion = mo.HarmonicBasis(tc.n_max + 1, self.nu_t)
@@ -127,7 +130,7 @@ class Model:
         self.lattice_full = self.motion.kind == "lattice" and N == self.motion.n_bound  # overflow = physical loss
         self.eps = 2 * np.pi * (self.motion.energies_hz - self.motion.energies_hz[0])  # level energies, rad/s
         # n=1 -> 0 spacing nu_10: nu_t (harmonic) or the exact level spacing (lattice)
-        self.nu_ref = self.nu_t if self.motion.kind == "harmonic" else float(self.motion.energies_hz[1] - self.motion.energies_hz[0])
+        self.nu_ref = self.nu_t if self.motion.kind == "harmonic" or self.N < 2 else float(self.motion.energies_hz[1] - self.motion.energies_hz[0])
         self.omega_ref = 2 * np.pi * self.nu_ref
         self.k_d2 = 2 * np.pi / at.d2_wavelength_m
         self.eta_d2 = self.k_d2 * self.x0  # single 780 nm photon along the trap axis
@@ -160,10 +163,18 @@ class Model:
         else:
             pl, ph, th, chi = np.array([1.0, 0.0]), np.array([0.0, 1.0]), 0.0, 0.0
         a = np.sqrt(np.outer(pl, ph))
+        if raman_path_coefficients is not None:
+            a = a * np.asarray(raman_path_coefficients, complex)
         self.raman_pathways = a
-        self.D = (a[0, 1] * np.exp(1j * th) * self.motion.displacement(self.eta_R_signed)
-                  + a[1, 0] * np.exp(1j * (chi - th)) * self.motion.displacement(-self.eta_R_signed)
-                  + (a[0, 0] + a[1, 1] * np.exp(1j * chi)) * np.eye(N))
+        # This operator describes up -> down: absorb LOW, emit HIGH. Its
+        # co-propagating beam-2 phase is -chi, because chi is HIGH-minus-LOW.
+        # H's |up><down| block must contain its adjoint (the reverse process).
+        self.raman_downward_D = (
+            a[0, 1] * np.exp(1j * th) * self.motion.displacement(self.eta_R_signed)
+            + a[1, 0] * np.exp(-1j * (chi + th)) * self.motion.displacement(-self.eta_R_signed)
+            + (a[0, 0] + a[1, 1] * np.exp(-1j * chi)) * np.eye(N)
+        )
+        self.D = self.raman_downward_D.conj().T
         self.omega_c = 2 * np.pi * rc.carrier_rabi_hz if rc.enabled else 0.0
         order = rc.max_sideband_order
         n = np.arange(N)
@@ -180,7 +191,7 @@ class Model:
             if np.any(Vk != 0):
                 self.vk_unit.append((float(f), Vk))
         eg = at.ground_energy_hz(self.B)
-        self.nu_ud_zeeman = float(eg[UP] - eg[DOWN])  # hyperfine + linear Zeeman
+        self.nu_ud_zeeman = float(eg[UP] - eg[DOWN])  # hyperfine + Breit-Rabi Zeeman
         self.nu_ud_ref = self.nu_ud_zeeman + rc.differential_light_shift_hz
         if rc.frequency_mode == "sideband_offset":
             self.nu_beat = self.nu_ud_ref + self.nu_ref + rc.red_sideband_offset_hz
@@ -240,16 +251,18 @@ class Model:
                 notes.append(f"custom spin populations normalized from sum {v.sum():.6g}")
             spin = v / v.sum()
         tail = 0.0
-        if ic.motion_mode in ("thermal_nbar", "thermal_temperature"):
+        if self.motion.kind == "lattice" and ic.motion_mode == "thermal_temperature":
+            all_pn = mo.boltzmann_pn(self.motion.all_bound_energies_hz, ic.temperature_k)
+            tail = float(all_pn[N:].sum())
+            pn = all_pn[:N] / all_pn[:N].sum()
+            notes.append(f"lattice: Boltzmann at T = {ic.temperature_k:g} K conditional on initially bound atoms; "
+                         f"discarded bound-state weight = {tail:.3g}; the initially unbound fraction is unspecified")
+        elif ic.motion_mode in ("thermal_nbar", "thermal_temperature"):
             nb = ic.nbar if ic.motion_mode == "thermal_nbar" else mo.nbar_from_temperature(ic.temperature_k, self.nu_t)
             pn, tail = mo.thermal_pn(nb, N)
-            if self.motion.kind == "lattice" and ic.motion_mode == "thermal_temperature" and ic.temperature_k > 0:
-                w = np.exp(-(self.motion.energies_hz - self.motion.energies_hz[0]) * H / (K_B * ic.temperature_k))
-                pn = w / w.sum()
-                notes.append(f"lattice: Boltzmann over the {N} kept levels at T = {ic.temperature_k:g} K (exact level energies); "
-                             f"a thermal state at this T has ~{tail:.3g} above them (harmonic-ladder estimate), not represented")
-            else:
-                notes.append(f"thermal nbar={nb:.6g}; discarded tail above n_max before normalization = {tail:.3g}")
+            notes.append(f"geometric occupation distribution, input nbar={nb:.6g}; discarded weight = {tail:.3g}")
+            if self.motion.kind == "lattice":
+                notes.append("thermal_nbar specifies a geometric level distribution, not a canonical lattice temperature")
         elif ic.motion_mode == "fock":
             if ic.fock_n >= N:
                 raise ValueError("fock_n exceeds n_max")
@@ -318,13 +331,21 @@ class Model:
                 if f2 != 2 or abs(m - m2) > 2 or (i, j) == (UP, DOWN):
                     continue
                 nu = eg[i] - eg[j]
-                for k in range(-2, 3):
-                    det = self.nu_beat - (nu + k * self.nu_t)
+                # Use actual level differences through the configured Raman
+                # sideband order, not a hard-coded +/-2 harmonic approximation.
+                for n, m2n in np.ndindex(self.N, self.N):
+                    k = n - m2n
+                    if abs(k) > self.cfg.raman.max_sideband_order:
+                        continue
+                    spacing = (self.eps[n] - self.eps[m2n]) / (2 * np.pi)
+                    det = self.nu_beat - (nu + spacing)
                     if best is None or abs(det) < abs(best[0]):
-                        best = (det, ground_label(i), ground_label(j), k)
-        det, a, b, k = best
-        scale = max(self.cfg.raman.carrier_rabi_hz * float(self.raman_pathways.sum()), 1e-30)
-        return {"nearest_detuning_hz": det, "pair": f"{a}<->{b}", "sideband": k, "ratio_to_carrier_rabi": abs(det) / scale}
+                        best = (det, ground_label(i), ground_label(j), k, n, m2n)
+        det, a, b, k, n, m = best
+        amp = max((s.raman for s in self.schedule), default=0.0) if self.cfg.raman.enabled else 0.0
+        scale = max(amp * self.cfg.raman.carrier_rabi_hz * float(np.abs(self.raman_pathways).sum()), 1e-30)
+        return {"nearest_detuning_hz": det, "pair": f"{a}<->{b}", "sideband": k,
+                "motional_levels": [n, m], "ratio_to_carrier_rabi": abs(det) / scale}
 
     def static_validity(self) -> Validity:
         cfg = self.cfg
@@ -332,7 +353,7 @@ class Model:
         z = zeeman_validity(self.atom, self.B, self.nu_t)
         self.zeeman = z
         v.add("magnetic field", z["status"], "; ".join(z["notes"]) or
-              f"weak-field Zeeman OK (quadratic error on nu_ud {z['raman_quadratic_zeeman_error_hz']:.3g} Hz, "
+              f"Breit-Rabi ground energies (correction to linear nu_ud {z['raman_quadratic_zeeman_error_hz']:.3g} Hz included; "
               f"excited quadratic shift {z['excited_quadratic_over_gamma']:.2g} Gamma)")
         # ground-state secular approximation (no Zeeman coherences from pumping)
         zs = min(abs(self.atom.g_ground[f]) for f in (2, 3)) * MU_B * self.B / H * 2 * np.pi
@@ -343,14 +364,20 @@ class Model:
         ratio = zs / max_rate if max_rate > 0 else np.inf
         st = "ok" if ratio > 10 else ("warning" if ratio > 1 else "invalid")
         v.add("ground coherences", st, f"adjacent-mF Zeeman splitting / max pumping rate = {ratio:.3g} (neglect of pump-induced Zeeman coherences needs >>1)")
-        rmax = max_rate / self.omega_t
+        min_gap = float(np.min(np.diff(self.eps)))
+        rmax = max_rate / min_gap
         st = "ok" if rmax < 0.1 else ("warning" if rmax < 0.5 else "invalid")
-        v.add("motional secular", st, f"max optical scattering rate / omega_t = {rmax:.3g} (secular recoil jumps need <<1)")
+        v.add("motional secular", st, f"max optical scattering rate / minimum motional angular spacing = {rmax:.3g} (needs <<1)")
+        if max_rate > 0:
+            v.add("recoil coherence", "warning", "population recoil model resolves each |s,n> jump separately: "
+                  "coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; "
+                  "the secular rate criterion alone does not justify this extra dephasing approximation")
         iso = self.raman_isolation()
-        if self.omega_c > 0:
+        if self.omega_c > 0 and any(s.raman > 0 for s in self.schedule):
             st = "ok" if iso["ratio_to_carrier_rabi"] > 20 else ("warning" if iso["ratio_to_carrier_rabi"] > 3 else "invalid")
             v.add("Raman isolation", st, f"only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel {iso['pair']} (sideband {iso['sideband']:+d}) "
-                  f"is {iso['nearest_detuning_hz'] / 1e3:.4g} kHz from the drive = {iso['ratio_to_carrier_rabi']:.3g} x carrier Rabi (assumes comparable coupling)")
+                  f"is {iso['nearest_detuning_hz'] / 1e3:.4g} kHz from the drive = {iso['ratio_to_carrier_rabi']:.3g} x carrier Rabi "
+                  "(conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)")
             if cfg.raman.scattering_rate_s == 0:
                 v.add("Raman scattering", "warning", "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)")
             v.add("Raman polarization", "ok", "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs")
@@ -368,6 +395,11 @@ class Model:
             src = self.beams[b].fraction_source
             if "EFFECTIVE" in src:
                 v.add(f"{b} polarization", "warning", src)
+            pc = getattr(cfg, b)
+            if pc.polarization.mode == "geometry" and not np.allclose(self.beams[b].direction, pol.unit(pc.direction), atol=1e-8):
+                v.add(f"{b} direction", "warning",
+                      f"geometry angles set lab direction {np.round(self.beams[b].direction, 6).tolist()}; "
+                      f"stored direction {pc.direction} is inactive; recoil uses the geometry direction")
         if cfg.optical.excited_manifold != "all_D2":
             v.add("excited manifold", "warning", "IDEALIZED F'=3-only absorption (F'=1,2,4 excluded)")
         if cfg.optical.emission_pattern == "isotropic":
@@ -385,8 +417,8 @@ class Model:
                   f"coherent Raman coupling into unbound states and anharmonic heating elements neglected{cap}")
         if self.initial_tail > cfg.numerics.boundary_tolerance:
             if self.lattice_full:
-                v.add("initial tail", "warning", f"~{self.initial_tail:.3g} of the initial thermal distribution lies above the lattice depth "
-                      "(unbound, would not stay trapped); not represented")
+                v.add("initial tail", "warning", f"{self.initial_tail:.3g} of the specified level distribution discarded; "
+                      "this is not a prediction of the initially unbound fraction")
             else:
                 v.add("initial tail", "invalid", f"initial distribution tail above n_max = {self.initial_tail:.3g}")
         return v
@@ -406,6 +438,8 @@ class Model:
             "raman_D10_red_sideband": float(abs(self.D[1, 0])),
             "raman_D00_carrier": float(abs(self.D[0, 0])),
             "nu_ud_zeeman_hz": self.nu_ud_zeeman,
+            "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+            "raman_isolation": self.raman_isolation(),
             "nu_ud_ref_hz": self.nu_ud_ref,
             "nu_beat_hz": self.nu_beat,
             "delta_beat_minus_nu_t_ref_hz": self.nu_beat - self.nu_ud_ref - self.nu_ref,

@@ -1,0 +1,37 @@
+{
+  "title": "Clarified experiment: absolute target yield versus pump powers",
+  "base_config": "experiment.json",
+  "axes": [
+    {
+      "param": "spin_pump.power_mw",
+      "start": 3e-06,
+      "stop": 0.003,
+      "num": 7,
+      "log": true,
+      "label": "Spin-pump power (mW)"
+    },
+    {
+      "param": "repump.power_mw",
+      "start": 3e-06,
+      "stop": 0.003,
+      "num": 7,
+      "log": true,
+      "label": "Repump power (mW)"
+    }
+  ],
+  "series": [
+    {
+      "label": "repump E along B (x)",
+      "overrides": {
+        "repump.polarization.orientation_deg": 0
+      }
+    },
+    {
+      "label": "repump E along y",
+      "overrides": {
+        "repump.polarization.orientation_deg": 90
+      }
+    }
+  ],
+  "workers": 1
+}

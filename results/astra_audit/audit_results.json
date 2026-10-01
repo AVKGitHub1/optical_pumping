@@ -1,0 +1,3606 @@
+{
+  "cases": {
+    "corrected": {
+      "changes": {},
+      "final": {
+        "P_up": 0.9735241421231726,
+        "P_n0": 0.9067596916442252,
+        "P_target": 0.8853701532385879,
+        "P_up_times_P_n0": 0.8827524509198169,
+        "P_n0_given_up": 0.909448584713751,
+        "P_trapped": 0.8123773332532555,
+        "P_up_absolute": 0.7908689464356863,
+        "P_n0_absolute": 0.7366310201994799,
+        "P_target_absolute": 0.7192546440299902,
+        "nbar": 0.1826203895566157,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.349815790883505e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 11092.269813780202,
+        "fractional_energy_reduction": 0.8936388417097892,
+        "T_equiv_K": 1.5960485983916313e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.06916393216923032,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.14879310688274,
+          "repump": 16.53738269827241,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 32.686175805155145,
+        "net_quanta_removed": 1.5630119458377347,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 312.60238916754696,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0015518683262829931,
+        "time_to_joint_threshold_s": 0.000507929060979387,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.4417305615625856e-05,
+          "|2,-1>": 0.00041103831823680726,
+          "|2,+0>": 0.0017226359864843293,
+          "|2,+1>": 0.004873257326983441,
+          "|2,+2>": 0.007151493424027368,
+          "|3,-3>": 6.585946102151334e-06,
+          "|3,-2>": 0.00012539945199034922,
+          "|3,-1>": 0.0006905999678768859,
+          "|3,+0>": 0.0016581169815025345,
+          "|3,+1>": 0.0033273078064379124,
+          "|3,+2>": 0.006465005361570042,
+          "|3,+3>": 0.9735241421231726
+        },
+        "max_conservation_error": 3.1086244689504383e-15,
+        "min_eigenvalue": 1.5059888794853992e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.1876226667467462,
+        "lattice_loss": 0.1876226667467462,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.4705545000033453,
+        "rhs_evaluations": 48244
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 3.11e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.51e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.188"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "rtol_1e-9": {
+      "changes": {
+        "numerics.rtol": 1e-09,
+        "numerics.atol": 1e-12
+      },
+      "final": {
+        "P_up": 0.9735241420980785,
+        "P_n0": 0.9067596970257479,
+        "P_target": 0.8853701584973946,
+        "P_up_times_P_n0": 0.8827524561361048,
+        "P_n0_given_up": 0.9094485901390181,
+        "P_trapped": 0.8123773380923605,
+        "P_up_absolute": 0.7908689511262859,
+        "P_n0_absolute": 0.7366310289592123,
+        "P_target_absolute": 0.7192546525865248,
+        "nbar": 0.1826203736845285,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.349815167918126e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 11092.268873606969,
+        "fractional_energy_reduction": 0.8936388507248885,
+        "T_equiv_K": 1.5960485412507148e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.06916392475598895,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.14879300262616,
+          "repump": 16.537382538510368,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 32.68617554113653,
+        "net_quanta_removed": 1.563011961709822,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 312.6023923419644,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.001551868279160127,
+        "time_to_joint_threshold_s": 0.0005079290569639393,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.441730567895457e-05,
+          "|2,-1>": 0.00041103831878161793,
+          "|2,+0>": 0.0017226359884650873,
+          "|2,+1>": 0.00487325733127726,
+          "|2,+2>": 0.007151493430520452,
+          "|3,-3>": 6.585946111884652e-06,
+          "|3,-2>": 0.00012539945216832594,
+          "|3,-1>": 0.0006905999687564923,
+          "|3,+0>": 0.0016581169832658121,
+          "|3,+1>": 0.003327307809433217,
+          "|3,+2>": 0.0064650053674620645,
+          "|3,+3>": 0.9735241420980785
+        },
+        "max_conservation_error": 1.9984014443252818e-15,
+        "min_eigenvalue": 1.5059887632360736e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.18762266190763802,
+        "lattice_loss": 0.18762266190763802,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 2.772806099965237,
+        "rhs_evaluations": 84376
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 2e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.51e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.188"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "quadrature_48": {
+      "changes": {
+        "numerics.recoil_quadrature_points": 48
+      },
+      "final": {
+        "P_up": 0.9735241421231727,
+        "P_n0": 0.9067596916442212,
+        "P_target": 0.885370153238584,
+        "P_up_times_P_n0": 0.8827524509198131,
+        "P_n0_given_up": 0.9094485847137469,
+        "P_trapped": 0.81237733325325,
+        "P_up_absolute": 0.7908689464356811,
+        "P_n0_absolute": 0.7366310201994717,
+        "P_target_absolute": 0.7192546440299822,
+        "nbar": 0.18262038955662208,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.349815790883772e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 11092.269813780606,
+        "fractional_energy_reduction": 0.8936388417097854,
+        "T_equiv_K": 1.596048598391656e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.06916393216923067,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.148793106882753,
+          "repump": 16.537382698272364,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 32.686175805155116,
+        "net_quanta_removed": 1.5630119458377283,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 312.60238916754565,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0015518683262829374,
+        "time_to_joint_threshold_s": 0.0005079290609793856,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.441730561562567e-05,
+          "|2,-1>": 0.00041103831823680596,
+          "|2,+0>": 0.0017226359864843251,
+          "|2,+1>": 0.004873257326983435,
+          "|2,+2>": 0.00715149342402736,
+          "|3,-3>": 6.5859461021512975e-06,
+          "|3,-2>": 0.00012539945199034866,
+          "|3,-1>": 0.000690599967876883,
+          "|3,+0>": 0.0016581169815025295,
+          "|3,+1>": 0.0033273078064379063,
+          "|3,+2>": 0.006465005361570035,
+          "|3,+3>": 0.9735241421231727
+        },
+        "max_conservation_error": 1.9984014443252818e-15,
+        "min_eigenvalue": 1.505988879485426e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.1876226667467508,
+        "lattice_loss": 0.1876226667467508,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5295350999804214,
+        "rhs_evaluations": 48244
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 2e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.51e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.188"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "all_bound_sidebands": {
+      "changes": {
+        "raman.max_sideband_order": 5
+      },
+      "final": {
+        "P_up": 0.9735241442084611,
+        "P_n0": 0.9067594967220155,
+        "P_target": 0.8853699628400223,
+        "P_up_times_P_n0": 0.8827522630491951,
+        "P_n0_given_up": 0.9094483871890883,
+        "P_trapped": 0.81237663040195,
+        "P_up_absolute": 0.7908682638870117,
+        "P_n0_absolute": 0.7366302245319989,
+        "P_target_absolute": 0.719253867071077,
+        "nbar": 0.18262118612081127,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.349845439314119e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 11092.314558900525,
+        "fractional_energy_reduction": 0.8936384126593869,
+        "T_equiv_K": 1.596051317864523e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.06916435642931504,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.148791043825128,
+          "repump": 16.53738226959368,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 32.686173313418806,
+        "net_quanta_removed": 1.563011149273539,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 312.6022298547078,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0015518691481151183,
+        "time_to_joint_threshold_s": 0.0005079292356617894,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.441730091977471e-05,
+          "|2,-1>": 0.0004110382768891216,
+          "|2,+0>": 0.001722635829431573,
+          "|2,+1>": 0.0048732569666817644,
+          "|2,+2>": 0.007151492872656658,
+          "|3,-3>": 6.585945389479726e-06,
+          "|3,-2>": 0.0001253994388036847,
+          "|3,-1>": 0.0006905999001543165,
+          "|3,+0>": 0.0016581168382961667,
+          "|3,+1>": 0.0033273075580568016,
+          "|3,+2>": 0.0064650048642595,
+          "|3,+3>": 0.9735241442084611
+        },
+        "max_conservation_error": 3.9968028886505635e-15,
+        "min_eigenvalue": 1.5059928603785103e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.18762336959805337,
+        "lattice_loss": 0.18762336959805337,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5755550999892876,
+        "rhs_evaluations": 51148
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +5) is 261.9 kHz from the drive = 13.1 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 4e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.51e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.188"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 261858.00720977783,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 5,
+          "motional_levels": [
+            5,
+            0
+          ],
+          "ratio_to_carrier_rabi": 13.092900360488892
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "nmax_20": {
+      "changes": {
+        "trap.n_max": 20
+      },
+      "final": {
+        "P_up": 0.9735241421231726,
+        "P_n0": 0.9067596916442252,
+        "P_target": 0.8853701532385879,
+        "P_up_times_P_n0": 0.8827524509198169,
+        "P_n0_given_up": 0.909448584713751,
+        "P_trapped": 0.8123773332532555,
+        "P_up_absolute": 0.7908689464356863,
+        "P_n0_absolute": 0.7366310201994799,
+        "P_target_absolute": 0.7192546440299902,
+        "nbar": 0.1826203895566157,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.349815790883505e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 11092.269813780202,
+        "fractional_energy_reduction": 0.8936388417097892,
+        "T_equiv_K": 1.5960485983916313e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.06916393216923032,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.14879310688274,
+          "repump": 16.53738269827241,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 32.686175805155145,
+        "net_quanta_removed": 1.5630119458377347,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 312.60238916754696,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0015518683262829931,
+        "time_to_joint_threshold_s": 0.000507929060979387,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.4417305615625856e-05,
+          "|2,-1>": 0.00041103831823680726,
+          "|2,+0>": 0.0017226359864843293,
+          "|2,+1>": 0.004873257326983441,
+          "|2,+2>": 0.007151493424027368,
+          "|3,-3>": 6.585946102151334e-06,
+          "|3,-2>": 0.00012539945199034922,
+          "|3,-1>": 0.0006905999678768859,
+          "|3,+0>": 0.0016581169815025345,
+          "|3,+1>": 0.0033273078064379124,
+          "|3,+2>": 0.006465005361570042,
+          "|3,+3>": 0.9735241421231726
+        },
+        "max_conservation_error": 3.1086244689504383e-15,
+        "min_eigenvalue": 1.5059888794853992e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.1876226667467462,
+        "lattice_loss": 0.1876226667467462,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5000326000154018,
+        "rhs_evaluations": 48244
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 3.11e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.51e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.188"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "repump_along_z": {
+      "changes": {
+        "repump.polarization.beam_azimuth_deg": 90
+      },
+      "final": {
+        "P_up": 0.9742474837717837,
+        "P_n0": 0.8634952458742022,
+        "P_target": 0.8455652181612441,
+        "P_up_times_P_n0": 0.8412580705418392,
+        "P_n0_given_up": 0.8679162453544675,
+        "P_trapped": 0.65097606220435,
+        "P_up_absolute": 0.6342117905982522,
+        "P_n0_absolute": 0.5621147348913652,
+        "P_target_absolute": 0.5504427160555688,
+        "nbar": 0.29033460249817367,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 1.1636680267227483e-29,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 17561.96358293533,
+        "fractional_energy_reduction": 0.8316024745259126,
+        "T_equiv_K": 1.9644928275424936e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.10)",
+        "final_pn_TVD_from_thermal": 0.10185547834019827,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 14.174334786005568,
+          "repump": 14.689181136515579,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 28.863515922521145,
+        "net_quanta_removed": 1.4552977328961767,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 291.05954657923536,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0015597101160130646,
+        "time_to_joint_threshold_s": 0.0004983330540211314,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.195832367610718e-05,
+          "|2,-1>": 0.00039158322113540625,
+          "|2,+0>": 0.0016586651098075918,
+          "|2,+1>": 0.004751331966462732,
+          "|2,+2>": 0.006981201734535814,
+          "|3,-3>": 6.188773894376045e-06,
+          "|3,-2>": 0.00011858210789814425,
+          "|3,-1>": 0.0006601917929737282,
+          "|3,+0>": 0.0016031179646483896,
+          "|3,+1>": 0.0032387898380214,
+          "|3,+2>": 0.006300905395162532,
+          "|3,+3>": 0.9742474837717837
+        },
+        "max_conservation_error": 5.551115123125783e-15,
+        "min_eigenvalue": 3.85482076451487e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.3490239377956542,
+        "lattice_loss": 0.3490239377956542,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.473385600023903,
+        "rhs_evaluations": 47584
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 5.55e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 3.85e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.349"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "kramers_heisenberg": {
+      "changes": {
+        "optical.path_model": "kramers_heisenberg"
+      },
+      "final": {
+        "P_up": 0.9725616027578913,
+        "P_n0": 0.9042533109734943,
+        "P_target": 0.882232963669174,
+        "P_up_times_P_n0": 0.8794420494195114,
+        "P_n0_given_up": 0.9071229639001042,
+        "P_trapped": 0.8068894108418768,
+        "P_up_absolute": 0.7847496586567463,
+        "P_n0_absolute": 0.7296324213432193,
+        "P_target_absolute": 0.7118644362803027,
+        "nbar": 0.1875890287790054,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.553112262853185e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 11399.082852832738,
+        "fractional_energy_reduction": 0.8906968838634676,
+        "T_equiv_K": 1.61462078514697e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.07038385502860603,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.918363898453656,
+          "repump": 17.136547851040785,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 34.05491174949444,
+        "net_quanta_removed": 1.558043306615345,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 311.608661323069,
+        "target_state_scattering_rate_per_s": 468.1833097830379,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.93374618735083,
+          "repump": 0.24956359568703265
+        },
+        "time_to_spin_threshold_s": 0.0016903999786509955,
+        "time_to_joint_threshold_s": 0.0005227547173620407,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.773013006205279e-05,
+          "|2,-1>": 0.0004477305258001093,
+          "|2,+0>": 0.0018559749555259034,
+          "|2,+1>": 0.005065723199992045,
+          "|2,+2>": 0.00717943302612494,
+          "|3,-3>": 7.85881557419179e-06,
+          "|3,-2>": 0.00013845034524900035,
+          "|3,-1>": 0.000744816788658552,
+          "|3,+0>": 0.001749413698395705,
+          "|3,+1>": 0.003480810146470599,
+          "|3,+2>": 0.0067204556102555876,
+          "|3,+3>": 0.9725616027578913
+        },
+        "max_conservation_error": 3.552713678800501e-15,
+        "min_eigenvalue": 1.8553337933303156e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.19311058915812002,
+        "lattice_loss": 0.19311058915812002,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5028441000031307,
+        "rhs_evaluations": 48184
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 3.55e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.86e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.193"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.93374618735083,
+            "gamma_out_down": 0.16182569341550115,
+            "gamma_out_max": 98633.63495239269,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703265,
+            "gamma_out_down": 37696.38319528628,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "phase_0": {
+      "changes": {
+        "raman.lattice_phase_deg": 0
+      },
+      "final": {
+        "P_up": 0.9748445724827,
+        "P_n0": 0.3160961512093549,
+        "P_target": 0.3079063887755092,
+        "P_up_times_P_n0": 0.3081446173891105,
+        "P_n0_given_up": 0.3158517752130927,
+        "P_trapped": 0.7709595676126885,
+        "P_up_absolute": 0.7515657500908385,
+        "P_n0_absolute": 0.24369735206039925,
+        "P_target_absolute": 0.23738337635555093,
+        "nbar": 1.4757320217634051,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 5.993570676955025e-29,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 90454.38006651687,
+        "fractional_energy_reduction": 0.13265429007636564,
+        "T_equiv_K": 7.382781057614374e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.08)",
+        "final_pn_TVD_from_thermal": 0.08361392466747455,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 14.61885665707496,
+          "repump": 14.557905718172503,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 29.176762375247463,
+        "net_quanta_removed": 0.26990031363094524,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 53.98006272618905,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.000572708146934269,
+        "time_to_joint_threshold_s": "not reached",
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.074573101293118e-05,
+          "|2,-1>": 0.0003803580546707778,
+          "|2,+0>": 0.0016150501323939986,
+          "|2,+1>": 0.004649477589069565,
+          "|2,+2>": 0.006814551500909395,
+          "|3,-3>": 6.012711488714949e-06,
+          "|3,-2>": 0.00011516176000238236,
+          "|3,-1>": 0.0006417413406132391,
+          "|3,+0>": 0.0015640772314153616,
+          "|3,+1>": 0.0031695265133361776,
+          "|3,+2>": 0.006158724952387372,
+          "|3,+3>": 0.9748445724827
+        },
+        "max_conservation_error": 8.881784197001252e-16,
+        "min_eigenvalue": 1.0220083470173455e-07,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.22904043238731156,
+        "lattice_loss": 0.22904043238731156,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.2668090999359265,
+        "rhs_evaluations": 40660
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "warning",
+          "message": "both tones in both beams: red sideband |D_10| = 8.49e-16 (0.00 x its maximum over lattice phase), carrier |D_00| = 3.78 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 0 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 8.88e-16"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.02e-07"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.229"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 8.49218850883462e-16,
+        "raman_D00_carrier": 3.7805342447162045,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "phase_45": {
+      "changes": {
+        "raman.lattice_phase_deg": 45
+      },
+      "final": {
+        "P_up": 0.9737082670607533,
+        "P_n0": 0.8422606703159434,
+        "P_target": 0.8223046730958772,
+        "P_up_times_P_n0": 0.8201161777067657,
+        "P_n0_given_up": 0.8445082586985682,
+        "P_trapped": 0.8050944046610193,
+        "P_up_absolute": 0.78392707758279,
+        "P_n0_absolute": 0.6780993529374055,
+        "P_target_absolute": 0.6620328912360993,
+        "nbar": 0.33624701675104596,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 1.3498019074364242e-29,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 20371.07783165296,
+        "fractional_energy_reduction": 0.804666540737865,
+        "T_equiv_K": 2.114700133488232e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.11)",
+        "final_pn_TVD_from_thermal": 0.11062423582730802,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 18.436395505234955,
+          "repump": 19.653966544607268,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 38.09036204984223,
+        "net_quanta_removed": 1.4093853186433045,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 281.8770637286609,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.004024391867359342,
+        "time_to_joint_threshold_s": 0.0007050198261965131,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.3944403464549515e-05,
+          "|2,-1>": 0.0004069270169868971,
+          "|2,+0>": 0.0017078151126842804,
+          "|2,+1>": 0.0048417232407739754,
+          "|2,+2>": 0.00710450773852562,
+          "|3,-3>": 6.5136281738170135e-06,
+          "|3,-2>": 0.00012405248628469438,
+          "|3,-1>": 0.0006839685192021979,
+          "|3,+0>": 0.0016450237034322179,
+          "|3,+1>": 0.003305239366556798,
+          "|3,+2>": 0.006422017723161797,
+          "|3,+3>": 0.9737082670607533
+        },
+        "max_conservation_error": 4.6629367034256575e-15,
+        "min_eigenvalue": 2.6227813614882774e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.19490559533897603,
+        "lattice_loss": 0.19490559533897603,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5602096000220627,
+        "rhs_evaluations": 46336
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.605 (0.71 x its maximum over lattice phase), carrier |D_00| = 3.26 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 45 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 4.66e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 2.62e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.195"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.6048572439156868,
+        "raman_D00_carrier": 3.2590278385737044,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "phase_135": {
+      "changes": {
+        "raman.lattice_phase_deg": 135
+      },
+      "final": {
+        "P_up": 0.97356492991275,
+        "P_n0": 0.90568118324745,
+        "P_target": 0.8843404540355709,
+        "P_up_times_P_n0": 0.8817394376916001,
+        "P_n0_given_up": 0.9083528246183074,
+        "P_trapped": 0.8103437043662931,
+        "P_up_absolute": 0.7889222117466084,
+        "P_n0_absolute": 0.7339130450075861,
+        "P_target_absolute": 0.7166197194441541,
+        "nbar": 0.2030724321099227,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 8.139989191721744e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 12284.791750539713,
+        "fractional_energy_reduction": 0.8822040302050552,
+        "T_equiv_K": 1.6674462588061217e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.09)",
+        "final_pn_TVD_from_thermal": 0.08797594644521721,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 14.018399501539369,
+          "repump": 13.652625266357731,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 27.6710247678971,
+        "net_quanta_removed": 1.5425599032844277,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 308.51198065688556,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0011189747076154556,
+        "time_to_joint_threshold_s": 0.0005492706810599696,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.428381903042478e-05,
+          "|2,-1>": 0.0004100039861629428,
+          "|2,+0>": 0.0017191998173122893,
+          "|2,+1>": 0.004866575522198158,
+          "|2,+2>": 0.007141006047166026,
+          "|3,-3>": 6.564411112367246e-06,
+          "|3,-2>": 0.00012504433562504402,
+          "|3,-1>": 0.0006889881381286647,
+          "|3,+0>": 0.0016551836575502347,
+          "|3,+1>": 0.0033225228225666503,
+          "|3,+2>": 0.006455697530397241,
+          "|3,+3>": 0.97356492991275
+        },
+        "max_conservation_error": 2.886579864025407e-15,
+        "min_eigenvalue": 1.781453824942732e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.18965629563370615,
+        "lattice_loss": 0.18965629563370615,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5408055000007153,
+        "rhs_evaluations": 46600
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman scattering",
+          "status": "warning",
+          "message": "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.605 (0.71 x its maximum over lattice phase), carrier |D_00| = 0.741 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 135 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 2.89e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.78e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.19"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.6048572439156857,
+        "raman_D00_carrier": 0.7409721614263127,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "raman_scatter_100_per_s": {
+      "changes": {
+        "raman.scattering_rate_s": 100
+      },
+      "final": {
+        "P_up": 0.9735064862181941,
+        "P_n0": 0.9068803777486938,
+        "P_target": 0.8854851707180362,
+        "P_up_times_P_n0": 0.8828539299623595,
+        "P_n0_given_up": 0.9095832264640613,
+        "P_trapped": 0.8089375202979625,
+        "P_up_absolute": 0.7875059229553286,
+        "P_n0_absolute": 0.7336095639829079,
+        "P_target_absolute": 0.7163021782612662,
+        "nbar": 0.17800258897360657,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 7.189736952102722e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 10850.680402323724,
+        "fractional_energy_reduction": 0.8959553855790375,
+        "T_equiv_K": 1.5813175751634203e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.07)",
+        "final_pn_TVD_from_thermal": 0.06556628866983688,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.18071425332831,
+          "repump": 16.592785912238604,
+          "raman_scatter": 0.3364446240263106
+        },
+        "photons_total": 33.10994478959323,
+        "net_quanta_removed": 1.5676297464207438,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 313.52594928414874,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0015753026314456592,
+        "time_to_joint_threshold_s": 0.0005083061401165312,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.445648632478354e-05,
+          "|2,-1>": 0.0004113824560289486,
+          "|2,+0>": 0.0017239522381464962,
+          "|2,+1>": 0.004876307782922244,
+          "|2,+2>": 0.007156191945798741,
+          "|3,-3>": 6.591897816413689e-06,
+          "|3,-2>": 0.00012550881173546436,
+          "|3,-1>": 0.0006911646114367499,
+          "|3,+0>": 0.0016593227164466574,
+          "|3,+1>": 0.0033294065257476156,
+          "|3,+2>": 0.006469228309401962,
+          "|3,+3>": 0.9735064862181941
+        },
+        "max_conservation_error": 1.1102230246251565e-15,
+        "min_eigenvalue": 1.4669343148742629e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.19106247970203807,
+        "lattice_loss": 0.19106247970203807,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5976898999651894,
+        "rhs_evaluations": 48232
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 1.11e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.47e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.191"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "raman_scatter_1000_per_s": {
+      "changes": {
+        "raman.scattering_rate_s": 1000
+      },
+      "final": {
+        "P_up": 0.9734267594275575,
+        "P_n0": 0.9018443832276406,
+        "P_target": 0.8805417191578807,
+        "P_up_times_P_n0": 0.8778794554732265,
+        "P_n0_given_up": 0.9045793231282242,
+        "P_trapped": 0.7829530990757081,
+        "P_up_absolute": 0.7621474980170299,
+        "P_n0_absolute": 0.7061018547321017,
+        "P_target_absolute": 0.6894228678801145,
+        "nbar": 0.1641884074998391,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 6.769059595780825e-30,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 10215.798267364895,
+        "fractional_energy_reduction": 0.9020431205859964,
+        "T_equiv_K": 1.5421247133145552e-06,
+        "T_equiv_note": "thermal-equivalent (p(n) near thermal)",
+        "final_pn_TVD_from_thermal": 0.04923391212652535,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 16.48177579948663,
+          "repump": 17.098448805786802,
+          "raman_scatter": 3.2769177365408204
+        },
+        "photons_total": 36.85714234181425,
+        "net_quanta_removed": 1.5814439278945112,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 316.2887855789022,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0018405673285830538,
+        "time_to_joint_threshold_s": 0.0005120351109613214,
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.463381255284743e-05,
+          "|2,-1>": 0.00041293084741977025,
+          "|2,+0>": 0.001729876620471012,
+          "|2,+1>": 0.004890062372825459,
+          "|2,+2>": 0.007177480232232277,
+          "|3,-3>": 6.618907984293137e-06,
+          "|3,-2>": 0.00012600088780806475,
+          "|3,-1>": 0.00069370416980824,
+          "|3,+0>": 0.0016647554289592559,
+          "|3,+1>": 0.003338866380198479,
+          "|3,+2>": 0.006488310912182561,
+          "|3,+3>": 0.9734267594275575
+        },
+        "max_conservation_error": 1.3322676295501878e-15,
+        "min_eigenvalue": 1.3029731329459141e-08,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.21704690092429127,
+        "lattice_loss": 0.21704690092429127,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 1.5805095999967307,
+        "rhs_evaluations": 48124
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.4 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.414 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "Raman isolation",
+          "status": "warning",
+          "message": "only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel |3,+2><->|2,+2> (sideband +3) is 349.3 kHz from the drive = 17.5 x carrier Rabi (conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)"
+        },
+        {
+          "category": "Raman polarization",
+          "status": "ok",
+          "message": "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs"
+        },
+        {
+          "category": "Raman tone layout",
+          "status": "ok",
+          "message": "both tones in both beams: red sideband |D_10| = 0.855 (1.00 x its maximum over lattice phase), carrier |D_00| = 2 (co-propagating pathways add 2, no motional coupling); result depends on raman.lattice_phase_deg = 90 deg (atom position in the beat pattern), scan it if not stabilized"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 1.33e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.3e-08"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.217"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 17.46558326795101
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    },
+    "optical_pumping_control": {
+      "changes": {
+        "raman.enabled": false
+      },
+      "final": {
+        "P_up": 0.9748776166785542,
+        "P_n0": 0.3383634598557328,
+        "P_target": 0.32967331393939603,
+        "P_up_times_P_n0": 0.32986296331526643,
+        "P_n0_given_up": 0.3381689232568553,
+        "P_trapped": 0.8139674100481904,
+        "P_up_absolute": 0.7935186087617954,
+        "P_n0_absolute": 0.2754168290737157,
+        "P_target_absolute": 0.26834333350925416,
+        "nbar": 1.4296301072104838,
+        "nbar_initial": 1.7456323353943504,
+        "mean_excitation_energy_J": 5.795648330239375e-29,
+        "mean_excitation_energy_initial_J": 6.91024421794019e-29,
+        "mean_excitation_energy_hz": 87467.355446567,
+        "fractional_energy_reduction": 0.16129616444048844,
+        "T_equiv_K": 6.96861719640713e-06,
+        "T_equiv_note": "PROXY ONLY: final p(n) non-thermal (TVD from thermal 0.06)",
+        "final_pn_TVD_from_thermal": 0.0639587435660469,
+        "energy_observable_note": "Mean excitation above the ground state per surviving atom; includes selection from loss. Lattice nbar is a mean level index.",
+        "photons": {
+          "spin_pump": 9.56601729644982,
+          "repump": 7.538465187840104,
+          "raman_scatter": 0.0
+        },
+        "photons_total": 17.104482484289925,
+        "net_quanta_removed": 0.3160022281838666,
+        "net_quanta_removed_per_photon": null,
+        "mean_cooling_rate_quanta_per_s": 63.20044563677332,
+        "target_state_scattering_rate_per_s": 468.18330978303794,
+        "target_state_scattering_by_beam_per_s": {
+          "spin_pump": 467.9337461873509,
+          "repump": 0.24956359568703268
+        },
+        "time_to_spin_threshold_s": 0.0003457903500622816,
+        "time_to_joint_threshold_s": "not reached",
+        "spin_threshold": 0.9,
+        "joint_threshold": 0.5,
+        "spin_populations_initial": {
+          "|2,-2>": 0.08333333333333333,
+          "|2,-1>": 0.08333333333333333,
+          "|2,+0>": 0.08333333333333333,
+          "|2,+1>": 0.08333333333333333,
+          "|2,+2>": 0.08333333333333333,
+          "|3,-3>": 0.08333333333333333,
+          "|3,-2>": 0.08333333333333333,
+          "|3,-1>": 0.08333333333333333,
+          "|3,+0>": 0.08333333333333333,
+          "|3,+1>": 0.08333333333333333,
+          "|3,+2>": 0.08333333333333333,
+          "|3,+3>": 0.08333333333333333
+        },
+        "spin_populations_final": {
+          "|2,-2>": 4.070114275524942e-05,
+          "|2,-1>": 0.0003800043178772167,
+          "|2,+0>": 0.0016132510723753015,
+          "|2,+1>": 0.004643731015131502,
+          "|2,+2>": 0.006804360631055162,
+          "|3,-3>": 6.0056511718312645e-06,
+          "|3,-2>": 0.00011506734138117465,
+          "|3,-1>": 0.0006411157086528749,
+          "|3,+0>": 0.0015621565105366502,
+          "|3,+1>": 0.0031657708772519053,
+          "|3,+2>": 0.006150219053256978,
+          "|3,+3>": 0.9748776166785542
+        },
+        "max_conservation_error": 1.5543122344752192e-15,
+        "min_eigenvalue": 1.0337349142270794e-07,
+        "max_boundary_population": 0.18286219935587447,
+        "final_overflow": 0.18603258995180808,
+        "lattice_loss": 0.18603258995180808,
+        "initial_tail_discarded": 0.0,
+        "initial_unbound_fraction": null,
+        "solver": "coherent",
+        "wall_time_s": 0.13586739997845143,
+        "rhs_evaluations": 6556
+      },
+      "validity": [
+        {
+          "category": "magnetic field",
+          "status": "ok",
+          "message": "Breit-Rabi ground energies (correction to linear nu_ud 359 Hz included; excited quadratic shift 0.02 Gamma)"
+        },
+        {
+          "category": "ground coherences",
+          "status": "ok",
+          "message": "adjacent-mF Zeeman splitting / max pumping rate = 29.7 (neglect of pump-induced Zeeman coherences needs >>1)"
+        },
+        {
+          "category": "motional secular",
+          "status": "warning",
+          "message": "max optical scattering rate / minimum motional angular spacing = 0.41 (needs <<1)"
+        },
+        {
+          "category": "recoil coherence",
+          "status": "warning",
+          "message": "population recoil model resolves each |s,n> jump separately: coherence transfer between degenerate motional transitions and interference of elastic spin amplitudes are omitted; the secular rate criterion alone does not justify this extra dephasing approximation"
+        },
+        {
+          "category": "repump direction",
+          "status": "warning",
+          "message": "geometry angles set lab direction [0.0, 1.0, 0.0]; stored direction [0.0, 0.0, 1.0] is inactive; recoil uses the geometry direction"
+        },
+        {
+          "category": "Lamb-Dicke",
+          "status": "ok",
+          "message": "eta_R = 0.4680, eta_R^2(2 nbar0+1) = 0.984; exact displacement elements used (no LD expansion)"
+        },
+        {
+          "category": "lattice",
+          "status": "ok",
+          "message": "1D lattice V0 = 15 uK = 312.5 kHz, E_r = 3.92 kHz (lattice wavelength 774 nm implied by depth and nu_t), 6 bound levels, spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz (harmonic 70.0); isolated site: tunnelling (lowest band ~0.0041 Hz, larger near the top), coherent Raman coupling into unbound states and anharmonic heating elements neglected"
+        },
+        {
+          "category": "conservation",
+          "status": "ok",
+          "message": "max |trace + overflow - 1| = 1.55e-15"
+        },
+        {
+          "category": "positivity",
+          "status": "ok",
+          "message": "most negative eigenvalue/population = 1.03e-07"
+        },
+        {
+          "category": "motional boundary",
+          "status": "ok",
+          "message": "max population in the top two bound levels: 0.183 (physical; above them the atom is unbound)"
+        },
+        {
+          "category": "lattice loss",
+          "status": "warning",
+          "message": "probability promoted above the lattice depth (atom leaves its site) = 0.186"
+        },
+        {
+          "category": "cooling observables",
+          "status": "warning",
+          "message": "energy, nbar and their derivatives describe surviving atoms and include loss selection; selection_cooling_power_W reports that contribution. Quanta removed per photon is undefined when loss is appreciable"
+        },
+        {
+          "category": "weak excitation",
+          "status": "ok",
+          "message": "max excited-state fraction for occupied ground states = 0.00259"
+        },
+        {
+          "category": "initial state",
+          "status": "ok",
+          "message": "lattice: Boltzmann at T = 1e-05 K conditional on initially bound atoms; discarded bound-state weight = 0; the initially unbound fraction is unspecified"
+        }
+      ],
+      "model_summary": {
+        "N_motional": 6,
+        "x0_m": 2.915919848038929e-08,
+        "eta_single_photon_D2_along_axis": 0.23481531429592023,
+        "eta_R": 0.46797611101178876,
+        "raman_dk_lab_per_m": [
+          0.0,
+          0.0,
+          16049004.61603981
+        ],
+        "raman_tone_layout": "both_tones_both_beams",
+        "raman_pathway_amplitudes_low_i_high_j": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ],
+        "raman_D10_red_sideband": 0.8553973176451748,
+        "raman_D00_carrier": 2.000000000000012,
+        "nu_ud_zeeman_hz": 3038068142.335536,
+        "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+        "raman_isolation": {
+          "nearest_detuning_hz": 349311.66535902023,
+          "pair": "|3,+2><->|2,+2>",
+          "sideband": 3,
+          "motional_levels": [
+            3,
+            0
+          ],
+          "ratio_to_carrier_rabi": 3.493116653590202e+35
+        },
+        "nu_ud_ref_hz": 3038068142.335536,
+        "nu_beat_hz": 3038133953.618066,
+        "delta_beat_minus_nu_t_ref_hz": -2.0273728296160698e-07,
+        "trap_potential": "lattice",
+        "nu_10_hz": 65811.28253003367,
+        "level_energies_hz": [
+          0.0,
+          65811.28253003367,
+          127015.6138878034,
+          182880.4383223177,
+          232020.36812418106,
+          270334.0964717475
+        ],
+        "lattice_bound_levels": 6,
+        "lattice_recoil_hz": 3919.3818432490807,
+        "lattice_wavelength_implied_m": 7.7427579397137e-07,
+        "cos_trap_axis_field": 0.0,
+        "pump_rates_per_s": {
+          "spin_pump": {
+            "gamma_out_up": 467.9337461873509,
+            "gamma_out_down": 0.16182569341550113,
+            "gamma_out_max": 98633.63495239272,
+            "p_exc_max": 0.0025879154281611355,
+            "light_shift_up_hz": -711.8401996820722,
+            "light_shift_down_hz": -12.896741362119245,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "0": 0.0,
+              "-1": 0.0048861861,
+              "1": 0.9951138139
+            },
+            "laser_hz": 384229067898998.9,
+            "fraction_source": "spherical (realizable by a transverse wave along the configured direction)"
+          },
+          "repump": {
+            "gamma_out_up": 0.24956359568703268,
+            "gamma_out_down": 37696.383195286275,
+            "gamma_out_max": 97065.64765358868,
+            "p_exc_max": 0.0025467751160992884,
+            "light_shift_up_hz": 19.56368447310327,
+            "light_shift_down_hz": -1248.2308154740078,
+            "E0_V_per_m": 15.486573750528883,
+            "intensity_w_m2": 0.31830988618379075,
+            "fractions": {
+              "1": 1.8746997283273213e-33,
+              "0": 1.0,
+              "-1": 1.8746997283273213e-33
+            },
+            "laser_hz": 384232103631437.9,
+            "fraction_source": "geometry (derived from transverse Jones vector)"
+          }
+        },
+        "illustrative_parameters": [
+          "initial.nbar",
+          "magnetic.magnitude_gauss",
+          "raman.carrier_rabi_hz",
+          "raman.beam_low_direction",
+          "raman.beam_high_direction",
+          "raman.tone_powers_low",
+          "raman.tone_powers_high",
+          "raman.lattice_phase_deg",
+          "raman.beam_beat_phase_deg",
+          "spin_pump.peak_intensity_w_m2",
+          "repump.peak_intensity_w_m2"
+        ]
+      }
+    }
+  },
+  "grid_checks": [
+    {
+      "step_x0": 0.025,
+      "half_width_sites": 2.5,
+      "bound_levels": 6,
+      "max_level_difference_hz": 41.79403841891326,
+      "max_gap_difference_hz": 12.580949175346177,
+      "max_overlap_magnitude_difference": 0.0006184117870154382,
+      "levels_hz": [
+        33989.45946343939,
+        99807.36645166637,
+        161022.79996758953,
+        216900.20535127918,
+        266049.762711419,
+        304357.2909967004
+      ]
+    },
+    {
+      "step_x0": 0.05,
+      "half_width_sites": 5.0,
+      "bound_levels": 6,
+      "max_level_difference_hz": 6.690877489745617e-05,
+      "max_gap_difference_hz": 6.691017188131809e-05,
+      "max_overlap_magnitude_difference": 2.8945604579888595e-08,
+      "levels_hz": [
+        33987.60054882061,
+        99798.88307885907,
+        161003.21443662114,
+        216868.03887112997,
+        266007.9686730015,
+        304321.6969536578
+      ]
+    },
+    {
+      "step_x0": 0.025,
+      "half_width_sites": 5.0,
+      "bound_levels": 6,
+      "max_level_difference_hz": 41.79403839353472,
+      "max_gap_difference_hz": 12.580949159659212,
+      "max_overlap_magnitude_difference": 0.0006183810242866294,
+      "levels_hz": [
+        33989.459463424166,
+        99807.36645166989,
+        161022.7999676082,
+        216900.20535128217,
+        266049.76271139365,
+        304357.29092593514
+      ]
+    }
+  ]
+}

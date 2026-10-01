@@ -31,7 +31,7 @@ from .protocols import PROTOCOLS
 GROUPS = [
     ("trap", "Trap"), ("initial", "Initial state"), ("magnetic", "Magnetic field"), ("raman", "Raman (calibrated)"),
     ("spin_pump", "Spin pump (F=3 -> F'=3)"), ("repump", "Repump (F=2 -> F'=3)"), ("optical", "Optical model"),
-    ("timing", "Timing / schedule"), ("numerics", "Numerics"), ("analysis", "Analysis"),
+    ("timing", "Timing / schedule"), ("ensemble", "3D spatial ensemble"), ("numerics", "Numerics"), ("analysis", "Analysis"),
 ]
 LOG_MIN, LOG_MAX, LOG_STEPS = -6.0, -1.0, 500
 
@@ -328,7 +328,7 @@ class PlotTab(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, cfg: SimConfig | None = None, start_path: str | None = None):
         super().__init__()
-        self.setWindowTitle("Rb-85 optical pumping + Raman sideband cooling (1D model)")
+        self.setWindowTitle("Rb-85 optical pumping + Raman sideband cooling")
         self.resize(1600, 1000)
         self.start_path = start_path  # config the window opened with; Reset returns to it
         self.fields: dict[str, FieldWidget] = {}

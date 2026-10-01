@@ -30,6 +30,7 @@ def P(default, unit="", help="", min=None, max=None, choices=None, illustrative=
 
 @dataclass
 class TrapConfig:
+    wavelength_nm: Optional[float] = P(None, "nm", "Lattice optical wavelength. When supplied, depth and wavelength determine the bottom frequency; frequency_hz is inactive.", min=100.0)
     frequency_hz: float = P(
         70e3, "Hz",
         "Harmonic vibration frequency nu_t (cycles/s, not angular). Experimental value. Lattice: harmonic frequency at the bottom "
@@ -74,17 +75,23 @@ class InitialStateConfig:
 
 @dataclass
 class FieldConfig:
-    magnitude_gauss: float = P(0.5, "G", "Bias field magnitude (ILLUSTRATIVE). Weak-field (linear) Zeeman model; validity is checked.", min=0.0, illustrative=True)
+    magnitude_gauss: float = P(0.5, "G", "Bias field magnitude (ILLUSTRATIVE). Breit-Rabi ground energies; excited shifts and dipoles use the weak-field basis, with validity checked.", min=0.0, illustrative=True)
     direction: list = P([0.0, 0.0, 1.0], "lab unit vector", "Bias-field / quantization axis.")
 
 
 @dataclass
 class RamanConfig:
+    calibration: str = P("pathway", "", "pathway: legacy one-path Rabi. measured_carrier: calibrate the ensemble carrier using ARC D1+D2 amplitudes and carrier_decay_mode (ensemble mode).", choices=["pathway", "measured_carrier"])
+    carrier_decay_mode: str = P("measured_envelope", "", "modeled: predict spatial/thermal dephasing, with carrier_rabi_hz interpreted as the RMS local carrier frequency (initial-curvature calibration), and no fitted damping. measured_envelope: fit intensity and nonnegative residual damping to the reported envelope.", choices=["modeled", "measured_envelope"])
+    beam_helicities: list = P([1, -1], "", "Helicity along each beam's OWN propagation vector: +1 and -1 are opposite circular polarizations.")
+    waist_um: float = P(200.0, "um", "Raman 1/e^2 intensity radius.", min=1.0)
+    flop_contrast: float = P(0.9, "", "Observed carrier contrast; treated as preparation/readout visibility, not atom loss.", min=0.0, max=1.0)
+    flop_decay_periods: float = P(3.5, "periods", "Reported 1/e carrier decay in measured periods. Fit input only in measured_envelope mode; comparison only in modeled mode.", min=0.1)
     enabled: bool = P(True, "", "Master enable for the Raman coupling.")
     carrier_rabi_hz: float = P(
         5e3, "Hz",
-        "Calibrated carrier two-photon Rabi frequency Omega_c/2pi, before motional overlap (ILLUSTRATIVE). In both_tones_both_beams: "
-        "Rabi of one pathway with unit relative tone powers.", min=0.0, illustrative=True,
+        "Two-photon Rabi frequency Omega/2pi. calibration=pathway: one-path value before motional overlap. "
+        "calibration=measured_carrier: measured ensemble carrier-flop frequency, interpreted by the ARC/spatial calibration.", min=0.0, illustrative=True,
     )
     frequency_mode: str = P(
         "sideband_offset",
@@ -121,7 +128,8 @@ class RamanConfig:
         90.0, "deg",
         "Phase theta of the crossed pathway (low from beam 1, high from beam 2) relative to the co-propagating beam-1 pathway "
         "= dk.X_atom + tone phases: where the atom sits in the static beat interference pattern. For balanced beams the red "
-        "sideband scales as sin(theta) and the crossed carrier as cos(theta) [both_tones_both_beams].", illustrative=True,
+        "sideband scales as sin(theta) and the crossed carrier as cos(theta) [both_tones_both_beams]. "
+        "Inactive in ensemble mode, which averages registration using ensemble.phase_offset_deg.", illustrative=True,
     )
     beam_beat_phase_deg: float = P(
         0.0, "deg", "Beat-note phase chi of beam 2 minus beam 1, (phi_high - phi_low)_2 - (phi_high - phi_low)_1 [both_tones_both_beams].",
@@ -130,7 +138,7 @@ class RamanConfig:
     extra_coherence_decay_rate_s: float = P(0.0, "1/s", "Additional up-down coherence decay beyond modeled scattering (laser phase noise, B noise...).", min=0.0)
     differential_light_shift_hz: float = P(0.0, "Hz", "Calibrated Raman-beam shift of (E_up - E_down)/h at full amplitude.")
     scattering_rate_s: float = P(
-        0.0, "1/s", "Residual Raman-beam photon scattering rate per atom at full amplitude. 0 = IDEALIZED (unknown, neglected).", min=0.0
+        0.0, "1/s", "Additional Raman-beam photon scattering rate at full amplitude. In measured_carrier mode this adds to the ARC estimate; in legacy mode 0 neglects scattering.", min=0.0
     )
     scattering_model: str = P(
         "spin_preserving",
@@ -265,6 +273,23 @@ class AnalysisConfig:
 
 
 @dataclass
+class EnsembleConfig:
+    enabled: bool = P(False, "", "Spatial/phase ensemble with coherent axial Raman dynamics and three-axis bound-state recoil/loss.")
+    samples: int = P(32, "", "Deterministic scrambled Sobol samples of Gaussian position and uniform Raman spatial phase; refine to check convergence.", min=1)
+    workers: int = P(1, "", "Processes for independent spatial samples in headless runs; interactive cancellable runs use one process.", min=1, max=8)
+    cloud_radius_um: float = P(150.0, "um", "Spherical Gaussian 1/e^2 DENSITY radius (coordinate standard deviation = radius/2).", min=0.0)
+    lattice_waist_um: float = P(200.0, "um", "All lattice beams' 1/e^2 intensity radius.", min=1.0)
+    transverse_wavelength_nm: float = P(1188.0, "nm", "Optical wavelength of both transverse standing waves.", min=100.0)
+    transverse_depth_uk: float = P(15.0, "uK", "Central depth of EACH transverse standing wave.", min=0.01)
+    transverse_temperature_k: float = P(10e-6, "K", "Loaded transverse temperature, conditional on local bound states.", min=0.0)
+    transverse_frequency_offset_hz: float = P(160e6, "Hz", "Optical carrier offset BETWEEN the x and y lattices, suppressing inter-axis interference.", min=0.0)
+    lattice_linear_polarizations: list = P([[0, 1, 0], [1, 0, 0], [1, 0, 0]], "lab vectors", "Linear electric field directions for x, y, z lattices, perpendicular to the respective axes.")
+    phase_offset_deg: float = P(0.0, "deg", "Offset added to the uniformly sampled Raman spatial phase; use for quadrature sensitivity.")
+    time_step_us: float = P(2.0, "us", "Maximum Strang splitting step; halve to verify integration convergence.", min=0.01)
+    calibration_samples: int = P(128, "", "Position/phase samples for independent pump-off, z-lattice-only carrier calibration.", min=8)
+
+
+@dataclass
 class SimConfig:
     name: str = P("default", "", "Run label.")
     trap: TrapConfig = field(default_factory=TrapConfig)
@@ -277,6 +302,7 @@ class SimConfig:
     timing: TimingConfig = field(default_factory=TimingConfig)
     numerics: NumericsConfig = field(default_factory=NumericsConfig)
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
+    ensemble: EnsembleConfig = field(default_factory=EnsembleConfig)
 
     # ------------------------------------------------------------------
     def to_dict(self) -> dict:
@@ -320,6 +346,31 @@ class SimConfig:
                     errs.append(f"{path} must be a nonzero 3-vector")
         if self.trap.potential == "lattice" and not (self.trap.depth_uk and self.trap.depth_uk > 0):
             errs.append("trap.potential = lattice requires trap.depth_uk > 0")
+        if self.raman.calibration == "measured_carrier" and not self.ensemble.enabled:
+            errs.append("measured_carrier calibration requires ensemble.enabled")
+        if self.raman.calibration == "measured_carrier" and (self.raman.carrier_rabi_hz <= 0 or self.raman.flop_contrast <= 0):
+            errs.append("measured_carrier requires positive measured frequency and contrast; use raman.enabled=false to turn the drive off")
+        hel = np.asarray(self.raman.beam_helicities)
+        if hel.shape != (2,) or not np.all(np.isin(hel, [-1, 1])):
+            errs.append("raman.beam_helicities must contain two values, each +1 or -1")
+        if self.ensemble.enabled:
+            if self.raman.calibration != "measured_carrier":
+                errs.append("ensemble mode requires raman.calibration = measured_carrier")
+            if self.trap.potential != "lattice" or self.trap.wavelength_nm is None:
+                errs.append("ensemble mode requires lattice depth and optical wavelength")
+            if not np.allclose(pol.unit(self.trap.axis), [0, 0, 1]):
+                errs.append("ensemble mode currently requires the axial lattice along lab z")
+            if not np.allclose(pol.unit(self.raman.beam_low_direction), [0, 0, 1]) or not np.allclose(pol.unit(self.raman.beam_high_direction), [0, 0, -1]):
+                errs.append("ensemble mode requires Raman beams along +z and -z")
+            if self.raman.tone_layout != "both_tones_both_beams":
+                errs.append("ensemble mode requires both tones in both Raman beams")
+            if self.numerics.solver == "rate":
+                errs.append("ensemble mode uses coherent evolution; rate solver is unsupported")
+            if self.trap.heating_rate_quanta_per_s != 0:
+                errs.append("ensemble mode does not implement an anharmonic background-heating noise model")
+            ep = np.asarray(self.ensemble.lattice_linear_polarizations, float)
+            if ep.shape != (3, 3) or not np.all(np.isfinite(ep)) or np.any(np.linalg.norm(ep, axis=1) == 0) or not np.allclose(np.diag(ep), 0):
+                errs.append("ensemble.lattice_linear_polarizations must be three nonzero transverse lab vectors for x,y,z")
         for name in ("tone_powers_low", "tone_powers_high"):
             v = np.asarray(getattr(self.raman, name), float)
             if v.shape != (2,) or not np.all(np.isfinite(v)) or np.any(v < 0):
@@ -333,11 +384,11 @@ class SimConfig:
         ini = self.initial
         if ini.spin_preset == "custom":
             v = np.asarray(ini.custom_spin_populations, float)
-            if v.shape != (12,) or np.any(v < 0) or v.sum() <= 0:
+            if v.shape != (12,) or not np.all(np.isfinite(v)) or np.any(v < 0) or v.sum() <= 0:
                 errs.append("initial.custom_spin_populations must be 12 nonnegative numbers with nonzero sum")
         if ini.motion_mode == "custom":
             v = np.asarray(ini.custom_pn, float)
-            if v.ndim != 1 or v.size == 0 or np.any(v < 0) or v.sum() <= 0:
+            if v.ndim != 1 or v.size == 0 or not np.all(np.isfinite(v)) or np.any(v < 0) or v.sum() <= 0:
                 errs.append("initial.custom_pn must be nonnegative with nonzero sum")
         if self.analysis.derivative_window % 2 == 0:
             errs.append("analysis.derivative_window must be odd")

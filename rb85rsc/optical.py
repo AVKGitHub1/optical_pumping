@@ -108,7 +108,7 @@ def beam_rates(
     gam = atom.gamma
     e0 = np.sqrt(2.0 * beam.intensity_w_m2 / (C_LIGHT * EPS0))
     d = atom.dipole_si  # (24, 12)
-    eg = np.array([atom.ground_hfs_hz[f] + atom.g_ground[f] * m * MU_B * b_tesla / H for f, m in GROUND_STATES])
+    eg = atom.ground_energy_hz(b_tesla)
     ee = np.array(
         [atom.d2_centroid_hz + atom.excited_hfs_hz[f] + atom.g_excited[f] * m * MU_B * b_tesla / H for f, m in EXCITED_STATES]
     ) + excited_shift_hz

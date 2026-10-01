@@ -1,0 +1,19 @@
+{
+  "objective": "P_target_absolute",
+  "checks": [
+    {
+      "offset_hz": -5000.0,
+      "target_absolute": 0.2718334324415432,
+      "survival": 0.5202047017857855,
+      "validity": "warning"
+    },
+    {
+      "offset_hz": 0.0,
+      "target_absolute": 0.2479971870370337,
+      "survival": 0.52981321511436,
+      "validity": "warning"
+    }
+  ],
+  "selected_offset_hz": -5000.0,
+  "note": "Best of the matched 64-node checks; finite search under the reported calibration/model assumptions."
+}
