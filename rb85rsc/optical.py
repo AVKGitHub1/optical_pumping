@@ -68,7 +68,7 @@ class BeamRates:
 
 def peak_intensity(cfg_pump) -> float:
     if cfg_pump.intensity_mode == "power_waist":
-        return 2.0 * cfg_pump.power_w / (np.pi * cfg_pump.waist_m**2)
+        return 2.0 * (cfg_pump.power_mw * 1e-3) / (np.pi * (cfg_pump.waist_um * 1e-6) ** 2)
     return cfg_pump.peak_intensity_w_m2
 
 

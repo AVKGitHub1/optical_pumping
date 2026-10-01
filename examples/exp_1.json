@@ -1,19 +1,19 @@
 {
-  "name": "default",
+  "name": "exp_1",
   "trap": {
     "frequency_hz": 70000.0,
     "n_max": 40,
     "axis": [
-      1.0,
       0.0,
-      0.0
+      0.0,
+      1.0
     ],
     "heating_rate_quanta_per_s": 0.0,
-    "depth_uk": null
+    "depth_uk": 15.0
   },
   "initial": {
     "spin_preset": "uniform_all",
-    "f3_fraction": 0.5833333333333334,
+    "f3_fraction": 0.5833333333,
     "custom_spin_populations": [
       0.08333333333333333,
       0.08333333333333333,
@@ -28,18 +28,18 @@
       0.08333333333333333,
       0.08333333333333333
     ],
-    "motion_mode": "thermal_nbar",
+    "motion_mode": "thermal_temperature",
     "nbar": 3.0,
     "temperature_k": 1e-05,
     "fock_n": 1,
     "custom_pn": []
   },
   "magnetic": {
-    "magnitude_gauss": 0.5,
+    "magnitude_gauss": 1.0,
     "direction": [
+      1.0,
       0.0,
-      0.0,
-      1.0
+      0.0
     ]
   },
   "raman": {
@@ -50,15 +50,26 @@
     "beat_frequency_hz": 3035802400.0,
     "wavelength_nm": 783.0,
     "beam_low_direction": [
-      0.70710678,
-      0.70710678,
-      0.0
+      0.0,
+      0.0,
+      1.0
     ],
     "beam_high_direction": [
-      -0.70710678,
-      0.70710678,
-      0.0
+      0.0,
+      0.0,
+      -1.0
     ],
+    "tone_layout": "both_tones_both_beams",
+    "tone_powers_low": [
+      1.0,
+      1.0
+    ],
+    "tone_powers_high": [
+      1.0,
+      1.0
+    ],
+    "lattice_phase_deg": 90.0,
+    "beam_beat_phase_deg": 0.0,
     "extra_coherence_decay_rate_s": 0.0,
     "differential_light_shift_hz": 0.0,
     "scattering_rate_s": 0.0,
@@ -67,20 +78,20 @@
   },
   "spin_pump": {
     "enabled": true,
-    "intensity_mode": "intensity",
+    "intensity_mode": "power_waist",
     "peak_intensity_w_m2": 0.1,
-    "power_mw": 0.001,
-    "waist_um": 2000.0,
+    "power_mw": 2e-05,
+    "waist_um": 200.0,
     "detuning_mhz": 0.0,
     "direction": [
+      1.0,
       0.0,
-      0.0,
-      1.0
+      0.0
     ],
     "polarization": {
       "mode": "spherical",
-      "pi_fraction": 0.0,
-      "sigma_minus_fraction": 0.0,
+      "pi_fraction": 0.0048861861,
+      "sigma_minus_fraction": 0.0048861861,
       "beam_angle_deg": 0.0,
       "beam_azimuth_deg": 0.0,
       "ellipticity_deg": 45.0,
@@ -92,10 +103,10 @@
   },
   "repump": {
     "enabled": true,
-    "intensity_mode": "intensity",
+    "intensity_mode": "power_waist",
     "peak_intensity_w_m2": 0.1,
-    "power_mw": 0.001,
-    "waist_um": 2000.0,
+    "power_mw": 2e-05,
+    "waist_um": 200.0,
     "detuning_mhz": 0.0,
     "direction": [
       0.0,
@@ -103,12 +114,12 @@
       1.0
     ],
     "polarization": {
-      "mode": "spherical",
+      "mode": "geometry",
       "pi_fraction": 0.0,
       "sigma_minus_fraction": 0.0,
-      "beam_angle_deg": 0.0,
+      "beam_angle_deg": 90.0,
       "beam_azimuth_deg": 0.0,
-      "ellipticity_deg": 45.0,
+      "ellipticity_deg": 0.0,
       "orientation_deg": 0.0,
       "linked_pi_share": 0.5
     },

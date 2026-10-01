@@ -44,7 +44,7 @@ def test_examples_load():
 def test_headless_cli_and_export(tmp_path):
     out = tmp_path / "run"
     cmd = [sys.executable, str(ROOT / "rb85_rsc_sim.py"), "--config", str(ROOT / "examples" / "continuous.json"), "--headless",
-           "--output", str(out), "--set", "timing.total_duration_s=5e-4", "--set", "timing.n_samples=11"]
+           "--output", str(out), "--set", "timing.total_duration_ms=0.5", "--set", "timing.n_samples=11"]
     env = {**os.environ, "MPLBACKEND": "Agg"}
     env.pop("QT_QPA_PLATFORM", None)
     p = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=ROOT, timeout=600)
@@ -73,7 +73,7 @@ def test_gui_smoke():
 
     app = QApplication.instance() or QApplication([])
     c = SimConfig()
-    c.timing.total_duration_s = 3e-4
+    c.timing.total_duration_ms = 0.3
     c.timing.n_samples = 11
     w = MainWindow(c)
     # linked impurity controls: repump edit must not change the spin pump
@@ -85,14 +85,17 @@ def test_gui_smoke():
     assert got.repump.polarization.pi_fraction == pytest.approx(0.005)
     assert got.repump.polarization.sigma_minus_fraction == pytest.approx(0.015)
     assert got.spin_pump.polarization.total_impurity == 0
+    assert w.last_ok.text() == "Last successful run: none"
     w.on_run()
     t0 = time.time()
     while w.thread is not None and time.time() - t0 < 120:
         QCoreApplication.processEvents()
         time.sleep(0.02)
     assert w.last is not None and "series" in w.last
+    stamp = w.last_ok.text()
+    assert stamp.startswith("Last successful run: 20")
     # Stop during a long integration
-    c.timing.total_duration_s = 20e-3
+    c.timing.total_duration_ms = 20.0
     w.load_config(c)
     w.on_run()
     t0 = time.time()
@@ -104,4 +107,5 @@ def test_gui_smoke():
         QCoreApplication.processEvents()
         time.sleep(0.02)
     assert w.thread is None and "Stopped" in w.status.text()
+    assert w.last_ok.text() == stamp  # a stopped run is not a successful one
     w.close()

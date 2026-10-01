@@ -75,6 +75,18 @@ single 780 nm photon Lamb-Dicke parameter along the axis is computed from consta
 `eta_R = |(k_abs − k_emit)·trap_axis| x0` is set by the configured Raman beam directions. With the default
 beams (90° apart, Δk ∥ x) it is 0.331.
 
+With `raman.tone_layout = "both_tones_both_beams"`, each beam carries both tones. The four pathways (low tone from beam i,
+high tone from beam j) are resonant at the same beat, so they add coherently in the coupling matrix:
+
+`D → √(p₁ˡp₂ʰ) e^{iθ} D(η_R) + √(p₂ˡp₁ʰ) e^{i(χ−θ)} D(−η_R) + [√(p₁ˡp₁ʰ) + √(p₂ˡp₂ʰ) e^{iχ}] 𝟙`
+
+The two co-propagating pathways have Δk = 0, so they drive only the carrier. The tone powers are
+`raman.tone_powers_low/high` (each is [beam 1, beam 2]), and `carrier_rabi_hz` is the Rabi frequency of one pathway at unit
+relative power. θ = `raman.lattice_phase_deg` is the atom's position in the static beat interference pattern, and
+χ = `raman.beam_beat_phase_deg`. For balanced beams with χ = 0, the red sideband scales as 2 sin θ times the one-pathway
+value. The motion-free carrier term is 2 + 2 cos θ·D_nn. At θ = 0 the sideband vanishes. The diagnostics report the realized
+|D₁₀| and |D₀₀|. If θ is not stabilized in the experiment, scan `raman.lattice_phase_deg`.
+
 ### 2.3 Atomic data (ARC)
 
 The model uses ARC's `getDipoleMatrixElementHFS` (absorption amplitude with q = m' − m, units e·a0), `getBranchingRatio`,
@@ -204,6 +216,32 @@ to 1e-6 (`test_red_pi_pulse_removes_one_quantum_then_reset_adds_predicted_recoil
 **numerical-overflow** bin. It is never reflected back into the basis and is never counted as physical loss. The diagnostics report the
 overflow, the population in the top two levels, `|trace + overflow − 1|`, and the thermal tail discarded before normalization.
 
+**Lattice trap** (`trap.potential = "lattice"`). The motion is one site of a 1D lattice `V0 sin²(k_L z)` along `trap.axis`,
+with `V0 = trap.depth_uk` and `frequency_hz` read as the harmonic frequency at the bottom of a site, `h ν_t = 2 sqrt(V0 E_r)`.
+That fixes `E_r = (h ν_t)² / (4 V0)` and k_L; the implied lattice wavelength is printed in the diagnostics so it can be checked against
+the real one. The site keeps the exact lattice shape inside `|z| ≤ λ_L/4` and is held at V0 outside (isolated-site approximation).
+The Schrödinger equation is solved by finite differences ([motion.py](rb85rsc/motion.py), `LatticeSite`), and the basis is every
+bound level (E < V0), capped by `n_max`. Then:
+
+* Raman matrix elements `D_nm = <n|exp(i Δk z)|m>` and the recoil kernels are overlaps of the site states.
+* Each Raman element `|up,n><down,m|` rotates at its own frequency `E_n − E_m − ω_10`, so carrier and sidebands are anharmonic.
+  `ω_10 = (E_1 − E_0)/ħ` replaces ω_t as the reference: `red_sideband_offset_hz = 0` is resonant with n = 1 → 0.
+* Probability that a recoil kick promotes above V0 goes to the overflow bin, which is now **physical loss** (the atom leaves its site),
+  reported as `lattice loss` and `final.lattice_loss`.
+* All reported populations are **per trapped atom** (post-selected on survival): P_up, P_n0, P_target, P(F), the spin bars,
+  p(n,t), the final joint P(F,mF,n), and `nbar` with everything derived from it (T_equiv, energy reduction, cooling rate).
+  Losing hot atoms therefore lowers n̄ without cooling anyone. `P_trapped` is the surviving fraction, and `P_up_absolute`,
+  `P_n0_absolute`, `P_target_absolute` are fractions of all atoms (= per-trapped value × P_trapped). The dashboard draws
+  P_trapped and prints the absolute values when there is loss; scans gain a survival panel. The `_joint.npz` export keeps the raw
+  absolute P[t, s, n]. In a harmonic trap P_trapped is 1 − numerical overflow, so the normalization changes values by < 1e-4 in a valid run.
+* `thermal_temperature` initial states are Boltzmann over the exact bound energies. The part of a thermal state above the depth is
+  not represented and is reported.
+
+Example: 15 µK and 70 kHz give E_r = 3.92 kHz (λ_L ≈ 774 nm) and 6 bound levels with spacings 65.8, 61.2, 55.9, 49.1, 38.3 kHz.
+Levels n = 0–3 agree with the exact Mathieu band centres to within 0.1 kHz. Not modeled: tunnelling between sites (negligible for the
+lowest bands, 0.004 Hz here, but the top band is about 16 kHz wide), coherent Raman coupling into unbound states, and anharmonic
+corrections to the background-heating matrix elements.
+
 ### 2.8 Solvers
 
 * **`coherent` (reference, default).** The master equation above is integrated with scipy `DOP853` (rtol 1e-7, atol 1e-10), exactly
@@ -219,16 +257,16 @@ overflow, the population in the top two levels, `|trace + overflow − 1|`, and 
   **is rejected at the defaults** (ratio 0.8, near critical damping), for Raman-only, and for Raman pulses with the pumps off.
 * **`auto`** uses the rate backend when every segment passes and otherwise falls back to coherent. The switch is recorded in the output.
 
-### 2.9 Protocols (equal wall-clock `timing.total_duration_s`, preparation included)
+### 2.9 Protocols (equal wall-clock `timing.total_duration_ms`, preparation included)
 
 | protocol | schedule |
 | --- | --- |
 | `optical_pumping_only` | both pumps, Raman off |
 | `continuous` | both pumps + Raman throughout |
-| `prep_then_continuous` | `prep_duration_s` of pumping, then pumping (scaled by `cooling_*_scale`) + Raman |
+| `prep_then_continuous` | `prep_duration_ms` of pumping, then pumping (scaled by `cooling_*_scale`) + Raman |
 | `pulsed` | [reset (pumps) → Raman pulse] × reps; reps = 0 fills the duration, the remainder is idle |
 | `raman_only`, `repump_raman_no_spin_pump`, `all_off` | controls |
-| `custom` | list of `{duration_s, raman, pump, repump}` amplitude multipliers |
+| `custom` | list of `{duration_ms, raman, pump, repump}` amplitude multipliers |
 
 Branching and recoil stay active during reset pulses. There is never a forced spin reset, the state and photon counters carry
 across every switch, and the laser phase is continuous because the interaction-picture phases use absolute time.
@@ -332,7 +370,7 @@ over-damps the sideband coherence (Ω²/γ suppression) and ends with n̄ ≈ 2.
 
 ---
 
-## 6. Physics checks (`python -m pytest`; 41 tests, about 2.5 min)
+## 6. Physics checks (`python -m pytest`; 52 tests, about 3 min)
 
 | check | test(s) | status |
 | --- | --- | --- |
@@ -349,6 +387,7 @@ over-damps the sideband coherence (Ω²/γ suppression) and ends with n̄ ≈ 2.
 | 10 config round trip, unknown keys, all examples load, headless CLI + every export, headless imports no Qt, GUI smoke (offscreen run + Stop mid-integration) | `test_io_gui.py` | pass |
 | 11 fractions sum to 1, power fixed, zero-impurity limit is identical, π and σ⁻ open distinct transitions with the expected Rabi rates, repump edit leaves the spin pump unchanged, geometry limits | `test_atomic_optical.py` | pass |
 | independent master-equation cross-check with QuTiP | `test_qutip_crosscheck.py` | pass (< 1e-6) |
+| 12 lattice: levels match Mathieu band centres, deep limit is harmonic, recoil kernels conserve probability, zero offset hits the exact 1→0 spacing, loss is reported and conserved, rate matches coherent | `test_lattice.py` | pass |
 
 The GUI was exercised programmatically: an offscreen Qt run, linked-impurity edits, a completed run, Stop during a 20 ms integration, and a
 rendered screenshot. **Interactive mouse and keyboard use and the Matplotlib toolbar were not hand-tested.**
@@ -360,7 +399,8 @@ faulthandler so that it doesn't print a spurious stack dump. It does not affect 
 
 ## 7. Limitations and not implemented
 
-* 1D motion only; a single trap frequency for all spins; no trap-depth or anharmonicity physics (a diagnostic is shown when `trap.depth_hz` is given).
+* 1D motion only; the same potential for all spins. Harmonic traps have no depth or anharmonicity (a diagnostic is shown when
+  `trap.depth_uk` is given); `trap.potential = "lattice"` adds both for one isolated lattice site, without tunnelling.
 * Calibrated Raman mode only. The microscopic Raman mode (D1+D2 amplitude sums from beam powers and polarizations), D1 pumping,
   and high-field (Breit-Rabi) state mixing are not implemented. Weak-field errors are reported instead: at 0.5 G, the quadratic Zeeman
   shift of ν_ud is 90 Hz and the neglected excited quadratic shift is 0.005 Γ.

@@ -9,7 +9,7 @@
       0.0
     ],
     "heating_rate_quanta_per_s": 0.0,
-    "depth_hz": null
+    "depth_uk": null
   },
   "initial": {
     "spin_preset": "uniform_all",
@@ -69,8 +69,8 @@
     "enabled": true,
     "intensity_mode": "intensity",
     "peak_intensity_w_m2": 0.1,
-    "power_w": 1e-06,
-    "waist_m": 0.002,
+    "power_mw": 0.001,
+    "waist_um": 2000.0,
     "detuning_mhz": 0.0,
     "direction": [
       0.0,
@@ -93,8 +93,8 @@
     "enabled": true,
     "intensity_mode": "intensity",
     "peak_intensity_w_m2": 0.1,
-    "power_w": 1e-06,
-    "waist_m": 0.002,
+    "power_mw": 0.001,
+    "waist_um": 2000.0,
     "detuning_mhz": 0.0,
     "direction": [
       0.0,
@@ -123,15 +123,15 @@
   },
   "timing": {
     "protocol": "optical_pumping_only",
-    "total_duration_s": 0.01,
-    "prep_duration_s": 0.001,
+    "total_duration_ms": 10.0,
+    "prep_duration_ms": 1.0,
     "prep_pump_scale": 1.0,
     "prep_repump_scale": 1.0,
     "cooling_pump_scale": 1.0,
     "cooling_repump_scale": 1.0,
     "cooling_raman_amplitude": 1.0,
-    "raman_pulse_s": 0.0003,
-    "reset_pulse_s": 0.0001,
+    "raman_pulse_ms": 0.3,
+    "reset_pulse_ms": 0.1,
     "reset_pump_scale": 1.0,
     "reset_repump_scale": 1.0,
     "repetitions": 0,

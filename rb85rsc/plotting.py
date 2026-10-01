@@ -66,6 +66,8 @@ def plot_traces(ax, a, keys=(("P_up", "P_up"), ("P_n0", "P_n0"), ("P_target", "P
     t = _ms(s["t_s"])
     for i, (k, lab) in enumerate(keys):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
+    if "P_trapped" in s and np.min(s["P_trapped"]) < 1 - 1e-4:  # real loss (lattice): show survival
+        ax.plot(t, s["P_trapped"], color=TEXT2, lw=1.5, ls="--", label="P_trapped (survival)")
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("probability")
     ax.set_ylim(-0.02, 1.02)
@@ -150,7 +152,9 @@ def diagnostics_text(a) -> str:
     lines = [
         f"MODEL VALIDITY: {STATUS_TEXT[v.status]}",
         f"P_up={f['P_up']:.4f}  P_n0={f['P_n0']:.4f}  P_target={f['P_target']:.4f}  (P_up*P_n0={f['P_up_times_P_n0']:.4f})",
-        f"nbar {f['nbar_initial']:.4g} -> {f['nbar']:.4g}   T_equiv={f['T_equiv_K'] * 1e6:.3g} uK [{f['T_equiv_note']}]",
+        *([f"populations are per trapped atom: trapped {f['P_trapped']:.4f} (lost {f['lattice_loss']:.4f}); of all atoms: "
+           f"P_up={f['P_up_absolute']:.4f}  P_n0={f['P_n0_absolute']:.4f}  P_target={f['P_target_absolute']:.4f}"] if f.get("lattice_loss") is not None else []),
+        f"nbar (trapped atoms) {f['nbar_initial']:.4g} -> {f['nbar']:.4g}   T_equiv={f['T_equiv_K'] * 1e6:.3g} uK [{f['T_equiv_note']}]",
         f"photons/atom: pump {f['photons']['spin_pump']:.3g}, repump {f['photons']['repump']:.3g}, Raman {f['photons']['raman_scatter']:.3g}",
         f"target |3,3> scattering rate {f['target_state_scattering_rate_per_s']:.3g} /s; quanta removed per photon {f['net_quanta_removed_per_photon']}",
         f"t(P_up>={f['spin_threshold']}) = {_fmt_t(f['time_to_spin_threshold_s'])};  t(P_target>={f['joint_threshold']}) = {_fmt_t(f['time_to_joint_threshold_s'])}",
@@ -219,15 +223,20 @@ METRICS = (("P_up", "final P_up"), ("P_n0", "final P_n0"), ("P_target", "final P
 
 def scan_figure(scan) -> Figure:
     """scan: dict with axes, metrics arrays, valid mask, optional series labels."""
-    fig = Figure(figsize=(15, 8.5), facecolor="white", layout="constrained")
-    gs = fig.add_gridspec(2, 3)
+    metrics = list(METRICS)
+    tr = scan["metrics"].get("P_trapped")
+    if tr is not None and np.isfinite(tr).any() and np.nanmin(tr) < 1 - 1e-4:  # real loss (lattice)
+        metrics.insert(3, ("P_trapped", "final P_trapped (survival)"))
+    ncol = (len(metrics) + 1) // 2
+    fig = Figure(figsize=(5 * ncol, 8.5), facecolor="white", layout="constrained")
+    gs = fig.add_gridspec(2, ncol)
     axes = scan["axes"]
     valid = scan["valid"]
     if len(axes) == 1:
         x = np.asarray(axes[0]["values"])
         logx = axes[0].get("log", False)
-        for j, (k, lab) in enumerate(METRICS):
-            ax = _new(fig, gs[j // 3, j % 3])
+        for j, (k, lab) in enumerate(metrics):
+            ax = _new(fig, gs[j // ncol, j % ncol])
             for si, slab in enumerate(scan["series_labels"]):
                 y = np.asarray(scan["metrics"][k])[si]
                 v = np.asarray(valid)[si]
@@ -243,8 +252,8 @@ def scan_figure(scan) -> Figure:
     else:
         x = np.asarray(axes[0]["values"])
         y = np.asarray(axes[1]["values"])
-        for j, (k, lab) in enumerate(METRICS):
-            ax = _new(fig, gs[j // 3, j % 3])
+        for j, (k, lab) in enumerate(metrics):
+            ax = _new(fig, gs[j // ncol, j % ncol])
             Z = np.asarray(scan["metrics"][k])[0].T
             V = np.asarray(valid)[0].T
             im = ax.pcolormesh(np.arange(len(x) + 1) - 0.5, np.arange(len(y) + 1) - 0.5, Z, cmap=SEQ, shading="flat")

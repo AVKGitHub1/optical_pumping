@@ -59,6 +59,17 @@
       0.70710678,
       0.0
     ],
+    "tone_layout": "both_tones_both_beams",
+    "tone_powers_low": [
+      1.0,
+      1.0
+    ],
+    "tone_powers_high": [
+      1.0,
+      1.0
+    ],
+    "lattice_phase_deg": 90.0,
+    "beam_beat_phase_deg": 0.0,
     "extra_coherence_decay_rate_s": 0.0,
     "differential_light_shift_hz": 0.0,
     "scattering_rate_s": 0.0,

@@ -36,7 +36,8 @@ from .config import SimConfig, set_param
 from .model import Model
 from .dynamics import estimate_cost
 
-METRIC_KEYS = ("P_up", "P_n0", "P_target", "nbar", "photons_total", "target_state_scattering_rate_per_s")
+METRIC_KEYS = ("P_up", "P_n0", "P_target", "nbar", "photons_total", "target_state_scattering_rate_per_s",
+               "P_trapped", "P_target_absolute")
 
 
 def axis_values(ax: dict) -> np.ndarray:

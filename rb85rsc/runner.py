@@ -26,9 +26,12 @@ ASSUMPTIONS = [
     "Linear (weak-field) Zeeman shifts for ground and excited states; errors vs Breit-Rabi are reported.",
     "Calibrated Raman mode: only the |3,3> <-> |2,2> pair is coupled; Raman polarization imperfections enter only through the calibrated decay, shift, and scattering inputs.",
     "Raman coupling uses exact displacement matrix elements exp(i eta_R (a+a^+)); couplings with |n-m| > raman.max_sideband_order are dropped (convergence parameter).",
+    "raman.tone_layout = both_tones_both_beams: the four tone pathways add coherently (co-propagating ones carrier-only); the result depends on raman.lattice_phase_deg.",
     "Every optical scattering event applies absorption + emission recoil via a single displacement (excited lifetime << trap period); emission directions integrated over the dipole pattern.",
     "Recoil jumps are secular (motional coherences between different n from spontaneous emission discarded; requires scattering rates << omega_t, checked).",
     "Probability pushed above n_max is tallied as numerical overflow (not physical loss) and flagged; it is never reflected into the basis.",
+    "trap.potential = lattice: motion is one isolated site of V0 sin^2(k_L z) (V0 = trap.depth_uk, k_L from frequency_hz) with exact bound levels; "
+    "promotion above V0 is counted as loss (overflow). Tunnelling, coherent Raman coupling into unbound states, and anharmonic heating matrix elements are neglected.",
 ]
 
 
@@ -133,7 +136,8 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
         counts=res.counts,
         spin_labels=np.array([atomic.ground_label(i) for i in range(12)]),
         rho_raman_block_final=res.rho_final if res.rho_final is not None else np.zeros(0),
-        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n"),
+        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n, "
+                             "as fractions of all atoms (sum = 1 - overflow); divide by P[t].sum() for per-trapped-atom values"),
     )
     (outdir / f"{stem}_metadata.json").write_text(json.dumps(metadata(a), indent=2, default=_json_default))
     (outdir / f"{stem}_config.json").write_text(a["model"].cfg.to_json())
@@ -151,7 +155,7 @@ def export_comparison(results: dict, outdir: str | Path) -> Path:
     outdir.mkdir(parents=True, exist_ok=True)
     for p, a in results.items():
         export(a, outdir / p, figures=True, stem=p)
-    keys = ["P_up", "P_n0", "P_target", "P_n0_given_up", "nbar", "fractional_energy_reduction", "photons_total",
+    keys = ["P_up", "P_n0", "P_target", "P_n0_given_up", "P_trapped", "P_target_absolute", "nbar", "fractional_energy_reduction", "photons_total",
             "net_quanta_removed_per_photon", "target_state_scattering_rate_per_s", "time_to_spin_threshold_s", "time_to_joint_threshold_s"]
     with open(outdir / "comparison_summary.csv", "w", newline="") as fh:
         w = csv.writer(fh)

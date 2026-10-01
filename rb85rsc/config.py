@@ -30,11 +30,21 @@ def P(default, unit="", help="", min=None, max=None, choices=None, illustrative=
 
 @dataclass
 class TrapConfig:
-    frequency_hz: float = P(70e3, "Hz", "Harmonic vibration frequency nu_t (cycles/s, not angular). Experimental value.", min=1.0)
-    n_max: int = P(40, "", "Highest vibrational level kept (basis n = 0..n_max).", min=2, max=250)
+    frequency_hz: float = P(
+        70e3, "Hz",
+        "Harmonic vibration frequency nu_t (cycles/s, not angular). Experimental value. Lattice: harmonic frequency at the bottom "
+        "of a site, 2 sqrt(V0 E_r)/h; the n=1->0 spacing is lower by about E_r.", min=1.0,
+    )
+    potential: str = P(
+        "harmonic", "",
+        "harmonic: infinitely deep harmonic trap. lattice: one site of a 1D lattice V0 sin^2(k_L z) along trap.axis with V0 = depth_uk "
+        "and k_L from frequency_hz; exact bound levels, anharmonic sidebands, promotion above V0 counted as loss.",
+        choices=["harmonic", "lattice"],
+    )
+    n_max: int = P(40, "", "Highest vibrational level kept (basis n = 0..n_max). Lattice: cap on the bound levels kept.", min=2, max=250)
     axis: list = P([1.0, 0.0, 0.0], "lab unit vector", "Direction of the modeled 1D trap axis.")
     heating_rate_quanta_per_s: float = P(0.0, "quanta/s", "Background motional heating dnbar/dt (infinite-temperature reservoir, a and a^+ jumps).", min=0.0)
-    depth_hz: Optional[float] = P(None, "Hz", "Optional trap depth in frequency units; enables the harmonic-validity diagnostic.", min=0.0)
+    depth_uk: Optional[float] = P(None, "uK", "Trap depth (k_B x temperature units). Harmonic: optional, enables the harmonic-validity diagnostic. Lattice: required, V0.", min=0.0)
 
 
 @dataclass
@@ -71,18 +81,52 @@ class FieldConfig:
 @dataclass
 class RamanConfig:
     enabled: bool = P(True, "", "Master enable for the Raman coupling.")
-    carrier_rabi_hz: float = P(5e3, "Hz", "Calibrated carrier two-photon Rabi frequency Omega_c/2pi, before motional overlap (ILLUSTRATIVE).", min=0.0, illustrative=True)
+    carrier_rabi_hz: float = P(
+        5e3, "Hz",
+        "Calibrated carrier two-photon Rabi frequency Omega_c/2pi, before motional overlap (ILLUSTRATIVE). In both_tones_both_beams: "
+        "Rabi of one pathway with unit relative tone powers.", min=0.0, illustrative=True,
+    )
     frequency_mode: str = P(
         "sideband_offset",
         "",
         "sideband_offset: beat = nu_ud_ref + nu_t + offset; absolute_beat: beat frequency given directly.",
         choices=["sideband_offset", "absolute_beat"],
     )
-    red_sideband_offset_hz: float = P(0.0, "Hz", "delta_beat - nu_t; 0 is the first red-sideband (cooling) resonance of the reference nu_ud.")
+    red_sideband_offset_hz: float = P(0.0, "Hz", "delta_beat - nu_10; 0 is the first red-sideband (n=1->0) resonance of the reference nu_ud (nu_10 = nu_t harmonic, exact level spacing lattice).")
     beat_frequency_hz: float = P(3.0357324e9 + 70e3, "Hz", "|nu_high - nu_low| in absolute_beat mode.")
     wavelength_nm: float = P(783.0, "nm", "Raman beam wavelength (sets |k|). Experimental value.", min=100.0)
-    beam_low_direction: list = P([0.70710678, 0.70710678, 0.0], "lab unit vector", "Lower-frequency Raman beam (absorbed on |up,n> -> |down,n-1>).", illustrative=True)
-    beam_high_direction: list = P([-0.70710678, 0.70710678, 0.0], "lab unit vector", "Higher-frequency Raman beam (stimulated emission on up -> down).", illustrative=True)
+    beam_low_direction: list = P(
+        [0.70710678, 0.70710678, 0.0], "lab unit vector",
+        "Lower-frequency Raman beam (absorbed on |up,n> -> |down,n-1>); beam 1 in both_tones_both_beams.", illustrative=True,
+    )
+    beam_high_direction: list = P(
+        [-0.70710678, 0.70710678, 0.0], "lab unit vector",
+        "Higher-frequency Raman beam (stimulated emission on up -> down); beam 2 in both_tones_both_beams.", illustrative=True,
+    )
+    tone_layout: str = P(
+        "one_tone_per_beam",
+        "",
+        "one_tone_per_beam: beam 1 carries only the low tone, beam 2 only the high tone. "
+        "both_tones_both_beams: each beam carries both tones; the two co-propagating pathways (dk = 0, carrier only) and the two "
+        "crossed pathways (dk = +/-k(k1 - k2)) add coherently with the phases below.",
+        choices=["one_tone_per_beam", "both_tones_both_beams"],
+    )
+    tone_powers_low: list = P(
+        [1.0, 1.0], "relative",
+        "[beam 1, beam 2] power of the low tone [both_tones_both_beams]. Pathway (low from i, high from j) has Rabi "
+        "carrier_rabi_hz * sqrt(p_low_i p_high_j).", illustrative=True,
+    )
+    tone_powers_high: list = P([1.0, 1.0], "relative", "[beam 1, beam 2] power of the high tone [both_tones_both_beams].", illustrative=True)
+    lattice_phase_deg: float = P(
+        90.0, "deg",
+        "Phase theta of the crossed pathway (low from beam 1, high from beam 2) relative to the co-propagating beam-1 pathway "
+        "= dk.X_atom + tone phases: where the atom sits in the static beat interference pattern. For balanced beams the red "
+        "sideband scales as sin(theta) and the crossed carrier as cos(theta) [both_tones_both_beams].", illustrative=True,
+    )
+    beam_beat_phase_deg: float = P(
+        0.0, "deg", "Beat-note phase chi of beam 2 minus beam 1, (phi_high - phi_low)_2 - (phi_high - phi_low)_1 [both_tones_both_beams].",
+        illustrative=True,
+    )
     extra_coherence_decay_rate_s: float = P(0.0, "1/s", "Additional up-down coherence decay beyond modeled scattering (laser phase noise, B noise...).", min=0.0)
     differential_light_shift_hz: float = P(0.0, "Hz", "Calibrated Raman-beam shift of (E_up - E_down)/h at full amplitude.")
     scattering_rate_s: float = P(
@@ -129,8 +173,8 @@ class PumpConfig:
     enabled: bool = P(True, "", "Enable this beam.")
     intensity_mode: str = P("intensity", "", "Specify peak intensity directly or power + 1/e^2 waist (I = 2P/(pi w^2)).", choices=["intensity", "power_waist"])
     peak_intensity_w_m2: float = P(0.1, "W/m^2", "Peak intensity (ILLUSTRATIVE weak value).", min=0.0, illustrative=True)
-    power_w: float = P(1e-6, "W", "Beam power (power_waist mode).", min=0.0)
-    waist_m: float = P(2e-3, "m", "1/e^2 intensity radius (power_waist mode).", min=1e-7)
+    power_mw: float = P(1e-3, "mW", "Beam power (power_waist mode).", min=0.0)
+    waist_um: float = P(2000.0, "um", "1/e^2 intensity radius (power_waist mode).", min=0.1)
     detuning_mhz: float = P(0.0, "MHz", "Laser detuning from the named zero-field hyperfine transition (positive = blue).")
     direction: list = P([0.0, 0.0, 1.0], "lab unit vector", "Propagation direction (spherical mode; derived in geometry mode).")
     polarization: PolarizationConfig = field(default_factory=PolarizationConfig)
@@ -175,21 +219,21 @@ class TimingConfig:
             "custom",
         ],
     )
-    total_duration_s: float = P(10e-3, "s", "Total wall-clock duration including any preparation.", min=0.0)
-    prep_duration_s: float = P(1e-3, "s", "Spin-preparation stage (prep_then_continuous).", min=0.0)
+    total_duration_ms: float = P(10.0, "ms", "Total wall-clock duration including any preparation.", min=0.0)
+    prep_duration_ms: float = P(1.0, "ms", "Spin-preparation stage (prep_then_continuous).", min=0.0)
     prep_pump_scale: float = P(1.0, "", "Spin-pump intensity multiplier during preparation.", min=0.0)
     prep_repump_scale: float = P(1.0, "", "Repump intensity multiplier during preparation.", min=0.0)
     cooling_pump_scale: float = P(1.0, "", "Spin-pump intensity multiplier during continuous cooling.", min=0.0)
     cooling_repump_scale: float = P(1.0, "", "Repump intensity multiplier during continuous cooling.", min=0.0)
     cooling_raman_amplitude: float = P(1.0, "", "Raman amplitude multiplier (scales Omega_c, shift, scattering) during cooling.", min=0.0)
-    raman_pulse_s: float = P(300e-6, "s", "Raman pulse duration (pulsed).", min=0.0)
-    reset_pulse_s: float = P(100e-6, "s", "Optical reset pulse duration (pulsed).", min=0.0)
+    raman_pulse_ms: float = P(0.3, "ms", "Raman pulse duration (pulsed).", min=0.0)
+    reset_pulse_ms: float = P(0.1, "ms", "Optical reset pulse duration (pulsed).", min=0.0)
     reset_pump_scale: float = P(1.0, "", "Spin-pump multiplier during reset pulses.", min=0.0)
     reset_repump_scale: float = P(1.0, "", "Repump multiplier during reset pulses.", min=0.0)
     repetitions: int = P(0, "", "Pulse repetitions; 0 = as many as fit in total_duration (remainder idle).", min=0)
     pulsed_first: str = P("reset", "", "First pulse of each pulsed cycle.", choices=["reset", "raman"])
     custom_segments: list = P(
-        [], "", "custom protocol: list of {duration_s, raman, pump, repump, label} amplitude multipliers."
+        [], "", "custom protocol: list of {duration_ms, raman, pump, repump, label} amplitude multipliers."
     )
     n_samples: int = P(201, "", "Number of uniformly spaced output samples.", min=2, max=20001)
 
@@ -274,6 +318,12 @@ class SimConfig:
             if path.endswith(("direction", "axis")) and isinstance(value, list):
                 if len(value) != 3 or not np.all(np.isfinite(value)) or np.linalg.norm(value) == 0:
                     errs.append(f"{path} must be a nonzero 3-vector")
+        if self.trap.potential == "lattice" and not (self.trap.depth_uk and self.trap.depth_uk > 0):
+            errs.append("trap.potential = lattice requires trap.depth_uk > 0")
+        for name in ("tone_powers_low", "tone_powers_high"):
+            v = np.asarray(getattr(self.raman, name), float)
+            if v.shape != (2,) or not np.all(np.isfinite(v)) or np.any(v < 0):
+                errs.append(f"raman.{name} must be 2 nonnegative numbers [beam 1, beam 2]")
         for name in ("spin_pump", "repump"):
             p = getattr(self, name).polarization
             if p.mode == "spherical":
@@ -292,20 +342,20 @@ class SimConfig:
         if self.analysis.derivative_window % 2 == 0:
             errs.append("analysis.derivative_window must be odd")
         t = self.timing
-        if t.protocol == "prep_then_continuous" and t.prep_duration_s > t.total_duration_s:
-            errs.append("timing.prep_duration_s exceeds total_duration_s")
+        if t.protocol == "prep_then_continuous" and t.prep_duration_ms > t.total_duration_ms:
+            errs.append("timing.prep_duration_ms exceeds total_duration_ms")
         if t.protocol == "pulsed":
-            per = t.raman_pulse_s + t.reset_pulse_s
+            per = t.raman_pulse_ms + t.reset_pulse_ms
             if per <= 0:
                 errs.append("pulsed protocol needs positive pulse durations")
-            elif t.repetitions and t.repetitions * per > t.total_duration_s * (1 + 1e-12):
-                errs.append("repetitions * (raman_pulse + reset_pulse) exceeds total_duration_s")
+            elif t.repetitions and t.repetitions * per > t.total_duration_ms * (1 + 1e-12):
+                errs.append("repetitions * (raman_pulse + reset_pulse) exceeds total_duration_ms")
         if t.protocol == "custom":
             if not t.custom_segments:
                 errs.append("custom protocol requires timing.custom_segments")
             for i, s in enumerate(t.custom_segments):
-                if float(s.get("duration_s", -1)) <= 0:
-                    errs.append(f"custom_segments[{i}].duration_s must be > 0")
+                if float(s.get("duration_ms", -1)) <= 0:
+                    errs.append(f"custom_segments[{i}].duration_ms must be > 0")
                 for k in ("raman", "pump", "repump"):
                     if float(s.get(k, 0.0)) < 0:
                         errs.append(f"custom_segments[{i}].{k} must be >= 0")
@@ -316,11 +366,38 @@ class SimConfig:
 
 
 # ---------------------------------------------------------------------------
+# renamed fields: old JSON key -> (new key, factor old -> new units); lets saved configs keep loading
+_LEGACY_KEYS = {
+    "PumpConfig": (("power_w", "power_mw", 1e3), ("waist_m", "waist_um", 1e6)),
+    "TrapConfig": (("depth_hz", "depth_uk", 6.62607015e-34 / 1.380649e-23 * 1e6),),
+    "TimingConfig": tuple((f"{k}_s", f"{k}_ms", 1e3) for k in ("total_duration", "prep_duration", "raman_pulse", "reset_pulse")),
+}
+
+
+def _legacy(cls_name: str, key: str):
+    return next(((new, scale) for old, new, scale in _LEGACY_KEYS.get(cls_name, ()) if old == key), None)
+
+
+def _migrate_segments(segs):
+    """custom_segments entries: duration_s -> duration_ms."""
+    if not isinstance(segs, list):
+        return segs
+    return [{("duration_ms" if k == "duration_s" else k): (float(v) * 1e3 if k == "duration_s" else v) for k, v in s.items()}
+            if isinstance(s, dict) and "duration_s" in s and "duration_ms" not in s else s for s in segs]
+
+
 def _build(cls, d: dict, prefix: str):
     if not isinstance(d, dict):
         raise ConfigError(f"{prefix or 'config'} must be an object")
     hints = get_type_hints(cls)
     known = {f.name: f for f in fields(cls)}
+    for old, new, scale in _LEGACY_KEYS.get(cls.__name__, ()):
+        if old in d:
+            if new in d:
+                raise ConfigError(f"{prefix}{old} and {prefix}{new} both given")
+            d = {**{k: v for k, v in d.items() if k != old}, new: None if d[old] is None else float(d[old]) * scale}
+    if cls.__name__ == "TimingConfig" and "custom_segments" in d:
+        d = {**d, "custom_segments": _migrate_segments(d["custom_segments"])}
     unknown = set(d) - set(known)
     if unknown:
         raise ConfigError(f"unknown keys in {prefix or 'config'}: {sorted(unknown)}")
@@ -389,6 +466,11 @@ def set_param(cfg: SimConfig, path: str, value: Any) -> None:
         else:
             obj.set_impurity(tot, float(value))
         return
+    leg = None if hasattr(obj, last) else _legacy(type(obj).__name__, last)
+    if leg:  # old unit-suffixed name, e.g. timing.total_duration_s
+        last, value = leg[0], (None if value is None else float(value) * leg[1])
+    if last == "custom_segments":
+        value = _migrate_segments(value)
     if not hasattr(obj, last):
         raise ConfigError(f"unknown parameter {path}")
     cur = getattr(obj, last)

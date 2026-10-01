@@ -17,7 +17,7 @@ from helpers import cfg
 
 
 def test_coherent_solver_matches_qutip():
-    c = cfg(trap__n_max=4, initial__nbar=0.8, timing__total_duration_s=0.4e-3, timing__n_samples=5,
+    c = cfg(trap__n_max=4, initial__nbar=0.8, timing__total_duration_ms=0.4, timing__n_samples=5,
             numerics__rtol=1e-9, numerics__atol=1e-12)
     m = Model(c)
     r = solve(m)

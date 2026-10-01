@@ -2,7 +2,7 @@
   "base_config": "default.json",
   "overrides": {
     "timing.protocol": "continuous",
-    "timing.total_duration_s": 0.005,
+    "timing.total_duration_ms": 5.0,
     "timing.n_samples": 51
   },
   "workers": 8,

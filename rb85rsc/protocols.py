@@ -4,7 +4,7 @@ Each segment gives amplitude multipliers applied to the configured beams:
 ``raman`` multiplies Omega_c (and, linearly, the calibrated Raman light shift and
 Raman scattering rate, i.e. both Raman beam intensities scaled together);
 ``pump`` and ``repump`` multiply the pump-beam intensities.  All protocols span
-exactly ``timing.total_duration_s`` so comparisons use equal wall-clock time.
+exactly ``timing.total_duration_ms`` so comparisons use equal wall-clock time.
 """
 from __future__ import annotations
 
@@ -46,7 +46,8 @@ class Segment:
 
 
 def build_schedule(timing) -> list[Segment]:
-    T = timing.total_duration_s
+    MS = 1e-3  # config durations are in ms; segments are in s
+    T = timing.total_duration_ms * MS
     p = timing.protocol
     segs: list[tuple[float, float, float, float, str]] = []  # (duration, raman, pump, repump, label)
     if p == "optical_pumping_only":
@@ -54,16 +55,16 @@ def build_schedule(timing) -> list[Segment]:
     elif p == "continuous":
         segs = [(T, timing.cooling_raman_amplitude, timing.cooling_pump_scale, timing.cooling_repump_scale, "continuous")]
     elif p == "prep_then_continuous":
-        tp = timing.prep_duration_s
+        tp = timing.prep_duration_ms * MS
         segs = [
             (tp, 0.0, timing.prep_pump_scale, timing.prep_repump_scale, "preparation"),
             (T - tp, timing.cooling_raman_amplitude, timing.cooling_pump_scale, timing.cooling_repump_scale, "continuous"),
         ]
     elif p == "pulsed":
-        per = timing.raman_pulse_s + timing.reset_pulse_s
+        per = (timing.raman_pulse_ms + timing.reset_pulse_ms) * MS
         reps = timing.repetitions or int(T // per + 1e-9)
-        reset = (timing.reset_pulse_s, 0.0, timing.reset_pump_scale, timing.reset_repump_scale, "reset")
-        raman = (timing.raman_pulse_s, timing.cooling_raman_amplitude, 0.0, 0.0, "raman pulse")
+        reset = (timing.reset_pulse_ms * MS, 0.0, timing.reset_pump_scale, timing.reset_repump_scale, "reset")
+        raman = (timing.raman_pulse_ms * MS, timing.cooling_raman_amplitude, 0.0, 0.0, "raman pulse")
         cycle = [reset, raman] if timing.pulsed_first == "reset" else [raman, reset]
         segs = cycle * reps
         rem = T - reps * per
@@ -77,7 +78,7 @@ def build_schedule(timing) -> list[Segment]:
         segs = [(T, 0.0, 0.0, 0.0, "all off")]
     elif p == "custom":
         segs = [
-            (float(s["duration_s"]), float(s.get("raman", 0.0)), float(s.get("pump", 0.0)), float(s.get("repump", 0.0)), s.get("label", f"seg{i}"))
+            (float(s["duration_ms"]) * MS, float(s.get("raman", 0.0)), float(s.get("pump", 0.0)), float(s.get("repump", 0.0)), s.get("label", f"seg{i}"))
             for i, s in enumerate(timing.custom_segments)
         ]
     else:

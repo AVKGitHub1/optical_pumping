@@ -131,3 +131,105 @@ def temperature_from_nbar(nbar: float, trap_hz: float) -> float:
 
 def annihilation(n_states: int) -> np.ndarray:
     return np.diag(np.sqrt(np.arange(1, n_states)), 1)
+
+
+# ---------------------------------------------------------------------------
+# Motional bases: harmonic oscillator (default) or one site of a 1D lattice.
+# Both expose N, energies_hz, displacement(eta) and recoil_kernel(...), with
+# eta = kappa * x0 (x0 of the harmonic frequency nu_t) as the common argument.
+# ---------------------------------------------------------------------------
+class HarmonicBasis:
+    """Harmonic levels n = 0..N-1 with E_n = n h nu_t (infinitely deep); closed-form elements."""
+
+    kind = "harmonic"
+
+    def __init__(self, n_states: int, trap_hz: float):
+        self.N = n_states
+        self.n_bound = None
+        self.energies_hz = trap_hz * np.arange(n_states)
+
+    def displacement(self, eta: float) -> np.ndarray:
+        return displacement_matrix(eta, self.N)
+
+    def recoil_kernel(self, eta_photon, abs_projection, cos_beta, pattern, n_quad):
+        return recoil_kernel(eta_photon, abs_projection, cos_beta, pattern, self.N, n_quad)
+
+
+class LatticeSite:
+    """Bound states of one site of a 1D lattice V(z) = V0 sin^2(k_L z).
+
+    The lattice is fixed by its depth V0 and the harmonic frequency at the bottom
+    of a site, h nu_t = 2 sqrt(V0 E_r), so E_r = (h nu_t)^2 / (4 V0) and
+    k_L = sqrt(2 m E_r) / hbar.  Isolated-site approximation: inside |z| <= a/2
+    (a = pi / k_L) the potential has the exact lattice shape, outside it is held
+    at V0, so neighbouring wells and tunnelling are neglected (accurate for bands
+    well below the barrier).  The Schrodinger equation is solved by finite
+    differences; states with E < V0 are bound.  Energies are measured from the
+    bottom of the well.
+
+    Displacements exp(i kappa z) are overlaps on the grid.  The grid eigenbasis is
+    complete, so 1 - sum_{bound n'} |<n'|exp(i kappa z)|n>|^2 is the probability
+    of being promoted above V0 (the atom leaves its site), counted as loss.
+    """
+
+    kind = "lattice"
+
+    def __init__(self, mass_kg: float, trap_hz: float, depth_hz: float, n_cap: int):
+        from scipy.linalg import eigh_tridiagonal
+
+        self.trap_hz, self.depth_hz = trap_hz, depth_hz
+        self.recoil_hz = trap_hz**2 / (4.0 * depth_hz)
+        self.k_lattice = np.sqrt(2.0 * mass_kg * H * self.recoil_hz) / HBAR
+        self.wavelength_m = 2.0 * np.pi / self.k_lattice
+        self.x0 = x0_m(mass_kg, trap_hz)
+        a = np.pi / self.k_lattice  # site spacing (lambda_L / 2)
+        dz = 0.05 * self.x0
+        half = 2.5 * a  # site plus two spacings of flat V0 on each side before the hard wall
+        m = int(np.ceil(half / dz))
+        self.z = z = dz * np.arange(-m, m + 1)
+        V = np.where(np.abs(z) <= a / 2, depth_hz * np.sin(self.k_lattice * z) ** 2, depth_hz)
+        t = HBAR**2 / (2.0 * mass_kg * dz**2) / H  # finite-difference kinetic term, Hz
+        E, vec = eigh_tridiagonal(2.0 * t + V, np.full(z.size - 1, -t), select="v", select_range=(-np.inf, depth_hz))
+        for j in range(vec.shape[1]):  # sign convention of the oscillator states: outer lobe at z > 0 positive
+            pos = vec[z >= 0, j]
+            if pos[np.argmax(np.abs(pos))] < 0:
+                vec[:, j] = -vec[:, j]
+        self.n_bound = int(E.size)
+        self.N = min(self.n_bound, int(n_cap))
+        self.energies_hz = E[: self.N]
+        self.all_bound_energies_hz = E
+        self._vec = vec[:, : self.N]  # unit-norm columns (sum |v|^2 = 1)
+        self._cache: dict = {}
+
+    def tunneling_hz(self) -> float:
+        """Lowest-band tunnelling J/h, deep-lattice formula (4/sqrt(pi)) E_r s^(3/4) exp(-2 sqrt(s))."""
+        s = self.depth_hz / self.recoil_hz
+        return float(4.0 / np.sqrt(np.pi) * self.recoil_hz * s**0.75 * np.exp(-2.0 * np.sqrt(s)))
+
+    def displacement(self, eta: float) -> np.ndarray:
+        key = ("D", float(eta))
+        if key not in self._cache:
+            v = self._vec
+            self._cache[key] = v.T @ (np.exp(1j * (eta / self.x0) * self.z)[:, None] * v)
+        return self._cache[key]
+
+    def recoil_kernel(self, eta_photon, abs_projection, cos_beta, pattern, n_quad):
+        key = ("K", float(eta_photon), float(abs_projection), float(cos_beta), pattern, int(n_quad))
+        if key not in self._cache:
+            c, w = np.polynomial.legendre.leggauss(n_quad)
+            wt = w * emission_weight(c, cos_beta, pattern)
+            K = np.zeros((self.N, self.N))
+            for ci, wi in zip(c, wt):
+                d = self.displacement(eta_photon * (abs_projection - ci))
+                K += wi * (d * d.conj()).real
+            ov = 1.0 - K.sum(axis=0)
+            ov[ov < 0] = 0.0
+            K.setflags(write=False)
+            ov.setflags(write=False)
+            self._cache[key] = (K, ov)
+        return self._cache[key]
+
+
+@lru_cache(maxsize=16)
+def lattice_site(mass_kg: float, trap_hz: float, depth_hz: float, n_cap: int) -> LatticeSite:
+    return LatticeSite(mass_kg, trap_hz, depth_hz, n_cap)

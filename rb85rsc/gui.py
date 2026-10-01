@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import threading
 import traceback
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -371,14 +372,18 @@ class MainWindow(QMainWindow):
         self.cmp_btn = QPushButton("Compare protocols")
         self.stop_btn = QPushButton("Stop")
         self.reset_btn = QPushButton("Reset")
+        self.load_btn = QPushButton("Load config...")
+        self.save_btn = QPushButton("Save config...")
         self.stop_btn.setEnabled(False)
-        for w in (QLabel("Protocol:"), self.protocol, self.run_btn, self.cmp_btn, self.stop_btn, self.reset_btn):
+        for w in (QLabel("Protocol:"), self.protocol, self.run_btn, self.cmp_btn, self.stop_btn, self.reset_btn, self.load_btn, self.save_btn):
             cl.addWidget(w)
         cl.addStretch(1)
         self.run_btn.clicked.connect(self.on_run)
         self.cmp_btn.clicked.connect(self.on_compare)
         self.stop_btn.clicked.connect(self.on_stop)
         self.reset_btn.clicked.connect(self.on_reset)
+        self.load_btn.clicked.connect(self.on_load)
+        self.save_btn.clicked.connect(self.on_save)
 
         # right: plots
         self.tabs = QTabWidget()
@@ -410,10 +415,15 @@ class MainWindow(QMainWindow):
         self.prog.setRange(0, 1000)
         self.status = QLabel("Ready.")
         self.statusBar().addWidget(self.status, 1)
+        self.last_ok = QLabel("Last successful run: none")
+        self.last_ok.setToolTip("Most recent run / comparison / scan that finished without error in this window")
+        self.statusBar().addPermanentWidget(self.last_ok)
         self.statusBar().addPermanentWidget(self.prog)
         m = self.menuBar().addMenu("&File")
-        for name, fn in (("Load config JSON...", self.on_load), ("Save config JSON...", self.on_save), ("Export results...", self.on_export)):
+        for name, fn, key in (("Load config JSON...", self.on_load, "Ctrl+O"), ("Save config JSON...", self.on_save, "Ctrl+S"),
+                              ("Export results...", self.on_export, "")):
             act = QAction(name, self)
+            act.setShortcut(key)
             act.triggered.connect(fn)
             m.addAction(act)
         self.load_config(base)
@@ -492,6 +502,7 @@ class MainWindow(QMainWindow):
         self.worker.progress.connect(lambda f, m: (self.prog.setValue(int(1000 * f)), self.status.setText(f"{label}: {m}")))
         self.worker.log.connect(self.status.setText)
         self.worker.done.connect(on_done)
+        self.worker.done.connect(lambda *_: self._mark_success(label))
         self.worker.failed.connect(self._failed)
         self.worker.done.connect(self._finish)
         self.worker.failed.connect(self._finish)
@@ -500,6 +511,10 @@ class MainWindow(QMainWindow):
         self.stop_btn.setEnabled(True)
         self.status.setText(f"{label}...")
         self.thread.start()
+
+    def _mark_success(self, label):
+        kind = {"Running": "run", "Comparing protocols": "comparison", "Scanning": "scan"}.get(label, label)
+        self.last_ok.setText(f"Last successful {kind}: {datetime.now():%Y-%m-%d %H:%M:%S}")
 
     def _finish(self, *_):
         self.thread.quit()
@@ -580,6 +595,7 @@ class MainWindow(QMainWindow):
         if fn:
             try:
                 self.load_config(SimConfig.from_json(fn))
+                self.status.setText(f"Config loaded from {fn}")
             except Exception as e:  # noqa: BLE001
                 QMessageBox.warning(self, "Load", str(e))
 
@@ -588,6 +604,7 @@ class MainWindow(QMainWindow):
         if fn:
             try:
                 self.current_config().to_json(fn)
+                self.status.setText(f"Config saved to {fn}")
             except Exception as e:  # noqa: BLE001
                 QMessageBox.warning(self, "Save", str(e))
 

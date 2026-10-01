@@ -23,6 +23,26 @@ with D = exp(i eta_R (a + a^+)) (exact matrix elements) and
 delta = 2 pi (nu_beat - nu_ud - nu_t).  The first red sideband n -> n-1 is static;
 the carrier rotates at -omega_t and the blue sideband at -2 omega_t, so they are
 retained as off-resonant terms rather than dropped.
+
+With raman.tone_layout = both_tones_both_beams,
+the four pathways (low tone from beam i, high tone from beam j) drive the same
+resonance and add coherently:
+
+  D -> sqrt(p1l p2h) e^{i theta} D(eta) + sqrt(p2l p1h) e^{i(chi - theta)} D(-eta)
+       + [sqrt(p1l p1h) + sqrt(p2l p2h) e^{i chi}] 1,
+
+where the co-propagating pathways have dk = 0 (carrier only), theta is the atom
+position in the static beat interference pattern and chi the beam-2 minus beam-1
+beat phase.
+
+Lattice (trap.potential = lattice)
+----------------------------------
+The levels are the bound states of one site of V0 sin^2(k_L z) (``motion.LatticeSite``),
+n = 0..N-1 with exact energies E_n.  The frame uses H0 = sum_n E_n |n><n| - omega_10 |up><up|
+with omega_10 = (E_1 - E_0)/hbar, so |up,n><down,m| rotates at E_n - E_m - omega_10 and
+delta = 2 pi (nu_beat - nu_ud - nu_10).  D_nm = <n|exp(i dk z)|m> and the recoil kernels are
+overlaps of the site states; probability promoted above V0 (the atom leaves its site)
+goes to the overflow bin, which is then physical loss.
 """
 from __future__ import annotations
 
@@ -40,12 +60,13 @@ from .atomic import (
     SPECTATORS,
     UP,
     H,
+    K_B,
     AtomicData,
     ground_label,
     load_atomic_data,
     zeeman_validity,
 )
-from .config import SimConfig, illustrative_parameters
+from .config import ConfigError, SimConfig, illustrative_parameters
 from .optical import BeamRates, beam_rates, beam_spec
 from .protocols import Segment, build_schedule
 
@@ -61,7 +82,7 @@ class SegmentOps:
     ovr: np.ndarray  # (12N,) rate into the numerical overflow bin
     counts: np.ndarray  # (3, 12N) photon-emission rate per counter
     delta: float  # rad/s, detuning of the drive from the first red sideband
-    vk: list  # [(k*omega_t, V_k)] with V_k (N,N) complex
+    vk: list  # [(frequency, V_k)] with V_k (N,N) complex; harmonic: frequency = k*omega_t
     gamma_extra: float
     heating: float
     ls_up: float  # rad/s total pump light shift of up
@@ -88,7 +109,6 @@ class Model:
         self.cfg = cfg
         self.atom = atom or load_atomic_data()
         at = self.atom
-        self.N = N = cfg.trap.n_max + 1
         self.b_dir = pol.unit(cfg.magnetic.direction)
         self.B = cfg.magnetic.magnitude_gauss * 1e-4
         self.u = pol.unit(cfg.trap.axis)
@@ -96,6 +116,19 @@ class Model:
         self.nu_t = cfg.trap.frequency_hz
         self.omega_t = 2 * np.pi * self.nu_t
         self.x0 = mo.x0_m(at.mass_kg, self.nu_t)
+        tc = cfg.trap
+        if tc.potential == "lattice":
+            self.motion = mo.lattice_site(at.mass_kg, self.nu_t, tc.depth_uk * 1e-6 * K_B / H, tc.n_max + 1)
+            if self.motion.N < 2:
+                raise ConfigError(f"lattice of depth {tc.depth_uk} uK holds {self.motion.n_bound} bound level(s) at nu_t = {self.nu_t:g} Hz; need >= 2")
+        else:
+            self.motion = mo.HarmonicBasis(tc.n_max + 1, self.nu_t)
+        self.N = N = self.motion.N
+        self.lattice_full = self.motion.kind == "lattice" and N == self.motion.n_bound  # overflow = physical loss
+        self.eps = 2 * np.pi * (self.motion.energies_hz - self.motion.energies_hz[0])  # level energies, rad/s
+        # n=1 -> 0 spacing nu_10: nu_t (harmonic) or the exact level spacing (lattice)
+        self.nu_ref = self.nu_t if self.motion.kind == "harmonic" else float(self.motion.energies_hz[1] - self.motion.energies_hz[0])
+        self.omega_ref = 2 * np.pi * self.nu_ref
         self.k_d2 = 2 * np.pi / at.d2_wavelength_m
         self.eta_d2 = self.k_d2 * self.x0  # single 780 nm photon along the trap axis
         nq = cfg.numerics.recoil_quadrature_points
@@ -110,33 +143,47 @@ class Model:
         self.T, self.out, self.ovf = {}, {}, {}
         for b in BEAMS:
             proj = float(np.dot(self.beams[b].direction, self.u))
-            kern = {cls: mo.recoil_kernel(self.eta_d2, proj, self.cos_beta, pat(cls), N, nq) for cls in ("sigma", "pi")}
+            kern = {cls: self.motion.recoil_kernel(self.eta_d2, proj, self.cos_beta, pat(cls), nq) for cls in ("sigma", "pi")}
             self.T[b], self.out[b], self.ovf[b] = self._transfer(self.rates[b].W, kern)
 
         # ---- Raman ------------------------------------------------------------
         rc = cfg.raman
         self.k_raman = 2 * np.pi / (rc.wavelength_nm * 1e-9)
         klo, khi = pol.unit(rc.beam_low_direction), pol.unit(rc.beam_high_direction)
-        self.dk = self.k_raman * (klo - khi)  # k_abs - k_emit for up -> down
+        self.dk = self.k_raman * (klo - khi)  # k_abs - k_emit for up -> down (low from beam 1, high from beam 2)
         self.eta_R_signed = float(np.dot(self.dk, self.u) * self.x0)
         self.eta_R = abs(self.eta_R_signed)
-        self.D = mo.displacement_matrix(self.eta_R_signed, N)
+        # pathway amplitudes a[i, j]: low tone from beam i, high tone from beam j (same beat frequency -> coherent sum)
+        if rc.tone_layout == "both_tones_both_beams":
+            pl, ph = np.asarray(rc.tone_powers_low, float), np.asarray(rc.tone_powers_high, float)
+            th, chi = np.deg2rad(rc.lattice_phase_deg), np.deg2rad(rc.beam_beat_phase_deg)
+        else:
+            pl, ph, th, chi = np.array([1.0, 0.0]), np.array([0.0, 1.0]), 0.0, 0.0
+        a = np.sqrt(np.outer(pl, ph))
+        self.raman_pathways = a
+        self.D = (a[0, 1] * np.exp(1j * th) * self.motion.displacement(self.eta_R_signed)
+                  + a[1, 0] * np.exp(1j * (chi - th)) * self.motion.displacement(-self.eta_R_signed)
+                  + (a[0, 0] + a[1, 1] * np.exp(1j * chi)) * np.eye(N))
         self.omega_c = 2 * np.pi * rc.carrier_rabi_hz if rc.enabled else 0.0
         order = rc.max_sideband_order
         n = np.arange(N)
         dn = n[:, None] - n[None, :]
+        # interaction-picture frequency of |up,n><down,m|: E_n - E_m - omega_ref (harmonic: (n - m - 1) omega_t)
+        if self.motion.kind == "harmonic":
+            self.F_raman = (dn - 1) * self.omega_t
+        else:
+            self.F_raman = self.eps[:, None] - self.eps[None, :] - self.omega_ref
+        keep = np.abs(dn) <= order
         self.vk_unit = []
-        for k in range(-order - 1, order):
-            mask = (dn - 1 == k) & (np.abs(dn) <= order)
-            if mask.any():
-                Vk = np.where(mask, 0.5 * self.omega_c * self.D, 0.0)
-                if np.any(Vk != 0):
-                    self.vk_unit.append((k * self.omega_t, Vk))
+        for f in np.unique(self.F_raman[keep]):
+            Vk = np.where(keep & (self.F_raman == f), 0.5 * self.omega_c * self.D, 0.0)
+            if np.any(Vk != 0):
+                self.vk_unit.append((float(f), Vk))
         eg = at.ground_energy_hz(self.B)
         self.nu_ud_zeeman = float(eg[UP] - eg[DOWN])  # hyperfine + linear Zeeman
         self.nu_ud_ref = self.nu_ud_zeeman + rc.differential_light_shift_hz
         if rc.frequency_mode == "sideband_offset":
-            self.nu_beat = self.nu_ud_ref + self.nu_t + rc.red_sideband_offset_hz
+            self.nu_beat = self.nu_ud_ref + self.nu_ref + rc.red_sideband_offset_hz
         else:
             self.nu_beat = rc.beat_frequency_hz
         # Raman-beam scattering (calibrated; recoil: absorb from either beam, isotropic emission)
@@ -148,9 +195,10 @@ class Model:
             Wr[:, :, 0] = rc.scattering_rate_s / N_GROUND
         klo_p, khi_p = float(np.dot(klo, self.u)), float(np.dot(khi, self.u))
         eta_rp = self.k_raman * self.x0
-        k1, o1 = mo.recoil_kernel(eta_rp, klo_p, self.cos_beta, "isotropic", N, nq)
-        k2, o2 = mo.recoil_kernel(eta_rp, khi_p, self.cos_beta, "isotropic", N, nq)
-        kr = (0.5 * (k1 + k2), 0.5 * (o1 + o2))
+        k1, o1 = self.motion.recoil_kernel(eta_rp, klo_p, self.cos_beta, "isotropic", nq)
+        k2, o2 = self.motion.recoil_kernel(eta_rp, khi_p, self.cos_beta, "isotropic", nq)
+        w1 = (pl[0] + ph[0]) / max(pl.sum() + ph.sum(), 1e-300)  # beam-1 share of the scattered photons
+        kr = (w1 * k1 + (1 - w1) * k2, w1 * o1 + (1 - w1) * o2)
         self.T["raman_scatter"], self.out["raman_scatter"], self.ovf["raman_scatter"] = self._transfer(Wr, {"sigma": kr, "pi": kr})
 
         self.schedule = build_schedule(cfg.timing)
@@ -195,7 +243,13 @@ class Model:
         if ic.motion_mode in ("thermal_nbar", "thermal_temperature"):
             nb = ic.nbar if ic.motion_mode == "thermal_nbar" else mo.nbar_from_temperature(ic.temperature_k, self.nu_t)
             pn, tail = mo.thermal_pn(nb, N)
-            notes.append(f"thermal nbar={nb:.6g}; discarded tail above n_max before normalization = {tail:.3g}")
+            if self.motion.kind == "lattice" and ic.motion_mode == "thermal_temperature" and ic.temperature_k > 0:
+                w = np.exp(-(self.motion.energies_hz - self.motion.energies_hz[0]) * H / (K_B * ic.temperature_k))
+                pn = w / w.sum()
+                notes.append(f"lattice: Boltzmann over the {N} kept levels at T = {ic.temperature_k:g} K (exact level energies); "
+                             f"a thermal state at this T has ~{tail:.3g} above them (harmonic-ladder estimate), not represented")
+            else:
+                notes.append(f"thermal nbar={nb:.6g}; discarded tail above n_max before normalization = {tail:.3g}")
         elif ic.motion_mode == "fock":
             if ic.fock_n >= N:
                 raise ValueError("fock_n exceeds n_max")
@@ -229,11 +283,11 @@ class Model:
         return ls_u, ls_d
 
     def detuning(self, seg: Segment) -> float:
-        """delta = 2 pi (nu_beat - nu_ud(t) - nu_t), nu_ud including all configured shifts."""
+        """delta = 2 pi (nu_beat - nu_ud(t) - nu_10), nu_ud including all configured shifts."""
         ls_u, ls_d = self.light_shifts(seg)
         amp = seg.raman if self.cfg.raman.enabled else 0.0
         nu_ud = self.nu_ud_zeeman + amp * self.cfg.raman.differential_light_shift_hz + (ls_u - ls_d) / (2 * np.pi)
-        return 2 * np.pi * (self.nu_beat - nu_ud - self.nu_t)
+        return 2 * np.pi * (self.nu_beat - nu_ud - self.nu_ref)
 
     def ops(self, seg: Segment) -> SegmentOps:
         cfg = self.cfg
@@ -269,7 +323,7 @@ class Model:
                     if best is None or abs(det) < abs(best[0]):
                         best = (det, ground_label(i), ground_label(j), k)
         det, a, b, k = best
-        scale = max(self.cfg.raman.carrier_rabi_hz, 1e-30)
+        scale = max(self.cfg.raman.carrier_rabi_hz * float(self.raman_pathways.sum()), 1e-30)
         return {"nearest_detuning_hz": det, "pair": f"{a}<->{b}", "sideband": k, "ratio_to_carrier_rabi": abs(det) / scale}
 
     def static_validity(self) -> Validity:
@@ -300,6 +354,16 @@ class Model:
             if cfg.raman.scattering_rate_s == 0:
                 v.add("Raman scattering", "warning", "IDEALIZED ASSUMPTION: residual Raman photon scattering rate = 0 (unknown)")
             v.add("Raman polarization", "ok", "calibrated mode: Raman polarization imperfections enter only via the calibrated extra decay, shift, and scattering inputs")
+            if cfg.raman.tone_layout == "both_tones_both_beams":
+                a = self.raman_pathways
+                d1 = abs(self.motion.displacement(self.eta_R)[1, 0])
+                cross = a[0, 1] + a[1, 0]
+                rsb = abs(self.D[1, 0]) / (cross * d1) if cross * d1 > 0 else 0.0
+                st = "ok" if rsb > 0.5 else "warning"  # physics, not a model-validity failure
+                v.add("Raman tone layout", st,
+                      f"both tones in both beams: red sideband |D_10| = {abs(self.D[1, 0]):.3g} ({rsb:.2f} x its maximum over lattice phase), "
+                      f"carrier |D_00| = {abs(self.D[0, 0]):.3g} (co-propagating pathways add {a[0, 0] + a[1, 1]:.3g}, no motional coupling); "
+                      f"result depends on raman.lattice_phase_deg = {cfg.raman.lattice_phase_deg:g} deg (atom position in the beat pattern), scan it if not stabilized")
         for b in BEAMS:
             src = self.beams[b].fraction_source
             if "EFFECTIVE" in src:
@@ -310,8 +374,21 @@ class Model:
             v.add("recoil", "warning", "isotropic emission approximation (optional; dipole pattern is the reference)")
         ld = self.eta_R**2 * (2 * self._nbar0() + 1)
         v.add("Lamb-Dicke", "ok", f"eta_R = {self.eta_R:.4f}, eta_R^2(2 nbar0+1) = {ld:.3g}; exact displacement elements used (no LD expansion)")
+        if self.motion.kind == "lattice":
+            s = self.motion
+            gaps = ", ".join(f"{g / 1e3:.1f}" for g in np.diff(s.energies_hz))
+            cap = "" if self.lattice_full else f"; basis capped at n_max = {self.N - 1} below the {s.n_bound} bound levels (overflow partly numerical)"
+            v.add("lattice", "ok" if self.lattice_full else "warning",
+                  f"1D lattice V0 = {cfg.trap.depth_uk:g} uK = {s.depth_hz / 1e3:.1f} kHz, E_r = {s.recoil_hz / 1e3:.2f} kHz "
+                  f"(lattice wavelength {s.wavelength_m * 1e9:.0f} nm implied by depth and nu_t), {s.n_bound} bound levels, spacings {gaps} kHz "
+                  f"(harmonic {self.nu_t / 1e3:.1f}); isolated site: tunnelling (lowest band ~{s.tunneling_hz():.2g} Hz, larger near the top), "
+                  f"coherent Raman coupling into unbound states and anharmonic heating elements neglected{cap}")
         if self.initial_tail > cfg.numerics.boundary_tolerance:
-            v.add("initial tail", "invalid", f"initial distribution tail above n_max = {self.initial_tail:.3g}")
+            if self.lattice_full:
+                v.add("initial tail", "warning", f"~{self.initial_tail:.3g} of the initial thermal distribution lies above the lattice depth "
+                      "(unbound, would not stay trapped); not represented")
+            else:
+                v.add("initial tail", "invalid", f"initial distribution tail above n_max = {self.initial_tail:.3g}")
         return v
 
     def _nbar0(self) -> float:
@@ -324,10 +401,20 @@ class Model:
             "eta_single_photon_D2_along_axis": self.eta_d2,
             "eta_R": self.eta_R,
             "raman_dk_lab_per_m": self.dk.tolist(),
+            "raman_tone_layout": self.cfg.raman.tone_layout,
+            "raman_pathway_amplitudes_low_i_high_j": self.raman_pathways.tolist(),
+            "raman_D10_red_sideband": float(abs(self.D[1, 0])),
+            "raman_D00_carrier": float(abs(self.D[0, 0])),
             "nu_ud_zeeman_hz": self.nu_ud_zeeman,
             "nu_ud_ref_hz": self.nu_ud_ref,
             "nu_beat_hz": self.nu_beat,
-            "delta_beat_minus_nu_t_ref_hz": self.nu_beat - self.nu_ud_ref - self.nu_t,
+            "delta_beat_minus_nu_t_ref_hz": self.nu_beat - self.nu_ud_ref - self.nu_ref,
+            "trap_potential": self.motion.kind,
+            "nu_10_hz": self.nu_ref,
+            "level_energies_hz": (self.eps / (2 * np.pi)).tolist(),
+            "lattice_bound_levels": self.motion.n_bound,
+            "lattice_recoil_hz": getattr(self.motion, "recoil_hz", None),
+            "lattice_wavelength_implied_m": getattr(self.motion, "wavelength_m", None),
             "cos_trap_axis_field": self.cos_beta,
             "pump_rates_per_s": {
                 b: {

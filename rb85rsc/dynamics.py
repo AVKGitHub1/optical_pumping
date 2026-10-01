@@ -15,8 +15,9 @@ motional populations of the 10 spectator sublevels.  Dissipators:
 * extra up-down dephasing gamma_x (calibrated input).
 
 Population pushed above n_max (recoil kernel tail, heating from n_max) goes into
-an explicit numerical-overflow bin; it is *not* reflected into the basis and is
-*not* physical atom loss.
+an explicit numerical-overflow bin; it is *not* reflected into the basis.  For a
+harmonic trap it is *not* physical atom loss; for trap.potential = lattice with
+all bound levels kept it is the probability of promotion above the lattice depth.
 
 Rate solver
 -----------
@@ -152,6 +153,13 @@ class CoherentSolver:
         vk = o.vk
         freqs = np.array([w for w, _ in vk])
         Vstack = np.array([V for _, V in vk]) if vk else None
+        # few distinct frequencies (harmonic: k*omega_t): sum over groups; many (lattice): one phase per element
+        elementwise = len(vk) > 12
+        if elementwise:
+            Vamp = Vstack.sum(axis=0)
+            Fmat = np.zeros((N, N))
+            for w, V in vk:
+                Fmat[V != 0] = w
         gh = o.heating
         a, ad, t2 = self.a, self.ad, self.two_n1
         nv = np.arange(N, dtype=float)
@@ -176,7 +184,7 @@ class CoherentSolver:
             p[spec_idx] = Ps.ravel()
             gain = G @ p
             if Vstack is not None:
-                V = np.tensordot(np.exp(1j * freqs * t), Vstack, axes=1)
+                V = Vamp * np.exp(1j * Fmat * t) if elementwise else np.tensordot(np.exp(1j * freqs * t), Vstack, axes=1)
                 Vh = V.conj().T
                 C = Bm.conj().T
                 dA = -1j * (V @ C - Bm @ Vh)
@@ -321,7 +329,7 @@ class RateSolver:
                     om = 2 * abs(V[i, j])
                     if om == 0:
                         continue
-                    dl = (i - j - 1) * m.omega_t - o.delta
+                    dl = m.F_raman[i, j] - o.delta
                     g = 0.5 * (gu[i] + gd[j]) + o.gamma_extra + 0.5 * gh * (2 * i + 1 + 2 * j + 1)
                     den = np.hypot(g, dl)
                     if occ[i] or occ[j]:

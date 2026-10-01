@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.signal import savgol_filter
 
-from .atomic import DOWN, GROUND_STATES, UP, H, ground_label
+from .atomic import DOWN, GROUND_STATES, K_B, UP, H, ground_label
 from .dynamics import RunResult
 from .model import BEAMS, COUNTERS, Model, Validity
 from .motion import temperature_from_nbar
@@ -34,9 +34,14 @@ def _derivative(t, y, window):
 
 def analyze(model: Model, res: RunResult) -> dict:
     cfg = model.cfg
-    t, P = res.t, res.P
+    t, P_abs = res.t, res.P
     N = model.N
     n = np.arange(N)
+    # All populations are normalized to the atoms still in the basis ("trapped"): the survivors of a
+    # lattice, or 1 - numerical overflow for a harmonic trap. Fractions of all atoms are kept as *_absolute.
+    trace = P_abs.reshape(len(t), -1).sum(axis=1)
+    safe = np.where(trace > 0, trace, 1.0)
+    P = P_abs / safe[:, None, None]
     spin = P.sum(axis=2)  # (T, 12)
     pn = P.sum(axis=1)  # (T, N)
     f2 = spin[:, [i for i, (f, _) in enumerate(GROUND_STATES) if f == 2]].sum(axis=1)
@@ -68,9 +73,8 @@ def analyze(model: Model, res: RunResult) -> dict:
     tgt_rate = float(o.gout[UP * N])
     tgt_by = {b: float(model.out[b][UP * N]) * (getattr(last, "pump" if b == "spin_pump" else "repump")) for b in BEAMS}
 
-    trace = P.reshape(len(t), -1).sum(axis=1)
     cons = np.abs(trace + res.overflow - 1.0)
-    boundary = P[:, :, N - 2 :].sum(axis=(1, 2))
+    boundary = P_abs[:, :, N - 2 :].sum(axis=(1, 2))
     series = {
         "t_s": t,
         "P_up": p_up,
@@ -80,6 +84,10 @@ def analyze(model: Model, res: RunResult) -> dict:
         "P_n0": p_n0,
         "P_target": p_target,
         "P_n0_given_up": p_n0_given_up,
+        "P_trapped": trace,
+        "P_up_absolute": p_up * trace,
+        "P_n0_absolute": p_n0 * trace,
+        "P_target_absolute": p_target * trace,
         "nbar": nbar,
         "fractional_energy_reduction": frac_red,
         "cooling_rate_quanta_per_s": cooling_rate,
@@ -104,12 +112,19 @@ def analyze(model: Model, res: RunResult) -> dict:
     mn = float(res.min_eig.min())
     v.add("positivity", "ok" if mn > -num.positivity_tolerance else "invalid", f"most negative eigenvalue/population = {mn:.3g}")
     bmax = float(boundary.max())
-    v.add("motional boundary", "ok" if bmax < num.boundary_tolerance else "invalid", f"max population in n >= n_max-1: {bmax:.3g}")
     ov = float(res.overflow[-1])
-    v.add("numerical overflow", "ok" if ov < num.boundary_tolerance else "invalid", f"probability pushed above n_max (numerical, not atom loss) = {ov:.3g}")
-    # high-energy validity: harmonic, infinitely deep trap
-    if cfg.trap.depth_hz:
-        nthr = 0.3 * cfg.trap.depth_hz / model.nu_t
+    if model.lattice_full:  # basis = every bound level: the top levels and the overflow are physical
+        v.add("motional boundary", "ok", f"max population in the top two bound levels: {bmax:.3g} (physical; above them the atom is unbound)")
+        v.add("lattice loss", "ok" if ov < 1e-2 else "warning", f"probability promoted above the lattice depth (atom leaves its site) = {ov:.3g}")
+    else:
+        v.add("motional boundary", "ok" if bmax < num.boundary_tolerance else "invalid", f"max population in n >= n_max-1: {bmax:.3g}")
+        v.add("numerical overflow", "ok" if ov < num.boundary_tolerance else "invalid", f"probability pushed above n_max (numerical, not atom loss) = {ov:.3g}")
+    # high-energy validity: harmonic, infinitely deep trap (the lattice entry comes from the model)
+    if model.motion.kind == "lattice":
+        pass
+    elif cfg.trap.depth_uk:
+        depth_hz = cfg.trap.depth_uk * 1e-6 * K_B / H
+        nthr = 0.3 * depth_hz / model.nu_t
         hi = float(pn[:, n > nthr].sum(axis=1).max())
         st = "ok" if hi < 1e-3 else ("warning" if hi < 1e-2 else "invalid")
         v.add("harmonic approximation", st, f"max population with E_n > 0.3 x trap depth during run: {hi:.3g}")
@@ -141,6 +156,10 @@ def analyze(model: Model, res: RunResult) -> dict:
         "P_target": float(p_target[-1]),
         "P_up_times_P_n0": float(p_up[-1] * p_n0[-1]),
         "P_n0_given_up": float(p_n0_given_up[-1]) if np.isfinite(p_n0_given_up[-1]) else None,
+        "P_trapped": float(trace[-1]),
+        "P_up_absolute": float(p_up[-1] * trace[-1]),
+        "P_n0_absolute": float(p_n0[-1] * trace[-1]),
+        "P_target_absolute": float(p_target[-1] * trace[-1]),
         "nbar": float(nbar[-1]),
         "nbar_initial": float(nbar0),
         "fractional_energy_reduction": float(frac_red[-1]) if nbar0 > 0 else None,
@@ -164,6 +183,7 @@ def analyze(model: Model, res: RunResult) -> dict:
         "min_eigenvalue": mn,
         "max_boundary_population": bmax,
         "final_overflow": ov,
+        "lattice_loss": ov if model.lattice_full else None,
         "initial_tail_discarded": float(model.initial_tail),
         "solver": res.solver,
         "wall_time_s": res.wall_time_s,
