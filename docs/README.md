@@ -6,6 +6,7 @@ Start with the [repository README](../README.md) to run **[examples/experiment.j
 
 | Document | Contents |
 | --- | --- |
+| [Simulation white paper (PDF, five pages)](../output/pdf/rb85_rsc_simulation_white_paper.pdf) | Illustrated overview of the current physics, calibration, numerical methods, reference results, and limitations |
 | [Experiment workflow](experiment-workflow.md) | Running the active config, outputs, optimization, controls, and numerical checks |
 | [Performance](performance.md) | Exact computational optimizations, benchmarks, validation, and worker settings |
 | [RSC physics corrections and current results](astra-physics-corrections.md) | Agreed experimental inputs, implemented model, current results, validation, and unresolved physical uncertainties |
