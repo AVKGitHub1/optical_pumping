@@ -326,10 +326,11 @@ class PlotTab(QWidget):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, cfg: SimConfig | None = None):
+    def __init__(self, cfg: SimConfig | None = None, start_path: str | None = None):
         super().__init__()
         self.setWindowTitle("Rb-85 optical pumping + Raman sideband cooling (1D model)")
         self.resize(1600, 1000)
+        self.start_path = start_path  # config the window opened with; Reset returns to it
         self.fields: dict[str, FieldWidget] = {}
         self.last = None
         self.thread = None
@@ -582,13 +583,19 @@ class MainWindow(QMainWindow):
         self.status.setText("Stopping...")
 
     def on_reset(self):
-        self.load_config(SimConfig())
+        cfg, msg = SimConfig(), "Parameters reset to built-in defaults."
+        if self.start_path:  # back to the startup config, re-read so file edits apply
+            try:
+                cfg, msg = SimConfig.from_json(self.start_path), f"Parameters reset to {self.start_path}."
+            except Exception as e:  # noqa: BLE001
+                msg = f"Could not re-read {self.start_path} ({e}); reset to built-in defaults."
+        self.load_config(cfg)
         self.last = None
         for t in (self.t_over, self.t_spin, self.t_tr, self.t_pnt, self.t_joint, self.t_cmp, self.t_scan):
             t.draw(lambda f: None)
         self.diag.clear()
         self.prog.setValue(0)
-        self.status.setText("Parameters reset to defaults.")
+        self.status.setText(msg)
 
     def on_load(self):
         fn, _ = QFileDialog.getOpenFileName(self, "Load config", "", "JSON (*.json)")
@@ -659,13 +666,14 @@ class MainWindow(QMainWindow):
 
 
 def _overview(fig, a):
-    gs = fig.add_gridspec(2, 3)
-    pl.plot_spin_bars(pl._new(fig, gs[0, 0]), a)
-    pl.plot_traces(pl._new(fig, gs[0, 1]), a)
-    pl.plot_nbar(pl._new(fig, gs[0, 2]), a)
-    pl.plot_pnt(pl._new(fig, gs[1, 0]), a, fig)
-    pl.plot_joint(pl._new(fig, gs[1, 1]), a, fig)
-    pl.plot_photons(pl._new(fig, gs[1, 2]), a)
+    gs = fig.add_gridspec(3, 3, height_ratios=[0.22, 1, 1])
+    pl.plot_schedule(pl._new(fig, gs[0, :]), a)
+    pl.plot_spin_bars(pl._new(fig, gs[1, 0]), a)
+    pl.plot_traces(pl._new(fig, gs[1, 1]), a)
+    pl.plot_nbar(pl._new(fig, gs[1, 2]), a)
+    pl.plot_pnt(pl._new(fig, gs[2, 0]), a, fig)
+    pl.plot_joint(pl._new(fig, gs[2, 1]), a, fig)
+    pl.plot_photons(pl._new(fig, gs[2, 2]), a)
 
 
 def _traces(fig, a):
@@ -675,9 +683,24 @@ def _traces(fig, a):
     pl.plot_cooling_rate(pl._new(fig, gs[2]), a)
 
 
+DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / "examples" / "experiment.json"
+
+
 def launch(config_path: str | None = None) -> int:
+    """Open the GUI with config_path, else examples/experiment.json, else the built-in defaults."""
     app = QApplication.instance() or QApplication([])
-    cfg = SimConfig.from_json(config_path) if config_path else None
-    w = MainWindow(cfg)
+    path = config_path or (str(DEFAULT_CONFIG) if DEFAULT_CONFIG.exists() else None)
+    cfg, note = None, None
+    if path:
+        try:
+            cfg = SimConfig.from_json(path)
+            note = f"Loaded {path}"
+        except Exception as e:  # noqa: BLE001
+            if config_path:
+                raise
+            path, note = None, f"Could not load {DEFAULT_CONFIG} ({e}); using built-in defaults."
+    w = MainWindow(cfg, start_path=path)
+    if note:
+        w.status.setText(note)
     w.show()
     return app.exec()

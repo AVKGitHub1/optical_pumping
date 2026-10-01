@@ -66,7 +66,9 @@ def plot_traces(ax, a, keys=(("P_up", "P_up"), ("P_n0", "P_n0"), ("P_target", "P
     t = _ms(s["t_s"])
     for i, (k, lab) in enumerate(keys):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
-    if "P_trapped" in s and np.min(s["P_trapped"]) < 1 - 1e-4:  # real loss (lattice): show survival
+    m = a.get("model")
+    lattice = m is not None and m.motion.kind == "lattice"  # harmonic overflow is numerical, not survival
+    if lattice and "P_trapped" in s and np.min(s["P_trapped"]) < 1 - 1e-4:
         ax.plot(t, s["P_trapped"], color=TEXT2, lw=1.5, ls="--", label="P_trapped (survival)")
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("probability")
@@ -85,6 +87,37 @@ def _shade_segments(ax, a):
             continue
         if sg.raman > 0:
             ax.axvspan(sg.t0 * 1e3, sg.t1 * 1e3, color="#eef4fc", lw=0, zorder=0)
+
+
+SCHEDULE_LANES = (("raman", "Raman (RSC)", SERIES[0]), ("pump", "spin pump", SERIES[1]), ("repump", "repump", SERIES[2]))
+
+
+def plot_schedule(ax, a):
+    """Narrow timeline of which beams are on; bar height = amplitude multiplier (relative to that beam's maximum)."""
+    segs = a.get("segments") or []
+    m = a.get("model")
+    enabled = {"raman": True, "pump": True, "repump": True}
+    if m is not None:
+        enabled = {"raman": m.cfg.raman.enabled, "pump": m.cfg.spin_pump.enabled, "repump": m.cfg.repump.enabled}
+    labels = []
+    for i, (key, lab, col) in enumerate(SCHEDULE_LANES):
+        y = len(SCHEDULE_LANES) - 1 - i  # Raman on top
+        amps = [getattr(sg, key) if enabled[key] else 0.0 for sg in segs]
+        top = max(amps, default=0.0) or 1.0
+        if segs:  # segments are contiguous: step trace at the boundaries, shaded down to the lane baseline
+            ts = [sg.t0 * 1e3 for sg in segs] + [segs[-1].t1 * 1e3]
+            ys = [y - 0.4 + 0.8 * x / top for x in amps] + [y - 0.4 + 0.8 * amps[-1] / top]
+            ax.step(ts, ys, where="post", color=col, lw=1.5)
+            ax.fill_between(ts, y - 0.4, ys, step="post", color=col, alpha=0.5, lw=0)
+        ax.axhline(y - 0.4, color=GRID, lw=0.8, zorder=0)
+        labels.append(lab if enabled[key] else f"{lab} (disabled)")
+    ax.set_yticks(range(len(SCHEDULE_LANES)), labels[::-1], fontsize=7)
+    ax.set_ylim(-0.5, len(SCHEDULE_LANES) - 0.5)
+    ax.set_xlim(0, segs[-1].t1 * 1e3 if segs else 1.0)
+    ax.grid(False, axis="y")
+    ax.tick_params(axis="x", labelsize=7)
+    ax.set_xlabel("time (ms)", fontsize=7)
+    ax.set_title("Beams on (trace height = amplitude multiplier)", fontsize=8)
 
 
 def plot_nbar(ax, a):
@@ -172,16 +205,17 @@ def _fmt_t(x):
 
 
 def dashboard(a, title="") -> Figure:
-    fig = Figure(figsize=(15, 10), facecolor="white", layout="constrained")
-    gs = fig.add_gridspec(3, 3)
-    plot_spin_bars(_new(fig, gs[0, 0]), a)
-    plot_traces(_new(fig, gs[0, 1]), a)
-    plot_nbar(_new(fig, gs[0, 2]), a)
-    plot_pnt(_new(fig, gs[1, 0]), a, fig)
-    plot_joint(_new(fig, gs[1, 1]), a, fig)
-    plot_photons(_new(fig, gs[1, 2]), a)
-    plot_cooling_rate(_new(fig, gs[2, 0]), a)
-    axt = fig.add_subplot(gs[2, 1:])
+    fig = Figure(figsize=(15, 11), facecolor="white", layout="constrained")
+    gs = fig.add_gridspec(4, 3, height_ratios=[0.22, 1, 1, 1])
+    plot_schedule(_new(fig, gs[0, :]), a)
+    plot_spin_bars(_new(fig, gs[1, 0]), a)
+    plot_traces(_new(fig, gs[1, 1]), a)
+    plot_nbar(_new(fig, gs[1, 2]), a)
+    plot_pnt(_new(fig, gs[2, 0]), a, fig)
+    plot_joint(_new(fig, gs[2, 1]), a, fig)
+    plot_photons(_new(fig, gs[2, 2]), a)
+    plot_cooling_rate(_new(fig, gs[3, 0]), a)
+    axt = fig.add_subplot(gs[3, 1:])
     axt.axis("off")
     axt.text(0, 1, diagnostics_text(a), family="monospace", fontsize=6.5, va="top", color=TEXT, wrap=True)
     fig.suptitle(title, fontsize=11, color=TEXT)

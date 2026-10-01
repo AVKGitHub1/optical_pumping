@@ -18,7 +18,7 @@ repumping, and spin pumping run simultaneously? It also compares that with stage
 
 ```text
 pip install -r requirements.txt
-python rb85_rsc_sim.py --gui
+python rb85_rsc_sim.py --gui                     # opens examples/experiment.json (Reset returns to it); --config overrides
 python rb85_rsc_sim.py --config examples/continuous.json --headless --output results/continuous
 python rb85_rsc_sim.py --compare-protocols --config examples/default.json --output results/comparison
 python rb85_rsc_sim.py --scan-config examples/intensity_scan.json --headless --output results/scan
