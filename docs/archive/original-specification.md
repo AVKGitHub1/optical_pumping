@@ -1,5 +1,7 @@
 # Build an Rb-85 optical-pumping and Raman sideband cooling simulator
 
+> Preserved original development specification. This is historical context, not the current experiment definition or a checklist of implemented features. See the [current physics report](../astra-physics-corrections.md) and [documentation index](../README.md).
+
 Act as an AMO physicist and scientific Python developer. Implement a working, tunable simulator, rather than only describing a model. Use ARC, NumPy, SciPy, Matplotlib, and PyQt6. Use QuTiP where it simplifies a physically justified master-equation calculation. Deliver runnable source, example configurations, documentation, and meaningful physics checks.
 
 The central question is: **How efficiently can an initially unpolarized Rb-85 sample be pumped into the stretched state and cooled when Raman driving, repumping, and spin-pumping operate simultaneously, and how does this compare with staged or pulsed operation?**
@@ -196,9 +198,9 @@ Expected usage should be comparable to:
 
 ```text
 python rb85_rsc_sim.py --gui
-python rb85_rsc_sim.py --config examples/continuous.json --headless --output results/continuous
-python rb85_rsc_sim.py --compare-protocols --config examples/default.json --output results/comparison
-python rb85_rsc_sim.py --scan-config examples/intensity_scan.json --headless --output results/scan
+python rb85_rsc_sim.py --config examples/arxiv/continuous.json --headless --output results/continuous
+python rb85_rsc_sim.py --compare-protocols --config examples/arxiv/default.json --output results/comparison
+python rb85_rsc_sim.py --scan-config examples/arxiv/intensity_scan.json --headless --output results/scan
 ```
 
 First implement and validate the atomic transition graph and a small coherent cooling model, then add recoil and all spin states, protocols, exports, and GUI. Use sparse operators and sensible basis sizes. Avoid propagating optical-frequency oscillations or a huge explicit excited-state density matrix when adiabatic elimination is valid. Show estimated resource cost before expensive runs.

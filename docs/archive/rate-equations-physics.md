@@ -1,6 +1,8 @@
 # Physics Behind The Model
 
-This document explains the physics implemented in [rate-calcs.py](c:\Abhishek\Stanford\Simon Lab\Code\optical_pumping\rate-calcs.py).
+> Archived documentation for the separate population-rate model. For the current RSC experiment, start with the [repository README](../../README.md) and [experiment workflow](../experiment-workflow.md). Commands below run from the repository root.
+
+This document explains the physics implemented in [rate-calcs.py](../../scripts/archive/rate-calcs.py).
 
 ## 1. Physical System
 

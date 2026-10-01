@@ -1,6 +1,6 @@
 {
   "title": "Clarified experiment: absolute target yield versus pump powers",
-  "base_config": "experiment.json",
+  "base_config": "../experiment.json",
   "axes": [
     {
       "param": "spin_pump.power_mw",

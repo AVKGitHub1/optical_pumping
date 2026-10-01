@@ -1,6 +1,6 @@
 # RSC physics corrections and current results
 
-Reviewed 2026-10-01. All execution and checks use the **`scripts` conda environment**. The active configuration is [examples/experiment.json](examples/experiment.json), with **modeled carrier decay**. The [historical audit](docs/astra-physics-history.md) preserves the original 1D audit, intermediate results, convergence studies and resolved questions.
+Reviewed 2026-10-01. All execution and checks use the **`scripts` conda environment**. The active configuration is [examples/experiment.json](../examples/experiment.json), with **modeled carrier decay**. The [historical audit](astra-physics-history.md) preserves the original 1D audit, intermediate results, convergence studies and resolved questions.
 
 ## Current result
 
@@ -67,13 +67,13 @@ The index j spans thermal states and spatial samples. Calibration uses the state
 - The 90% contrast is preparation/readout visibility and never removes atoms.
 - Cached central, phase-averaged Raman scattering: **0.3385/s** for `|3,3>` and **0.3370/s** for `|2,2>`; differential Raman light shift **-26.18 Hz**.
 
-The [calibration cache](rb85rsc/cache/carrier_97d9792bf4c62571cc17e221.json) includes traces, optical estimates and source metadata. ARC D1+D2 scattering amplitudes interfere before squaring; ground light shifts include the D-line counter-rotating term. ARC's working database stays in memory. Atomic estimates do not determine technical laser or magnetic noise.
+The [calibration cache](../rb85rsc/cache/carrier_97d9792bf4c62571cc17e221.json) includes traces, optical estimates and source metadata. ARC D1+D2 scattering amplitudes interfere before squaring; ground light shifts include the D-line counter-rotating term. ARC's working database stays in memory. Atomic estimates do not determine technical laser or magnetic noise.
 
 For older configs, `measured_envelope` remains available and is the default when the new mode is omitted. It fits a synthetic trace with nonnegative residual damping and flags poor fits. That earlier fit could not reproduce the reported envelope. Choosing modeled decay removes that fit constraint; it does not establish experimental agreement.
 
 ## Corrections implemented
 
-The ensemble backend is in [ensemble.py](rb85rsc/ensemble.py), with cached optical estimates in [far_detuned.py](rb85rsc/far_detuned.py). The legacy 1D backend remains available. Measured-carrier configs cannot silently reinterpret 5 kHz as a single-path Rabi frequency.
+The ensemble backend is in [ensemble.py](../rb85rsc/ensemble.py), with cached optical estimates in [far_detuned.py](../rb85rsc/far_detuned.py). The legacy 1D backend remains available. Measured-carrier configs cannot silently reinterpret 5 kHz as a single-path Rabi frequency.
 
 - **Energy and temperature:** actual anharmonic excitation energies and survivor-weighted mixtures of finite local spectra replace harmonic energy assignments. `nbar` is a mean level index in a lattice.
 - **Magnetic energies:** analytic Breit-Rabi ground energies replace the linear approximation and a failed ARC check that previously reported zero error. Weak-field dipoles and excited energies remain approximate.
@@ -113,15 +113,15 @@ The complete 64-node experiment was rerun after cleanup. It reproduced the previ
 
 Earlier timestep/recoil checks used the previous calibration and z-lattice E along x. They establish numerical convergence for that reference, not a physical error bound. Spatial quadrature still has visible residual dependence; no statistical confidence intervals are claimed. A central single-photon angular check found Cartesian-factorization retention differences of 0.000042 to 0.000209, which is not a sequence-wide or coherence-error bound.
 
-The [single-photon recoil check](results/astra_modeled_decay/one_photon_recoil_check.json) was rerun in the current output directory and reproduced those values. It now uses the configured magnetic-field direction rather than hard-coding lab x.
+The [single-photon recoil check](../results/astra_modeled_decay/one_photon_recoil_check.json) was rerun in the current output directory and reproduced those values. It now uses the configured magnetic-field direction rather than hard-coding lab x.
 
 Cleanup fixes: scan reuse now requires matching full configs; controls must match in physics and numerics; invalid objectives fail before propagation; unknown scan runtime is described without `nan`; cache publication is atomic; initial-state metadata reflects actual inputs. `--stage final` reruns the current config and needs explicit `--use-selected` to restore an optimization winner. Temporary test/smoke outputs are removed, while historical scientific results are preserved.
 
 ## Outputs and reproduction
 
-- [Current metadata and all 12 absolute/conditional spin populations](results/astra_modeled_decay/final/run_metadata.json), [time series](results/astra_modeled_decay/final/run_timeseries.csv), [3D populations and local spectra](results/astra_modeled_decay/final/run_ensemble.npz), and [exact run config](results/astra_modeled_decay/final/run_config.json).
-- [Dashboard](results/astra_modeled_decay/final/run_dashboard.png), [modeled carrier trace](results/astra_modeled_decay/final/run_carrier_calibration.png), and [spatial convergence](results/astra_modeled_decay/spatial_convergence.json). PDF copies accompany the figures.
-- Earlier scans and measured-envelope results remain in [results/astra_clarified](results/astra_clarified/); the original 1D audit remains in [results/astra_audit](results/astra_audit/). Their interpretation and reproduction details are preserved in the [historical audit](docs/astra-physics-history.md).
+- [Current metadata and all 12 absolute/conditional spin populations](../results/astra_modeled_decay/final/run_metadata.json), [time series](../results/astra_modeled_decay/final/run_timeseries.csv), [3D populations and local spectra](../results/astra_modeled_decay/final/run_ensemble.npz), and [exact run config](../results/astra_modeled_decay/final/run_config.json).
+- [Dashboard](../results/astra_modeled_decay/final/run_dashboard.png), [modeled carrier trace](../results/astra_modeled_decay/final/run_carrier_calibration.png), and [spatial convergence](../results/astra_modeled_decay/spatial_convergence.json). PDF copies accompany the figures.
+- Earlier scans and measured-envelope results remain in [results/astra_clarified](../results/astra_clarified/); the original 1D audit remains in [results/astra_audit](../results/astra_audit/). Their interpretation and reproduction details are preserved in the [historical audit](astra-physics-history.md).
 
 From the repository root:
 
@@ -140,4 +140,4 @@ conda run --no-capture-output -n scripts python scripts/check_experiment_converg
 conda run --no-capture-output -n scripts python scripts/check_recoil_factorization.py
 ```
 
-Control selection requires fresh matching outputs. The current modeled-decay settings have not been reoptimized; to repeat the search, run the stages in the README and explicitly add `--use-selected` to the final stage. Outputs are separated by carrier-decay mode and include full configs and assumptions.
+Control selection requires fresh matching outputs. The current modeled-decay settings have not been reoptimized; to repeat the search, run the stages in the [experiment workflow](experiment-workflow.md) and explicitly add `--use-selected` to the final stage. Outputs are separated by carrier-decay mode and include full configs and assumptions.

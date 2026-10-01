@@ -1,4 +1,5 @@
 """Check 10: headless execution, config round trip, export, GUI smoke test."""
+import importlib.util
 import json
 import os
 import subprocess
@@ -30,7 +31,7 @@ def test_unknown_key_rejected():
 
 
 def test_examples_load():
-    for f in (ROOT / "examples").glob("*.json"):
+    for f in (ROOT / "examples").rglob("*.json"):
         d = json.loads(f.read_text())
         if "axes" in d:
             from rb85rsc.scan import load_scan, point_configs
@@ -41,9 +42,33 @@ def test_examples_load():
             SimConfig.from_dict(d)
 
 
+@pytest.mark.parametrize("entrypoint", [["-m", "rb85rsc"], [str(ROOT / "rb85_rsc_sim.py")]])
+def test_cli_entrypoints_write_same_default_config(entrypoint, tmp_path):
+    path = tmp_path / "default.json"
+    result = subprocess.run(
+        [sys.executable, *entrypoint, "--write-default-config", str(path)],
+        capture_output=True, text=True, cwd=ROOT, timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    assert SimConfig.from_json(path) == SimConfig()
+
+
+def test_legacy_entrypoint_preserves_imported_configuration(monkeypatch):
+    spec = importlib.util.spec_from_file_location("legacy_rate_calcs", ROOT / "rate-calcs.py")
+    module = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, module)
+    spec.loader.exec_module(module)
+    module.RUN_SWEEP = False
+    module.INITIAL_POPULATIONS = {"g_F3_m+3": 1.0}
+    assert module.main.__globals__ is vars(module)
+    assert module.main.__globals__["RUN_SWEEP"] is False
+    assert module.main.__globals__["INITIAL_POPULATIONS"] == {"g_F3_m+3": 1.0}
+    assert module.State.__module__ == spec.name
+
+
 def test_headless_cli_and_export(tmp_path):
     out = tmp_path / "run"
-    cmd = [sys.executable, str(ROOT / "rb85_rsc_sim.py"), "--config", str(ROOT / "examples" / "continuous.json"), "--headless",
+    cmd = [sys.executable, str(ROOT / "rb85_rsc_sim.py"), "--config", str(ROOT / "examples" / "arxiv" / "continuous.json"), "--headless",
            "--output", str(out), "--set", "timing.total_duration_ms=0.5", "--set", "timing.n_samples=11"]
     env = {**os.environ, "MPLBACKEND": "Agg"}
     env.pop("QT_QPA_PLATFORM", None)
@@ -57,7 +82,7 @@ def test_headless_cli_and_export(tmp_path):
 
 
 def test_headless_does_not_import_qt():
-    code = "import sys; sys.path.insert(0, r'%s'); import rb85rsc.runner, rb85rsc.scan, rb85rsc.plotting; print('PyQt6' in sys.modules)" % ROOT
+    code = "import sys; sys.path.insert(0, r'%s'); import rb85rsc.runner, rb85rsc.scan, rb85rsc.plotting, rb85rsc.cli, rb85_rsc_sim; print('PyQt6' in sys.modules)" % ROOT
     p = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=300)
     assert p.stdout.strip() == "False"
 

@@ -1,6 +1,6 @@
 # Historical physics audit and intermediate results
 
-This is the preserved audit history before the final cleanup. Current settings, results and remaining limitations are in [astra-physics-corrections.md](../astra-physics-corrections.md). Historical questions and numerical results below are superseded where the current report says so. Commands run from the repository root.
+This is the preserved audit history before the final cleanup. Current settings, results and remaining limitations are in [astra-physics-corrections.md](astra-physics-corrections.md). Historical questions and numerical results below are superseded where the current report says so. Commands run from the repository root.
 
 # RSC physics audit and corrections
 

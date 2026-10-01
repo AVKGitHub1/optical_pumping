@@ -1,6 +1,8 @@
 # Optical Pumping Rate-Equation Model
 
-This repository contains a single self-contained Python script, [rate-calcs.py](c:\Abhishek\Stanford\Simon Lab\Code\optical_pumping\rate-calcs.py), that simulates mF-resolved optical pumping of `85Rb` on the D2 line using population rate equations.
+> Archived documentation for the separate population-rate model. For the current RSC experiment, start with the [repository README](../../README.md) and [experiment workflow](../experiment-workflow.md). Commands below run from the repository root.
+
+This repository contains a single self-contained Python script, [rate-calcs.py](../../scripts/archive/rate-calcs.py), that simulates mF-resolved optical pumping of `85Rb` on the D2 line using population rate equations.
 
 The model includes:
 
@@ -14,10 +16,10 @@ The model includes:
 
 The script saves:
 
-- [output.png](c:\Abhishek\Stanford\Simon Lab\Code\optical_pumping\output.png): figure dashboard
-- [detailed_output.md](c:\Abhishek\Stanford\Simon Lab\Code\optical_pumping\detailed_output.md): detailed text report
+- [output.png](../../results/archive/rate-calcs/output.png): figure dashboard
+- [detailed_output.md](rate-equations-output.md): detailed text report
 
-For the physics background, see [physics.md](c:\Abhishek\Stanford\Simon Lab\Code\optical_pumping\physics.md).
+For the physics background, see [physics.md](rate-equations-physics.md).
 
 ## Requirements
 
@@ -31,7 +33,7 @@ Install:
 Example:
 
 ```bash
-pip install numpy scipy sympy matplotlib
+conda run --no-capture-output -n scripts python -m pip install numpy scipy sympy matplotlib
 ```
 
 ## Running
@@ -39,10 +41,10 @@ pip install numpy scipy sympy matplotlib
 Run:
 
 ```bash
-python rate-calcs.py
+conda run --no-capture-output -n scripts python scripts/archive/rate-calcs.py
 ```
 
-By default, the script writes files instead of opening interactive plot windows.
+By default, the script writes `output.png` and `detailed_output.md` in the working directory instead of opening interactive plot windows. The links above refer to preserved historical output. The root `rate-calcs.py` entry point remains available for compatibility.
 
 ## What The Script Does
 
@@ -59,7 +61,7 @@ At a high level, the script:
 
 ## Main User Inputs
 
-Most settings live near the top of [rate-calcs.py](c:\Abhishek\Stanford\Simon Lab\Code\optical_pumping\rate-calcs.py).
+Most settings live near the top of [rate-calcs.py](../../scripts/archive/rate-calcs.py).
 
 ### 1. Hyperfine offsets
 

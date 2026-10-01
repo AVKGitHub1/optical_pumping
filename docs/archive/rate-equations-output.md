@@ -1,5 +1,7 @@
 # Detailed Output
 
+> Preserved output from the legacy population-rate model. These numbers are not predictions for the current RSC experiment. See the [legacy script guide](rate-equations.md).
+
 ```text
 === Configuration Summary ===
 Gamma / (2 pi)                  =  6.065000 MHz
