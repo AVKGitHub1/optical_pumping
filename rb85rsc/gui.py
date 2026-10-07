@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QSplitter, QTabWidget, QToolBox, QVBoxLayout, QWidget,
 )
 
-from . import plotting as pl
+from . import atomic as at, motion as mo, plotting as pl
 from . import polarization as pol
 from .config import ConfigError, SimConfig, field_info, get_param
 from .protocols import PROTOCOLS
@@ -119,6 +119,83 @@ class FieldWidget:
             self.w.setValue(v)
         else:
             self.w.setText(_fmt(v))
+
+
+class LatticeWidget(QGroupBox):
+    """Physical inputs for one lattice, with depth/frequency kept consistent."""
+
+    def __init__(self, axis, mass_kg):
+        super().__init__(f"{axis.upper()} lattice")
+        self.mass_kg = mass_kg
+        self._updating = False
+        self._dirty = False
+        self._raw = {}
+        form = QFormLayout(self)
+        self.mode = QComboBox()
+        self.mode.addItem("Depth", "depth")
+        self.mode.addItem("Frequency", "frequency")
+        form.addRow("Set confinement using", self.mode)
+        self.inputs = {}
+        for key, label in (("wavelength_nm", "Wavelength (nm)"), ("frequency_hz", "Bottom frequency (Hz)"),
+                           ("waist_um", "Beam waist (um)"), ("depth_uk", "Depth (uK)")):
+            entry = QLineEdit()
+            validator = QDoubleValidator()
+            validator.setNotation(QDoubleValidator.Notation.ScientificNotation)
+            entry.setValidator(validator)
+            entry.textChanged.connect(self._changed)
+            self.inputs[key] = entry
+            form.addRow(label, entry)
+        self.note = QLabel("Wavelength and depth determine the bottom frequency.")
+        self.note.setWordWrap(True)
+        form.addRow(self.note)
+        self.mode.currentIndexChanged.connect(self._changed)
+
+    def load(self, cfg, axis):
+        self._updating = True
+        self._raw = vars(getattr(cfg.trap, "lattice_" + "xyz"[axis])).copy()
+        spec = cfg.lattice_config(axis)
+        # The panels are hidden for a legacy harmonic config, which need not
+        # specify a lattice wavelength or depth.
+        wavelength = spec.wavelength_nm if spec.wavelength_nm is not None else 785.
+        depth = spec.depth_uk if spec.depth_uk is not None else 15.
+        frequency = spec.frequency_hz if spec.confinement == "frequency" else mo.lattice_frequency_hz(self.mass_kg, wavelength, depth)
+        self.mode.setCurrentIndex(self.mode.findData(spec.confinement))
+        for key, value in dict(wavelength_nm=wavelength, frequency_hz=frequency, waist_um=spec.waist_um, depth_uk=depth).items():
+            self.inputs[key].setText(_fmt(value))
+        self._updating = False
+        self._refresh()
+        self._dirty = False
+
+    def _changed(self, *_):
+        if self._updating:
+            return
+        self._dirty = True
+        self._refresh()
+
+    def _refresh(self):
+        frequency_mode = self.mode.currentData() == "frequency"
+        self.inputs["depth_uk"].setReadOnly(frequency_mode)
+        self.inputs["frequency_hz"].setReadOnly(not frequency_mode)
+        self.note.setText("Depth is calculated from wavelength and frequency." if frequency_mode
+                          else "Frequency is calculated from wavelength and depth.")
+        source, target = ("frequency_hz", "depth_uk") if frequency_mode else ("depth_uk", "frequency_hz")
+        try:
+            wavelength = float(self.inputs["wavelength_nm"].text())
+            value = float(self.inputs[source].text())
+            if wavelength <= 0 or value <= 0:
+                return
+            calculate = mo.lattice_depth_uk if frequency_mode else mo.lattice_frequency_hz
+            calculated = calculate(self.mass_kg, wavelength, value)
+        except (ValueError, OverflowError):
+            return  # Parsing/validation reports unfinished or invalid inputs on Run.
+        self._updating = True
+        self.inputs[target].setText(_fmt(calculated))
+        self._updating = False
+
+    def dump(self):
+        if not self._dirty:
+            return self._raw.copy()  # Preserve legacy fallbacks until edited.
+        return dict(confinement=self.mode.currentData(), **{k: float(v.text()) for k, v in self.inputs.items()})
 
 
 class PolarizationWidget(QGroupBox):
@@ -339,9 +416,13 @@ class MainWindow(QMainWindow):
 
         # left: parameters
         self.toolbox = QToolBox()
-        info = [(p, f) for p, f in field_info() if ".polarization." not in p and p != "timing.protocol"]
+        info = [(p, f) for p, f in field_info() if ".polarization." not in p and p != "timing.protocol" and not p.startswith("trap.lattice_")]
         base = cfg or SimConfig()
         self.pol_widgets = {}
+        self.lattice_widgets = {}
+        self.legacy_lattice_rows = []
+        legacy_lattice_fields = {"trap.wavelength_nm", "trap.frequency_hz", "trap.depth_uk",
+                                 "ensemble.lattice_waist_um", "ensemble.transverse_wavelength_nm", "ensemble.transverse_depth_uk"}
         for key, title in GROUPS:
             page = QWidget()
             form = QFormLayout(page)
@@ -351,9 +432,20 @@ class MainWindow(QMainWindow):
                 fw = FieldWidget(p, f, get_param(base, p))
                 self.fields[p] = fw
                 unit = f.metadata.get("unit", "")
-                lab = QLabel(p.split(".", 1)[1] + (f" [{unit}]" if unit else ""))
+                name = {"trap.potential": "Potential", "trap.n_max": "Maximum level n",
+                        "trap.heating_rate_quanta_per_s": "Heating rate"}.get(p, p.split(".", 1)[1])
+                lab = QLabel(name + (f" [{unit}]" if unit else ""))
+                if p == "trap.axis":
+                    self.trap_axis_label = lab
                 lab.setToolTip(fw.w.toolTip())
                 form.addRow(lab, fw.w)
+                if p in legacy_lattice_fields:
+                    self.legacy_lattice_rows.append((lab, fw.w))
+            if key == "trap":
+                for axis in "xyz":
+                    panel = LatticeWidget(axis, at.load_atomic_data().mass_kg)
+                    self.lattice_widgets[axis] = panel
+                    form.addRow(panel)
             if key in ("spin_pump", "repump"):
                 pw = PolarizationWidget("Polarization (relative to bias field)", self._bdir)
                 self.pol_widgets[key] = pw
@@ -429,6 +521,7 @@ class MainWindow(QMainWindow):
             act.triggered.connect(fn)
             m.addAction(act)
         self.load_config(base)
+        self.fields["ensemble.enabled"].w.toggled.connect(self._lattice_visibility)
 
     # ------------------------------------------------------------------
     def _scan_tab(self):
@@ -436,6 +529,7 @@ class MainWindow(QMainWindow):
         lay = QVBoxLayout(w)
         form = QFormLayout()
         numeric = [p for p, f in field_info() if isinstance(get_param(SimConfig(), p), float) and not isinstance(get_param(SimConfig(), p), bool)]
+        numeric += [p for p, f in field_info() if p.startswith("trap.lattice_") and "float" in str(f.type)]
         numeric += ["spin_pump.polarization.total_impurity", "repump.polarization.total_impurity",
                     "spin_pump.polarization.pi_share_of_impurity", "repump.polarization.pi_share_of_impurity"]
         self.scan_rows = []
@@ -474,27 +568,46 @@ class MainWindow(QMainWindow):
             fw.set(get_param(cfg, p))
         for b, pw in self.pol_widgets.items():
             pw.load(getattr(cfg, b).polarization)
+        for axis, panel in self.lattice_widgets.items():
+            panel.load(cfg, "xyz".index(axis))
+        self._lattice_visibility()
         i = self.protocol.findData(cfg.timing.protocol)
         self.protocol.setCurrentIndex(max(i, 0))
+
+    def _lattice_visibility(self, *_):
+        ensemble = self.fields["ensemble.enabled"].get()
+        self.trap_axis_label.setText(("Z lattice direction" if ensemble else "Trap direction") + " [lab vector]")
+        for row in self.legacy_lattice_rows:
+            for widget in row:
+                widget.setVisible(not ensemble)
+        for panel in self.lattice_widgets.values():
+            panel.setVisible(ensemble)
 
     def current_config(self) -> SimConfig:
         d = SimConfig().to_dict()
         for p, fw in self.fields.items():
-            a, b = p.split(".", 1)
-            d[a][b] = fw.get()
+            target = d
+            keys = p.split(".")
+            for key in keys[:-1]:
+                target = target[key]
+            target[keys[-1]] = fw.get()
+        for axis, panel in self.lattice_widgets.items():
+            d["trap"]["lattice_" + axis] = panel.dump()
         for b, pw in self.pol_widgets.items():
             d[b]["polarization"] = pw.dump()
         d["timing"]["protocol"] = self.protocol.currentData()
         return SimConfig.from_dict(d)
 
+    def _job_config(self):
+        try:
+            return self.current_config()
+        except (ConfigError, ValueError) as e:
+            QMessageBox.warning(self, "Invalid parameters", str(e))
+            return None
+
     # ------------------------------------------------------------------
     def _start(self, job, on_done, label):
         if self.thread is not None:
-            return
-        try:
-            self.current_config()
-        except (ConfigError, ValueError) as e:
-            QMessageBox.warning(self, "Invalid parameters", str(e))
             return
         self.stop.clear()
         self.thread = QThread()
@@ -534,7 +647,9 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Simulation error", msg[:3000])
 
     def on_run(self):
-        cfg = self.current_config()
+        cfg = self._job_config()
+        if cfg is None:
+            return
         stop = self.stop
 
         def job(w):
@@ -547,7 +662,9 @@ class MainWindow(QMainWindow):
         self._start(job, self._show_result, "Running")
 
     def on_compare(self):
-        cfg = self.current_config()
+        cfg = self._job_config()
+        if cfg is None:
+            return
         stop = self.stop
 
         def job(w):
@@ -558,7 +675,9 @@ class MainWindow(QMainWindow):
         self._start(job, self._show_compare, "Comparing protocols")
 
     def on_scan(self):
-        cfg = self.current_config()
+        cfg = self._job_config()
+        if cfg is None:
+            return
         axes = []
         try:
             for p, s0, s1, n, lg in self.scan_rows:

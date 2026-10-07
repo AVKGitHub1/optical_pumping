@@ -23,7 +23,63 @@ Choose a separate output directory for runs you want to compare. The root entry 
 | `run_dashboard.png` / `.pdf` | Population, cooling, scattering, and validity summary |
 | `run_carrier_calibration.png` / `.pdf` | Modeled carrier trace and reported-envelope comparison |
 
-The main objective is `P_target_absolute`: initially loaded atoms that remain in all three wells and end in `F=3,mF=3,nz=0`. Read absolute yields and survivor-conditioned fractions separately. `T_equiv_axes_K` contains finite-spectrum, energy-matched temperature proxies; a nonthermal distribution can have the same value. Leaving any local well counts as irreversible loss under this model.
+The main objective is `P_target_absolute`: initially loaded atoms that remain in all three wells and end in `F=3,mF=3,n=0` along the Raman-driven lattice (`z` in the active example). Read absolute yields and survivor-conditioned fractions separately. `T_equiv_axes_K` contains finite-spectrum, energy-matched temperature proxies; a nonthermal distribution can have the same value. Leaving any local well counts as irreversible loss under this model.
+
+## Raman and lattice directions
+
+The **Trap** tab has separate **X lattice**, **Y lattice**, and **Z lattice**
+sections. Each sets its own wavelength, beam waist, depth, and bottom frequency.
+Choose **Set confinement using: Depth** or **Frequency**; wavelength and the
+chosen value determine the other for a sinusoidal lattice. The calculated field
+is read-only. These settings are saved under `trap.lattice_x`, `trap.lattice_y`,
+and `trap.lattice_z`, with `wavelength_nm`, `waist_um`, `depth_uk`, `frequency_hz`,
+and `confinement` (`depth` or `frequency`). Unspecified per-axis values in old
+JSON files inherit the previous axial/transverse settings. The shared legacy
+controls are hidden in the ensemble GUI.
+
+Ensemble Raman beams can counterpropagate along any **one of the three lattice
+axes**. Set `raman.beam_low_direction` and `raman.beam_high_direction` to opposite
+vectors along the selected axis; either ordering and nonunit vectors work. The
+solver selects that well's actual wavelength, local depth, motional spectrum,
+beam envelope, and recoil projection. It does not rotate or overwrite the trap.
+Oblique beams coupling multiple lattice axes coherently are still unsupported.
+
+The ensemble's `x,y,z` labels describe a local lattice frame: `z` is `trap.axis`.
+`ensemble.transverse_reference_direction` (default lab +x) is projected
+perpendicular to it to define local `x`; local `y` is `z cross x`. If the reference
+is parallel to the trap axis, the least aligned lab coordinate axis is used
+instead (ties choose x, then y, then z). The existing +z configuration therefore
+retains the original lab x,y,z frame.
+
+`ensemble.lattice_linear_polarizations` still contains **lab vectors**, in local
+x,y,z lattice order. Each must be perpendicular to its lattice direction. To
+drive the x lattice of the existing lab-aligned trap, keep `trap.axis = [0,0,1]`
+and use:
+
+```text
+raman.beam_low_direction                 = [1, 0, 0]
+raman.beam_high_direction                = [-1, 0, 0]
+```
+
+Set the magnetic direction and pumping geometry to match the apparatus as well.
+In particular, the active example has the magnetic field along x: Raman beams
+parallel to that field cannot drive the modeled `|3,3> -> |2,2>` transition with
+the available transverse polarizations. A positive measured carrier frequency
+in that geometry is inconsistent, and calibration reports this explicitly.
+For an example with nonzero x-axis coupling, use a magnetic direction such as
+`[0,1,0]` and set the pumping directions/polarizations for that field.
+
+`initial` still describes preparation in the z lattice; x and y start at
+`ensemble.transverse_temperature_k`. Carrier calibration uses only the driven
+lattice, its waist and spectrum, and that axis's configured temperature. The
+supplied carrier measurement must correspond to this geometry and confinement.
+
+Saved metadata includes `model_summary.lattice_axes_lab`, and the ensemble NPZ
+includes `lattice_axes_lab` with rows in local x,y,z order. `raman_axis` identifies
+the driven lattice. `n`, `P_n0`, target yields, and the primary cooling metrics
+refer to this axis; three-axis temperatures and `P_final_spin_nx_ny_nz` retain
+the original lattice order. The model summary also records the resolved
+wavelength, frequency, depth, and waist for every lattice.
 
 ## Numerical controls and calibration
 
@@ -33,7 +89,7 @@ Parallel parameter scans and optimization stages use one outer process pool, wit
 
 GUI scans visit parameter points sequentially and use the chosen ensemble workers within each point. GUI protocol comparisons also honor this worker count.
 
-When `trap.wavelength_nm` is supplied, depth and wavelength determine the bottom trap frequency; the retained `frequency_hz` field is inactive. `n_max` must include all local bound levels for ensemble runs.
+For ensemble runs, each lattice's `confinement` selects depth or frequency as the input. In the legacy 1D backend, `trap.wavelength_nm` and depth determine the bottom frequency when wavelength is supplied. `n_max` must include all local bound levels for ensemble runs.
 
 The current `raman.carrier_decay_mode = modeled` derives carrier dephasing from spatial and thermal averaging. The supplied carrier frequency uses the RMS local-frequency/initial-curvature convention, and no homogeneous damping is fitted to the reported envelope. Contrast is preparation/readout visibility. Configurations that omit this field retain the historical `measured_envelope` mode. Atomic data and carrier calibration are cached under [rb85rsc/cache/](../rb85rsc/cache/).
 

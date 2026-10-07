@@ -104,7 +104,8 @@ class Validity:
 
 
 class Model:
-    def __init__(self, cfg: SimConfig, atom: AtomicData | None = None, raman_path_coefficients=None):
+    def __init__(self, cfg: SimConfig, atom: AtomicData | None = None, raman_path_coefficients=None,
+                 *, motion_axis=None, motion_basis=None, initial_config=None):
         cfg.validate()
         if cfg.raman.calibration == "measured_carrier" and raman_path_coefficients is None:
             raise ConfigError("measured_carrier configs must run through runner.run (spatial calibration and 3D ensemble), not the legacy 1D Model")
@@ -113,14 +114,18 @@ class Model:
         at = self.atom
         self.b_dir = pol.unit(cfg.magnetic.direction)
         self.B = cfg.magnetic.magnitude_gauss * 1e-4
-        self.u = pol.unit(cfg.trap.axis)
+        self.u = pol.unit(cfg.trap.axis if motion_axis is None else motion_axis)
         self.cos_beta = float(np.dot(self.u, self.b_dir))
         self.nu_t = (mo.lattice_frequency_hz(at.mass_kg, cfg.trap.wavelength_nm, cfg.trap.depth_uk)
-                     if cfg.trap.potential == "lattice" and cfg.trap.wavelength_nm is not None else cfg.trap.frequency_hz)
+                     if motion_basis is None and cfg.trap.potential == "lattice" and cfg.trap.wavelength_nm is not None else cfg.trap.frequency_hz)
+        if motion_basis is not None:
+            self.nu_t = motion_basis.trap_hz
         self.omega_t = 2 * np.pi * self.nu_t
         self.x0 = mo.x0_m(at.mass_kg, self.nu_t)
         tc = cfg.trap
-        if tc.potential == "lattice":
+        if motion_basis is not None:
+            self.motion = motion_basis
+        elif tc.potential == "lattice":
             self.motion = mo.lattice_site(at.mass_kg, self.nu_t, tc.depth_uk * 1e-6 * K_B / H, tc.n_max + 1)
             if self.motion.N < 2 and not cfg.ensemble.enabled:
                 raise ConfigError(f"lattice of depth {tc.depth_uk} uK holds {self.motion.n_bound} bound level(s) at nu_t = {self.nu_t:g} Hz; need >= 2")
@@ -213,7 +218,7 @@ class Model:
         self.T["raman_scatter"], self.out["raman_scatter"], self.ovf["raman_scatter"] = self._transfer(Wr, {"sigma": kr, "pi": kr})
 
         self.schedule = build_schedule(cfg.timing)
-        self.P0, self.initial_tail, self.initial_notes = self._initial_state()
+        self.P0, self.initial_tail, self.initial_notes = self._initial_state(initial=initial_config)
 
     # ------------------------------------------------------------------
     def _transfer(self, W, kern):
@@ -231,9 +236,10 @@ class Model:
         out = np.repeat(W.sum(axis=(1, 2)), N)
         return T, out, ovr
 
-    def _initial_state(self):
-        ic = self.cfg.initial
-        N = self.N
+    def _initial_state(self, *, motion=None, initial=None):
+        ic = self.cfg.initial if initial is None else initial
+        motion = self.motion if motion is None else motion
+        N = motion.N
         notes = []
         if ic.spin_preset == "uniform_all":
             spin = np.full(N_GROUND, 1.0 / N_GROUND)
@@ -251,8 +257,8 @@ class Model:
                 notes.append(f"custom spin populations normalized from sum {v.sum():.6g}")
             spin = v / v.sum()
         tail = 0.0
-        if self.motion.kind == "lattice" and ic.motion_mode == "thermal_temperature":
-            all_pn = mo.boltzmann_pn(self.motion.all_bound_energies_hz, ic.temperature_k)
+        if motion.kind == "lattice" and ic.motion_mode == "thermal_temperature":
+            all_pn = mo.boltzmann_pn(motion.all_bound_energies_hz, ic.temperature_k)
             tail = float(all_pn[N:].sum())
             pn = all_pn[:N] / all_pn[:N].sum()
             notes.append(f"lattice: Boltzmann at T = {ic.temperature_k:g} K conditional on initially bound atoms; "
@@ -261,7 +267,7 @@ class Model:
             nb = ic.nbar if ic.motion_mode == "thermal_nbar" else mo.nbar_from_temperature(ic.temperature_k, self.nu_t)
             pn, tail = mo.thermal_pn(nb, N)
             notes.append(f"geometric occupation distribution, input nbar={nb:.6g}; discarded weight = {tail:.3g}")
-            if self.motion.kind == "lattice":
+            if motion.kind == "lattice":
                 notes.append("thermal_nbar specifies a geometric level distribution, not a canonical lattice temperature")
         elif ic.motion_mode == "fock":
             if ic.fock_n >= N:

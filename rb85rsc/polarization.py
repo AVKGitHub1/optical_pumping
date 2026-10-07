@@ -30,6 +30,32 @@ def unit(v) -> np.ndarray:
     return v / n
 
 
+def lattice_frame(axis, transverse_reference_direction) -> np.ndarray:
+    """Rows are the two transverse and the axial lattice directions in lab space.
+
+    Project the reference onto the plane normal to the trap axis to fix the
+    transverse orientation. If parallel, use the least aligned lab axis.
+    The default reference +x and trap axis +z reproduce the lab frame.
+    """
+    z = unit(axis)
+    ref = unit(transverse_reference_direction)
+    x = ref - z * np.dot(ref, z)
+    if np.linalg.norm(x) < 1e-9:
+        ref = np.eye(3)[np.argmin(np.abs(z))]
+        x = ref - z * np.dot(ref, z)
+    x = unit(x)
+    return np.vstack([x, np.cross(z, x), z])
+
+
+def lattice_axis_index(direction, axes_lab) -> int:
+    """Select a lattice axis without changing the physical lattice geometry."""
+    k = unit(direction)
+    axis = int(np.argmax(np.abs(axes_lab @ k)))
+    if np.linalg.norm(np.cross(k, axes_lab[axis])) > 1e-8:
+        raise ValueError("ensemble Raman beams must follow one lattice axis (local x, y, or z); simultaneous coherent coupling of multiple axes is unsupported")
+    return axis
+
+
 def field_frame(b_dir) -> np.ndarray:
     """Rows are (x_B, y_B, z_B) lab-frame unit vectors of the field frame."""
     z = unit(b_dir)

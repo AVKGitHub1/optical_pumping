@@ -153,13 +153,14 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
         photon_counter_labels=np.array(["spin_pump", "repump", "raman_scatter"] + (["lattice_scatter"] if res.counts.shape[1] == 4 else [])),
         spin_labels=np.array([atomic.ground_label(i) for i in range(12)]),
         rho_raman_block_final=res.rho_final if res.rho_final is not None else np.zeros(0),
-        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and axial vibrational level n (transverse states marginalized in ensemble mode), "
+        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n along the Raman-driven lattice (model_summary.raman_axis; other axes marginalized in ensemble mode), "
                              "as fractions of all atoms (sum = 1 - overflow); divide by P[t].sum() for per-trapped-atom values"),
     )
     (outdir / f"{stem}_metadata.json").write_text(json.dumps(metadata(a), indent=2, default=_json_default))
     (outdir / f"{stem}_config.json").write_text(a["model"].cfg.to_json())
     if "ensemble_nodes" in a:
-        arrays = {}
+        arrays = {"lattice_axes_lab": np.asarray([a["model_summary"]["lattice_axes_lab"][axis] for axis in "xyz"]),
+                  "raman_axis": np.asarray(a["model_summary"]["raman_axis"])}
         for i, (local, result) in enumerate(a["ensemble_nodes"]):
             arrays[f"node_{i}_position_um"] = local.position
             arrays[f"node_{i}_phase_rad"] = np.asarray(local.phase)

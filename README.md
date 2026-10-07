@@ -22,6 +22,12 @@ In the GUI, open **3D spatial ensemble**, set **workers** to **8**, and click **
 
 The GUI also opens this config by default and returns to it on Reset. For headless runs, pass `--config` explicitly: omitting it retains the legacy built-in defaults. `python -m rb85rsc` accepts the same options as `python rb85_rsc_sim.py`.
 
+The Trap tab provides separate X, Y, and Z lattice controls for wavelength,
+waist, depth, and bottom frequency. Raman beams may counterpropagate along any
+one of these lattice axes without rotating the trap. See
+[Raman and lattice directions](docs/experiment-workflow.md#raman-and-lattice-directions)
+for axis and polarization settings.
+
 If dependencies need installing into the existing environment:
 
 ```powershell
@@ -34,7 +40,7 @@ The pinned [requirements](requirements.txt) were tested with Python 3.14.6 on Wi
 
 Runs export configuration and metadata JSON, time-series CSV, population arrays, and PNG/PDF figures. Ensemble runs also export per-sample 3D populations and carrier-calibration diagnostics. Inspect the validity diagnostics alongside the observables.
 
-`P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches `F=3,mF=3,nz=0`. It is an **axial** cooling target; the full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
+`P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches `F=3,mF=3,n=0` along the Raman-driven lattice (`z` in the active example). The full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
 
 ## Documentation
 

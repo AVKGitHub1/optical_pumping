@@ -29,7 +29,19 @@ def P(default, unit="", help="", min=None, max=None, choices=None, illustrative=
 
 
 @dataclass
+class LatticeAxisConfig:
+    confinement: str = P("depth", "", "Set confinement using depth or frequency; the other value is calculated for a sinusoidal lattice.", choices=["depth", "frequency"])
+    wavelength_nm: Optional[float] = P(None, "nm", "Lattice optical wavelength.", min=100.0)
+    frequency_hz: Optional[float] = P(None, "Hz", "Harmonic frequency at the well bottom; used when confinement is frequency.", min=1.0)
+    waist_um: Optional[float] = P(None, "um", "Lattice beam 1/e^2 intensity radius.", min=1.0)
+    depth_uk: Optional[float] = P(None, "uK", "Central lattice depth divided by k_B; used when confinement is depth.", min=0.01)
+
+
+@dataclass
 class TrapConfig:
+    lattice_x: LatticeAxisConfig = field(default_factory=LatticeAxisConfig)
+    lattice_y: LatticeAxisConfig = field(default_factory=LatticeAxisConfig)
+    lattice_z: LatticeAxisConfig = field(default_factory=LatticeAxisConfig)
     wavelength_nm: Optional[float] = P(None, "nm", "Lattice optical wavelength. When supplied, depth and wavelength determine the bottom frequency; frequency_hz is inactive.", min=100.0)
     frequency_hz: float = P(
         70e3, "Hz",
@@ -43,7 +55,7 @@ class TrapConfig:
         choices=["harmonic", "lattice"],
     )
     n_max: int = P(40, "", "Highest vibrational level kept (basis n = 0..n_max). Lattice: cap on the bound levels kept.", min=2, max=250)
-    axis: list = P([1.0, 0.0, 0.0], "lab unit vector", "Direction of the modeled 1D trap axis.")
+    axis: list = P([1.0, 0.0, 0.0], "lab unit vector", "Direction of the local z lattice (and the 1D trap in legacy mode). Ensemble Raman beams may follow any of the three lattice axes.")
     heating_rate_quanta_per_s: float = P(0.0, "quanta/s", "Background motional heating dnbar/dt (infinite-temperature reservoir, a and a^+ jumps).", min=0.0)
     depth_uk: Optional[float] = P(None, "uK", "Trap depth (k_B x temperature units). Harmonic: optional, enables the harmonic-validity diagnostic. Lattice: required, V0.", min=0.0)
 
@@ -274,7 +286,7 @@ class AnalysisConfig:
 
 @dataclass
 class EnsembleConfig:
-    enabled: bool = P(False, "", "Spatial/phase ensemble with coherent axial Raman dynamics and three-axis bound-state recoil/loss.")
+    enabled: bool = P(False, "", "Spatial/phase ensemble with coherent Raman dynamics along the driven lattice and three-axis bound-state recoil/loss.")
     samples: int = P(32, "", "Deterministic scrambled Sobol samples of Gaussian position and uniform Raman spatial phase; refine to check convergence.", min=1)
     workers: int = P(1, "", "Worker processes for spatial samples in GUI and headless runs. Set 8 for eight workers, or 1 for sequential execution. Stop cancels all workers.", min=1, max=8)
     cloud_radius_um: float = P(150.0, "um", "Spherical Gaussian 1/e^2 DENSITY radius (coordinate standard deviation = radius/2).", min=0.0)
@@ -282,11 +294,12 @@ class EnsembleConfig:
     transverse_wavelength_nm: float = P(1188.0, "nm", "Optical wavelength of both transverse standing waves.", min=100.0)
     transverse_depth_uk: float = P(15.0, "uK", "Central depth of EACH transverse standing wave.", min=0.01)
     transverse_temperature_k: float = P(10e-6, "K", "Loaded transverse temperature, conditional on local bound states.", min=0.0)
-    transverse_frequency_offset_hz: float = P(160e6, "Hz", "Optical carrier offset BETWEEN the x and y lattices, suppressing inter-axis interference.", min=0.0)
-    lattice_linear_polarizations: list = P([[0, 1, 0], [1, 0, 0], [1, 0, 0]], "lab vectors", "Linear electric field directions for x, y, z lattices, perpendicular to the respective axes.")
+    transverse_reference_direction: list = P([1.0, 0.0, 0.0], "lab vector", "Project this direction perpendicular to trap.axis to define local lattice x; local y = trap.axis cross x. If parallel, use the least aligned lab axis. Local z is trap.axis.")
+    transverse_frequency_offset_hz: float = P(160e6, "Hz", "Optical carrier offset BETWEEN the local x and y lattices, suppressing inter-axis interference.", min=0.0)
+    lattice_linear_polarizations: list = P([[0, 1, 0], [1, 0, 0], [1, 0, 0]], "lab vectors", "Linear electric field directions for the local x, y, z lattices, perpendicular to their respective lab directions. Rotate these lab vectors when rotating the apparatus.")
     phase_offset_deg: float = P(0.0, "deg", "Offset added to the uniformly sampled Raman spatial phase; use for quadrature sensitivity.")
     time_step_us: float = P(2.0, "us", "Maximum Strang splitting step; halve to verify integration convergence.", min=0.01)
-    calibration_samples: int = P(128, "", "Position/phase samples for independent pump-off, z-lattice-only carrier calibration.", min=8)
+    calibration_samples: int = P(128, "", "Position/phase samples for independent pump-off carrier calibration with only the Raman-driven lattice present.", min=8)
 
 
 @dataclass
@@ -327,9 +340,33 @@ class SimConfig:
     def copy(self) -> "SimConfig":
         return copy.deepcopy(self)
 
+    def lattice_config(self, axis: int) -> LatticeAxisConfig:
+        """Resolve per-axis settings, retaining old JSON fields as fallbacks."""
+        result = copy.copy(getattr(self.trap, "lattice_" + "xyz"[axis]))
+        defaults = dict(
+            wavelength_nm=self.trap.wavelength_nm if axis == 2 else self.ensemble.transverse_wavelength_nm,
+            frequency_hz=self.trap.frequency_hz if axis == 2 else None,
+            waist_um=self.ensemble.lattice_waist_um,
+            depth_uk=self.trap.depth_uk if axis == 2 else self.ensemble.transverse_depth_uk,
+        )
+        for name, value in defaults.items():
+            if getattr(result, name) is None:
+                setattr(result, name, value)
+        return result
+
+    def lattice_parameters(self, axis: int, mass_kg: float) -> LatticeAxisConfig:
+        from . import motion as mo
+        result = self.lattice_config(axis)
+        if result.confinement == "frequency":
+            result.depth_uk = mo.lattice_depth_uk(mass_kg, result.wavelength_nm, result.frequency_hz)
+        else:
+            result.frequency_hz = mo.lattice_frequency_hz(mass_kg, result.wavelength_nm, result.depth_uk)
+        return result
+
     # ------------------------------------------------------------------
     def validate(self) -> None:
         errs = []
+        directions = {}
         for path, f, value in iter_fields(self):
             md = f.metadata
             if md.get("choices") and value not in md["choices"]:
@@ -341,10 +378,13 @@ class SimConfig:
                     errs.append(f"{path}={value} below minimum {md['min']}")
                 if md.get("max") is not None and value > md["max"]:
                     errs.append(f"{path}={value} above maximum {md['max']}")
-            if path.endswith(("direction", "axis")) and isinstance(value, list):
-                if len(value) != 3 or not np.all(np.isfinite(value)) or np.linalg.norm(value) == 0:
+            if path.endswith(("direction", "axis")):
+                v = np.asarray(value, float)
+                if v.shape != (3,) or not np.all(np.isfinite(v)) or np.linalg.norm(v) == 0:
                     errs.append(f"{path} must be a nonzero 3-vector")
-        if self.trap.potential == "lattice" and not (self.trap.depth_uk and self.trap.depth_uk > 0):
+                else:
+                    directions[path] = pol.unit(v)
+        if not self.ensemble.enabled and self.trap.potential == "lattice" and not (self.trap.depth_uk and self.trap.depth_uk > 0):
             errs.append("trap.potential = lattice requires trap.depth_uk > 0")
         if self.raman.calibration == "measured_carrier" and not self.ensemble.enabled:
             errs.append("measured_carrier calibration requires ensemble.enabled")
@@ -356,12 +396,28 @@ class SimConfig:
         if self.ensemble.enabled:
             if self.raman.calibration != "measured_carrier":
                 errs.append("ensemble mode requires raman.calibration = measured_carrier")
-            if self.trap.potential != "lattice" or self.trap.wavelength_nm is None:
-                errs.append("ensemble mode requires lattice depth and optical wavelength")
-            if not np.allclose(pol.unit(self.trap.axis), [0, 0, 1]):
-                errs.append("ensemble mode currently requires the axial lattice along lab z")
-            if not np.allclose(pol.unit(self.raman.beam_low_direction), [0, 0, 1]) or not np.allclose(pol.unit(self.raman.beam_high_direction), [0, 0, -1]):
-                errs.append("ensemble mode requires Raman beams along +z and -z")
+            if self.trap.potential != "lattice":
+                errs.append("ensemble mode requires trap.potential = lattice")
+            for i, label in enumerate("xyz"):
+                lattice = self.lattice_config(i)
+                required = ("wavelength_nm", "waist_um", "frequency_hz" if lattice.confinement == "frequency" else "depth_uk")
+                for name in required:
+                    value = getattr(lattice, name)
+                    if value is None or not np.isfinite(value) or value <= 0:
+                        errs.append(f"trap.lattice_{label}.{name} must be positive")
+            axis = directions.get("trap.axis")
+            low = directions.get("raman.beam_low_direction")
+            high = directions.get("raman.beam_high_direction")
+            if low is not None and high is not None:
+                if not np.allclose(low, -high, rtol=0, atol=1e-8):
+                    errs.append("ensemble mode requires counterpropagating Raman beams (opposite beam directions)")
+                if axis is not None and "ensemble.transverse_reference_direction" in directions:
+                    axes = pol.lattice_frame(axis, directions["ensemble.transverse_reference_direction"])
+                    try:
+                        pol.lattice_axis_index(low, axes)
+                        pol.lattice_axis_index(high, axes)
+                    except ValueError as e:
+                        errs.append(str(e))
             if self.raman.tone_layout != "both_tones_both_beams":
                 errs.append("ensemble mode requires both tones in both Raman beams")
             if self.numerics.solver == "rate":
@@ -369,8 +425,12 @@ class SimConfig:
             if self.trap.heating_rate_quanta_per_s != 0:
                 errs.append("ensemble mode does not implement an anharmonic background-heating noise model")
             ep = np.asarray(self.ensemble.lattice_linear_polarizations, float)
-            if ep.shape != (3, 3) or not np.all(np.isfinite(ep)) or np.any(np.linalg.norm(ep, axis=1) == 0) or not np.allclose(np.diag(ep), 0):
-                errs.append("ensemble.lattice_linear_polarizations must be three nonzero transverse lab vectors for x,y,z")
+            if ep.shape != (3, 3) or not np.all(np.isfinite(ep)) or np.any(np.linalg.norm(ep, axis=1) == 0):
+                errs.append("ensemble.lattice_linear_polarizations must be three nonzero finite lab vectors")
+            elif axis is not None and "ensemble.transverse_reference_direction" in directions:
+                axes = pol.lattice_frame(axis, directions["ensemble.transverse_reference_direction"])
+                if not np.allclose(np.sum(ep * axes, axis=1) / np.linalg.norm(ep, axis=1), 0, rtol=0, atol=1e-8):
+                    errs.append("ensemble.lattice_linear_polarizations must be perpendicular to the respective local x,y,z lattice axes")
         for name in ("tone_powers_low", "tone_powers_high"):
             v = np.asarray(getattr(self.raman, name), float)
             if v.shape != (2,) or not np.all(np.isfinite(v)) or np.any(v < 0):

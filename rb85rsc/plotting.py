@@ -66,7 +66,8 @@ def plot_traces(ax, a, keys=(("P_up", "P_up"), ("P_n0", "P_n0"), ("P_target", "P
     t = _ms(s["t_s"])
     ensemble = "T_equiv_axes_K" in a["final"]
     if ensemble:
-        keys = (("P_up", "spin |3,3>, among survivors"), ("P_n0", "axial n=0, among survivors"),
+        axis = a["final"].get("raman_axis", "z")
+        keys = (("P_up", "spin |3,3>, among survivors"), ("P_n0", f"{axis} lattice n=0, among survivors"),
                 ("P_target_absolute", "target / initially loaded atoms"))
     for i, (k, lab) in enumerate(keys):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
@@ -130,7 +131,8 @@ def plot_nbar(ax, a):
     ax.plot(t, s["nbar"], color=SERIES[0], lw=2)
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("mean vibrational level index")
-    ax.set_title("Mean axial occupation, among survivors", fontsize=9)
+    axis = a["final"].get("raman_axis")
+    ax.set_title(f"Mean {axis + ' lattice' if axis else 'axial'} occupation, among survivors", fontsize=9)
 
 
 def plot_photons(ax, a):
@@ -204,6 +206,7 @@ def diagnostics_text(a) -> str:
         "",
     ]
     if "T_equiv_axes_K" in f:
+        lines.insert(1, f"Raman cooling axis: local {f.get('raman_axis', 'z')}; n and target refer to this lattice.")
         lines.insert(4, "Axis temperature proxies (uK): " + ", ".join(f"{axis}={_fmt_number(temp * 1e6 if temp is not None else None)}" for axis, temp in f["T_equiv_axes_K"].items()))
         lines.insert(4, f["loss_label"] + f": {f['well_loss_fraction_no_recapture']:.4f}")
     for cat, st, msg in v.items:

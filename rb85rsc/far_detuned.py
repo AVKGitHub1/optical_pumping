@@ -180,6 +180,9 @@ def spatial_samples(cfg, count=None):
     sampler = qmc.Sobol(4, scramble=True, seed=cfg.numerics.seed)
     points = sampler.random_base2(int(np.ceil(np.log2(n))))[:n]
     xyz = ndtri(np.clip(points[:, :3], 1e-12, 1 - 1e-12)) * cfg.ensemble.cloud_radius_um / 2
+    # Sample in lattice coordinates, return lab positions. The cloud is
+    # spherical; rotating the apparatus also rotates its finite quadrature.
+    xyz = xyz @ pol.lattice_frame(cfg.trap.axis, cfg.ensemble.transverse_reference_direction)
     phase = 2 * np.pi * points[:, 3] + np.deg2rad(cfg.ensemble.phase_offset_deg)
     return xyz, phase
 
@@ -203,7 +206,7 @@ def raman_fields(cfg, response):
 def calibrate_carrier(cfg, response):
     """Infer intensity using the selected carrier-decay convention.
 
-    Only z confinement is used (the stated calibration condition). Thermal
+    Only the Raman-driven lattice is present in the calibration model. Thermal
     carrier overlaps and Gaussian intensity / random position are included
     before either predicting decay from those overlaps (modeled mode) or fitting
     NONNEGATIVE residual homogeneous dephasing (measured_envelope mode).
@@ -212,11 +215,15 @@ def calibrate_carrier(cfg, response):
     Contrast is visibility only and never scales initial atom populations.
     """
     rc, ec = cfg.raman, cfg.ensemble
-    ensemble_inputs = {k: getattr(ec, k) for k in ("cloud_radius_um", "lattice_waist_um", "phase_offset_deg", "calibration_samples")}
+    axes = pol.lattice_frame(cfg.trap.axis, ec.transverse_reference_direction)
+    ra = pol.lattice_axis_index(rc.beam_low_direction, axes)
+    lattice = cfg.lattice_parameters(ra, response.atom.mass_kg)
+    temperature = cfg.initial.temperature_k if ra == 2 else ec.transverse_temperature_k
+    ensemble_inputs = {k: getattr(ec, k) for k in ("cloud_radius_um", "lattice_waist_um", "phase_offset_deg", "calibration_samples", "transverse_reference_direction")}
     raman_inputs = {k: getattr(rc, k) for k in ("carrier_rabi_hz", "wavelength_nm", "beam_low_direction", "beam_high_direction",
                     "tone_powers_low", "tone_powers_high", "beam_beat_phase_deg", "beam_helicities", "waist_um", "flop_contrast", "flop_decay_periods", "carrier_decay_mode")}
-    keydata = dict(format=6, atom=response.source, raman=raman_inputs, ensemble=ensemble_inputs,
-                   trap=cfg.trap.__dict__, magnetic=cfg.magnetic.__dict__, temperature=cfg.initial.temperature_k,
+    keydata = dict(format=8, atom=response.source, raman=raman_inputs, ensemble=ensemble_inputs,
+                   trap=cfg.to_dict()["trap"], lattice=lattice.__dict__, magnetic=cfg.magnetic.__dict__, temperature=temperature,
                    seed=cfg.numerics.seed)
     key = hashlib.sha256(json.dumps(keydata, sort_keys=True).encode()).hexdigest()[:24]
     path = CACHE / f"carrier_{key}.json"
@@ -226,22 +233,25 @@ def calibrate_carrier(cfg, response):
     xyz, phases = spatial_samples(cfg, ec.calibration_samples)
     a = paths * np.sqrt(np.outer(rc.tone_powers_low, rc.tone_powers_high))
     chi = np.deg2rad(rc.beam_beat_phase_deg)
+    axis = axes[ra]
+    beam_axis = pol.unit(rc.beam_low_direction)
+    dk_axial = 2 * np.pi / (rc.wavelength_nm * 1e-9) * np.dot(beam_axis - pol.unit(rc.beam_high_direction), axis)
     cs, weights = [], []
     for p, th in zip(xyz, phases):
-        depth = cfg.trap.depth_uk * envelope(p, [0, 0, 1], ec.lattice_waist_um)
-        nu = mo.lattice_frequency_hz(response.atom.mass_kg, cfg.trap.wavelength_nm, depth)
+        depth = lattice.depth_uk * envelope(p, axis, lattice.waist_um)
+        nu = mo.lattice_frequency_hz(response.atom.mass_kg, lattice.wavelength_nm, depth)
         site = mo.lattice_site(response.atom.mass_kg, nu, depth * 1e-6 * at.K_B / at.H, cfg.trap.n_max + 1)
         if site.N != site.n_bound:
             raise ValueError("carrier calibration requires all bound axial levels; increase trap.n_max")
-        eta = 4 * np.pi / (rc.wavelength_nm * 1e-9) * site.x0
+        eta = dk_axial * site.x0
         diag = np.diag(site.displacement(eta))
         op = a[0, 1] * np.exp(1j * th) * diag + a[1, 0] * np.exp(-1j * (chi + th)) * diag.conj()
         op += a[0, 0] + a[1, 1] * np.exp(-1j * chi)
-        cs.extend(np.abs(op) * envelope(p, [0, 0, 1], rc.waist_um))
-        weights.extend(mo.boltzmann_pn(site.energies_hz, cfg.initial.temperature_k) / len(xyz))
+        cs.extend(np.abs(op) * envelope(p, beam_axis, rc.waist_um))
+        weights.extend(mo.boltzmann_pn(site.energies_hz, temperature) / len(xyz))
     cs, weights = np.asarray(cs), np.asarray(weights)
     if weights @ cs**2 < 1e-24:
-        raise ValueError("No carrier coupling for the specified Raman polarizations/tone phases; cannot infer intensity from a positive measured Rabi frequency")
+        raise ValueError("No carrier coupling for the specified Raman polarizations, magnetic direction, and tone phases; cannot infer intensity from a positive measured Rabi frequency. Beams parallel to the magnetic field cannot drive the modeled |3,3> to |2,2> transition with the available transverse polarizations.")
     curvature_intensity = rc.carrier_rabi_hz / np.sqrt(weights @ cs**2)
     t = np.linspace(0, 4 / rc.carrier_rabi_hz, 161)
     tau = rc.flop_decay_periods / rc.carrier_rabi_hz
@@ -284,7 +294,9 @@ def calibrate_carrier(cfg, response):
         for ep, power in zip(eps, powers):
             scattering += intensity * power * (abs(response.scattering_amplitudes(freq, ep))**2).sum(axis=(1, 2))
             shifts += intensity * power * response.shift_hz(freq, ep)
-    result = dict(cache_key=key, calibration_model_version=6, carrier_decay_mode=rc.carrier_decay_mode,
+    result = dict(cache_key=key, calibration_model_version=8, carrier_decay_mode=rc.carrier_decay_mode,
+                  lattice_axis="xyz"[ra], lattice_direction_lab=axis.tolist(), lattice_parameters=lattice.__dict__,
+                  temperature_k=temperature,
                   intensity_calibration="rms_carrier_initial_curvature" if modeled else "synthetic_measured_envelope_fit",
                   intensity_per_unit_tone_w_m2=float(intensity),
                   power_per_unit_tone_w=float(intensity * np.pi * (rc.waist_um * 1e-6)**2 / 2),

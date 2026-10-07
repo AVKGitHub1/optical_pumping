@@ -29,6 +29,12 @@ def lattice_frequency_hz(mass_kg: float, wavelength_nm: float, depth_uk: float) 
     return float(2 * np.sqrt(depth_uk * 1e-6 * K_B / H * recoil_hz))
 
 
+def lattice_depth_uk(mass_kg: float, wavelength_nm: float, frequency_hz: float) -> float:
+    """Depth of the sinusoidal well with the specified bottom frequency."""
+    recoil_hz = H / (2 * mass_kg * (wavelength_nm * 1e-9) ** 2)
+    return float(frequency_hz**2 / (4 * recoil_hz) * H / K_B * 1e6)
+
+
 def lamb_dicke(wavelength_m: float, mass_kg: float, trap_hz: float, projection: float = 1.0) -> float:
     return float(abs(2.0 * np.pi / wavelength_m * projection) * x0_m(mass_kg, trap_hz))
 
