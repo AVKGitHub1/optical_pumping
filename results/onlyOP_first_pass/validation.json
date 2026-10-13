@@ -1,0 +1,19 @@
+{
+  "full_test_suite": {
+    "passed": 194,
+    "failed": 0,
+    "duration_s": 170.91
+  },
+  "final_reference_diagnostic_checks": {
+    "passed": 5,
+    "failed": 0
+  },
+  "onlyOP_regression": {
+    "max_population_absolute_difference": 3.608224830031759e-16,
+    "max_photon_count_absolute_difference": 1.3322676295501878e-15,
+    "original_results_preserved": true
+  },
+  "reference_comparison": "recoil_reference/comparison.json",
+  "gui_preview": "gui_preview.png",
+  "scope": "Diagnostics, labeling, inactive calibration handling, and separate one-axis coherent motional recoil benchmark. Production 3D recoil model unchanged."
+}

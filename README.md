@@ -52,6 +52,22 @@ For a 3D ensemble, the GUI's **Thermal x/y/z** tab compares each lattice's tempe
 
 `P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches selected Raman state A with `n=0` along the Raman-driven lattice (`F=3,mF=3` and `z` in the active example). The full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
 
+Check the **model validity** banner before interpreting a result. Ensemble diagnostics include magnetic-field and ground-coherence checks as well as the motional-secular criterion. A numerically converged run can still lie outside these approximations. The energy-change plots separate preferential loss from the remaining dynamics; a decreasing survivor temperature does not by itself demonstrate cooling of retained atoms. "Well escape assuming no recapture" is not a prediction of apparatus-level atom loss.
+
+For a **custom schedule**, its segment durations determine the run length; `total_duration_ms` is inactive. The GUI displays that length and disables unused duration and carrier-calibration inputs. If Raman light is off in every segment, carrier calibration is skipped and no carrier figure is exported. State A and the selected motional axis still define the reported target. Existing CSV observable names are retained for compatibility.
+
+## Check the motional population approximation
+
+The separate [one-well reference solver](rb85rsc/recoil_reference.py) retains the motional density matrix in every ground spin state during optical pumping. It compares coherent recoil jumps with population-resolving jumps using the same optical rates, local spectrum, and absorbing escape boundary:
+
+```powershell
+conda run --no-capture-output -n scripts python scripts/check_coherent_recoil.py --config examples/onlyOP.json --axis z --power-scales 0.03 0.1 1 --output results/coherent_recoil_reference
+```
+
+The script writes `comparison.json`, exact configs, and time-series/density-matrix arrays in NPZ files. Power scales multiply both pumping beams; the schedule duration stays fixed. Use `--position-um X Y Z` for a different local site and `--axis x`, `y`, or `z` for its motional axis.
+
+This benchmark requires Raman off, zero background heating, and 2–16 retained bound levels covering the full local bound spectrum. It isolates **motional coherence**: spin coherences, transverse recoil and escape, lattice scattering, excited-state mixing, and recapture are absent. A small difference in this benchmark is not a validation of the full 3D experiment. The production ensemble solver is unchanged in its treatment of recoil. Effective-jump theory follows [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
+
 ## Documentation
 
 | Document | Use it for |

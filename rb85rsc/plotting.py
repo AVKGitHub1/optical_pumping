@@ -8,6 +8,7 @@ from __future__ import annotations
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, LogNorm
 from matplotlib.figure import Figure
+from matplotlib.transforms import ScaledTranslation
 
 from .atomic import GROUND_STATES, K_B, ground_label
 
@@ -80,19 +81,26 @@ def plot_traces(ax, a, keys=None):
                 ("P_target", f"P_target: {up}, n=0"), ("P_F3", "P(F=3)"))
     if ensemble:
         axis = a["final"].get("raman_axis", "z")
-        keys = (("P_up", f"spin {up}, among survivors"), ("P_n0", f"{axis} lattice n=0, among survivors"),
-                ("P_target_absolute", "target / initially loaded atoms"))
+        keys = (("P_up", f"spin {up} / survivors"), ("P_n0", f"{axis}: n=0 / survivors"),
+                ("P_target_absolute", "joint target / initially loaded"),
+                ("P_up_absolute", f"spin {up} / initially loaded"))
     for i, (k, lab) in enumerate(keys):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
     m = a.get("model")
     lattice = m is not None and m.motion.kind == "lattice"  # harmonic overflow is numerical, not survival
     if lattice and "P_trapped" in s and np.min(s["P_trapped"]) < 1 - 1e-4:
-        ax.plot(t, s["P_trapped"], color=TEXT2, lw=1.5, ls="--", label="P_trapped (survival)")
+        ax.plot(t, s["P_trapped"], color=TEXT2, lw=1.5, ls="--", label="survival in modeled wells")
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("probability")
     ax.set_ylim(-0.02, 1.02)
     ax.set_title("Survival and absolute target yield" if ensemble else "Spin polarization and motional ground state", fontsize=9)
-    ax.legend(fontsize=7, frameon=False, loc="lower right" if ensemble else "center right")
+    if ensemble:
+        # Reserve space below the x label, even in short dashboard panels.
+        legend_transform = ax.transAxes + ScaledTranslation(0, -36 / 72, ax.figure.dpi_scale_trans)
+        ax.legend(fontsize=7, frameon=False, loc="upper center", bbox_to_anchor=(0.5, 0),
+                  bbox_transform=legend_transform, borderaxespad=0, labelspacing=0.3)
+    else:
+        ax.legend(fontsize=7, frameon=False, loc="center right")
     _shade_segments(ax, a)
 
 
@@ -163,18 +171,26 @@ def plot_photons(ax, a):
     if "photons_lattice_scatter" in s:
         ax.plot(t, s["photons_lattice_scatter"], color=SERIES[3], lw=2, label="lattice scatter")
     ax.set_xlabel("time (ms)")
-    ax.set_ylabel("photons scattered / atom")
+    ax.set_ylabel("photons / initially loaded atom")
     ax.set_title("Integrated scattered photons", fontsize=9)
     ax.legend(fontsize=7, frameon=False)
 
 
 def plot_cooling_rate(ax, a):
     s = a["series"]
-    ax.plot(_ms(s["t_s"]), s["cooling_rate_quanta_per_s"], color=SERIES[2], lw=2)
+    scale = 1e3 / K_B  # J/s -> uK/ms
+    for key, label, color, style in (("cooling_power_W", "Net", SERIES[0], "-"),
+                                    ("selection_cooling_power_W", "Loss selection", SERIES[1], "--")):
+        if key in s:
+            ax.plot(_ms(s["t_s"]), s[key] * scale, color=color, lw=2, ls=style, label=label)
+    if "selection_cooling_power_W" in s:
+        ax.plot(_ms(s["t_s"]), (s["cooling_power_W"] - s["selection_cooling_power_W"]) * scale,
+                color=SERIES[2], ls=":", label="Net minus selection")
     ax.axhline(0, color=MUTED, lw=0.8)
     ax.set_xlabel("time (ms)")
-    ax.set_ylabel("-dnbar/dt (quanta/s)")
-    ax.set_title("Net cooling rate (Savitzky-Golay derivative)", fontsize=9)
+    ax.set_ylabel("-d<E>/dt / kB (uK/ms)")
+    ax.set_title("Survivor energy change (positive = decrease)", fontsize=9)
+    ax.legend(fontsize=7, frameon=False)
 
 
 def plot_pnt(ax, a, fig=None, axis=None):
@@ -198,7 +214,7 @@ def plot_pnt(ax, a, fig=None, axis=None):
 
 
 def _axis_label(a, axis):
-    return axis + (" (Raman)" if axis == a["final"].get("raman_axis") else "")
+    return axis + (" (Raman)" if axis == a["final"].get("raman_axis") and a["final"].get("raman_active", True) else "")
 
 
 def draw_motional_axes(fig, a):
@@ -250,7 +266,7 @@ def draw_thermal_axes(fig, a):
                                                 ("bound_cooling_power", "Net minus loss", ":"))):
             ax.plot(t, s[f"{key}_{axis}_W"] * 1e3 / K_B, color=SERIES[j], lw=1.8, ls=style, label=label)
         ax.axhline(0, color=MUTED, lw=.8)
-        ax.set_title(f"{_axis_label(a, axis)}: cooling and heating", fontsize=9)
+        ax.set_title(f"{_axis_label(a, axis)}: survivor energy change", fontsize=9)
         ax.set_xlabel("time (ms)")
         ax.set_ylabel("Energy removal / kB (uK/ms)")
         ax.legend(fontsize=7, frameon=False)
@@ -260,7 +276,7 @@ def draw_thermal_axes(fig, a):
                 ax.axvline(seg.t1 * 1e3, color=MUTED, ls=":", lw=.7)
     fig.suptitle("Local x, y, z motion among surviving atoms\n"
                  "Temperature is an energy-matched estimate; distributions need not be thermal.", fontsize=10)
-    fig.supxlabel("Positive rates = cooling; negative = heating. Net uses a smoothed energy derivative.\n"
+    fig.supxlabel("Positive = decreasing survivor energy; negative = increasing energy. Net uses a smoothed derivative.\n"
                   "Loss selection is preferential escape; net minus loss includes Raman and recoil dynamics.", fontsize=8)
 
 
@@ -297,7 +313,7 @@ def diagnostics_text(a) -> str:
         f"MODEL VALIDITY: {STATUS_TEXT[v.status]}",
         f"Raman pair: A={up} <-> B={down}; P_up and target refer to A, P_down to B.",
         f"P_up={f['P_up']:.4f}  P_n0={f['P_n0']:.4f}  P_target={f['P_target']:.4f}  (P_up*P_n0={f['P_up_times_P_n0']:.4f})",
-        *([f"populations are per trapped atom: trapped {f['P_trapped']:.4f} (lost {f['lattice_loss']:.4f}); of all atoms: "
+        *([f"populations are per survivor: remaining in wells {f['P_trapped']:.4f} (well escape, no recapture {f['lattice_loss']:.4f}); initially loaded fractions: "
            f"P_up={f['P_up_absolute']:.4f}  P_n0={f['P_n0_absolute']:.4f}  P_target={f['P_target_absolute']:.4f}"] if f.get("lattice_loss") is not None else []),
         f"nbar (trapped atoms) {f['nbar_initial']:.4g} -> {f['nbar']:.4g}   "
         + (f"T_equiv={f['T_equiv_K'] * 1e6:.3g} uK" if f['T_equiv_K'] is not None else "T_equiv undefined")
@@ -310,7 +326,8 @@ def diagnostics_text(a) -> str:
         "",
     ]
     if "T_equiv_axes_K" in f:
-        lines.insert(1, f"Raman cooling axis: local {f.get('raman_axis', 'z')}; n and target refer to this lattice.")
+        active = "active" if f.get("raman_active", True) else "off throughout schedule"
+        lines.insert(1, f"Target motional axis: local {f.get('raman_axis', 'z')}; Raman light {active}.")
         lines.insert(4, "Axis temperature proxies (uK): " + ", ".join(f"{axis}={_fmt_number(temp * 1e6 if temp is not None else None)}" for axis, temp in f["T_equiv_axes_K"].items()))
         lines.insert(4, f["loss_label"] + f": {f['well_loss_fraction_no_recapture']:.4f}")
         if "T_equiv_axes_initial_K" in f:
@@ -331,6 +348,10 @@ def _fmt_number(value):
 def carrier_calibration_figure(calibration) -> Figure:
     fig = Figure(figsize=(8, 4.5), facecolor="white", layout="constrained")
     ax = _new(fig, 111)
+    if calibration.get("status") == "skipped":
+        ax.axis("off")
+        ax.text(.5, .5, calibration["reason"], ha="center", va="center", wrap=True)
+        return fig
     t = np.asarray(calibration["times_s"]) * 1e3
     modeled = calibration.get("carrier_decay_mode") == "modeled"
     ax.plot(t, calibration["summary_trace"], lw=1.5, ls="--" if modeled else "-", color=SERIES[0],
@@ -375,7 +396,10 @@ def dashboard(a, title="") -> Figure:
     axt = fig.add_subplot(gs[3, 1:])
     axt.axis("off")
     axt.text(0, 1, diagnostic_text, family="monospace", fontsize=6.5, va="top", color=TEXT)
-    fig.suptitle(title, fontsize=11, color=TEXT)
+    status = a["validity"].status
+    notice = " — outside model validity limits" if status == "invalid" else ""
+    fig.suptitle(f"{title}\nModel validity: {STATUS_TEXT[status]}{notice}", fontsize=11,
+                 color="#a32121" if status == "invalid" else TEXT)
     return fig
 
 

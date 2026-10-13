@@ -3,8 +3,8 @@
 Each segment gives amplitude multipliers applied to the configured beams:
 ``raman`` multiplies Omega_c (and, linearly, the calibrated Raman light shift and
 Raman scattering rate, i.e. both Raman beam intensities scaled together);
-``pump`` and ``repump`` multiply the pump-beam intensities.  All protocols span
-exactly ``timing.total_duration_ms`` so comparisons use equal wall-clock time.
+``pump`` and ``repump`` multiply the pump-beam intensities. Built-in protocols
+span ``timing.total_duration_ms``; custom schedules use the sum of their segments.
 """
 from __future__ import annotations
 
@@ -99,3 +99,8 @@ def build_schedule(timing) -> list[Segment]:
 
 def schedule_duration(segs: list[Segment]) -> float:
     return segs[-1].t1 if segs else 0.0
+
+
+def raman_is_active(cfg) -> bool:
+    """Whether the enabled Raman light has any nonzero scheduled exposure."""
+    return cfg.raman.enabled and any(s.raman > 0 for s in build_schedule(cfg.timing))

@@ -33,6 +33,11 @@ def test_unknown_key_rejected():
 def test_examples_load():
     for f in (ROOT / "examples").rglob("*.json"):
         d = json.loads(f.read_text())
+        if f.name.endswith("_metadata.json"):
+            # Exported run metadata wraps a config; it is not itself a config.
+            SimConfig.from_dict(d["config"])
+            assert "final" in d and "validity_status" in d
+            continue
         if "axes" in d:
             from rb85rsc.scan import load_scan, point_configs
 

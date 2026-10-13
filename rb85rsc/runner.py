@@ -179,7 +179,7 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
         fig = dashboard(a, title=f"{a['model'].cfg.name} - protocol {a['model'].cfg.timing.protocol}")
         fig.savefig(outdir / f"{stem}_dashboard.png", dpi=130)
         fig.savefig(outdir / f"{stem}_dashboard.pdf")
-        if "ensemble_details" in a:
+        if "ensemble_details" in a and a["ensemble_details"]["calibration"].get("status") != "skipped":
             from .plotting import carrier_calibration_figure
             fig = carrier_calibration_figure(a["ensemble_details"]["calibration"])
             fig.savefig(outdir / f"{stem}_carrier_calibration.png", dpi=140)

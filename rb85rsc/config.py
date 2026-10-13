@@ -259,7 +259,7 @@ class TimingConfig:
             "custom",
         ],
     )
-    total_duration_ms: float = P(10.0, "ms", "Total wall-clock duration including any preparation.", min=0.0)
+    total_duration_ms: float = P(10.0, "ms", "Built-in protocol duration including preparation. In custom mode, duration is the sum of custom_segments and this field is inactive.", min=0.0)
     prep_duration_ms: float = P(1.0, "ms", "Spin-preparation stage (prep_then_continuous).", min=0.0)
     prep_pump_scale: float = P(1.0, "", "Spin-pump intensity multiplier during preparation.", min=0.0)
     prep_repump_scale: float = P(1.0, "", "Repump intensity multiplier during preparation.", min=0.0)
@@ -422,8 +422,6 @@ class SimConfig:
             errs.append("trap.potential = lattice requires trap.depth_uk > 0")
         if self.raman.calibration == "measured_carrier" and not self.ensemble.enabled:
             errs.append("measured_carrier calibration requires ensemble.enabled")
-        if self.raman.calibration == "measured_carrier" and (self.raman.carrier_rabi_hz <= 0 or self.raman.flop_contrast <= 0):
-            errs.append("measured_carrier requires positive measured frequency and contrast; use raman.enabled=false to turn the drive off")
         hel = np.asarray(self.raman.beam_helicities)
         if hel.shape != (2,) or not np.all(np.isin(hel, [-1, 1])):
             errs.append("raman.beam_helicities must contain two values, each +1 or -1")
@@ -508,6 +506,10 @@ class SimConfig:
             errs.append("tolerances must be positive")
         if errs:
             raise ConfigError("; ".join(errs))
+        from .protocols import raman_is_active
+        if (self.raman.calibration == "measured_carrier" and raman_is_active(self)
+                and (self.raman.carrier_rabi_hz <= 0 or self.raman.flop_contrast <= 0)):
+            raise ConfigError("active measured_carrier drive requires positive measured frequency and contrast")
 
 
 # ---------------------------------------------------------------------------

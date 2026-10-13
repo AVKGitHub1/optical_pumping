@@ -526,6 +526,13 @@ class MainWindow(QMainWindow):
         right = QWidget()
         rl = QVBoxLayout(right)
         rl.addWidget(ctl)
+        self.schedule_note = QLabel()
+        self.schedule_note.setWordWrap(True)
+        rl.addWidget(self.schedule_note)
+        self.validity_banner = QLabel()
+        self.validity_banner.setWordWrap(True)
+        self.validity_banner.hide()
+        rl.addWidget(self.validity_banner)
         rl.addWidget(self.tabs)
         split = QSplitter()
         split.addWidget(scroll)
@@ -551,6 +558,14 @@ class MainWindow(QMainWindow):
         self.load_config(base)
         self.fields["ensemble.enabled"].w.toggled.connect(self._lattice_visibility)
         self.fields["raman.polarization_mode"].w.currentTextChanged.connect(self._raman_visibility)
+        self.protocol.currentIndexChanged.connect(self._refresh_activity)
+        self.fields["raman.enabled"].w.toggled.connect(self._refresh_activity)
+        for path, field in self.fields.items():
+            if path.startswith("timing."):
+                signal = (field.w.currentTextChanged if field.kind == "choice" else
+                          field.w.valueChanged if field.kind == "int" else field.w.textChanged)
+                signal.connect(self._refresh_activity)
+        self._refresh_activity()
 
     # ------------------------------------------------------------------
     def _scan_tab(self):
@@ -603,6 +618,34 @@ class MainWindow(QMainWindow):
         self._raman_visibility()
         i = self.protocol.findData(cfg.timing.protocol)
         self.protocol.setCurrentIndex(max(i, 0))
+        self._refresh_activity()
+
+    def _refresh_activity(self, *_):
+        from .protocols import build_schedule, raman_is_active, schedule_duration
+        custom = self.protocol.currentData() == "custom"
+        self.fields["timing.total_duration_ms"].w.setEnabled(not custom)
+        self.fields["timing.custom_segments"].w.setEnabled(custom)
+        try:
+            cfg = SimConfig()
+            for path, field in self.fields.items():
+                if path.startswith("timing."):
+                    setattr(cfg.timing, path.split(".")[1], field.get())
+            cfg.timing.protocol = self.protocol.currentData()
+            cfg.raman.enabled = self.fields["raman.enabled"].get()
+            schedule = build_schedule(cfg.timing)
+            active = raman_is_active(cfg)
+        except (ValueError, TypeError, KeyError, ZeroDivisionError):
+            self.schedule_note.setText("Schedule incomplete; finish editing timing to calculate the active duration.")
+            return
+        for name in ("carrier_rabi_hz", "carrier_decay_mode", "flop_contrast", "flop_decay_periods",
+                     "frequency_mode", "beat_frequency_hz", "red_sideband_offset_hz",
+                     "differential_light_shift_hz", "scattering_rate_s", "extra_coherence_decay_rate_s"):
+            self.fields[f"raman.{name}"].w.setEnabled(active)
+        self.fields["ensemble.calibration_samples"].w.setEnabled(active)
+        duration = schedule_duration(schedule) * 1e3
+        source = "sum of custom segments; total_duration_ms is inactive" if custom else "built-in protocol duration"
+        raman = "Raman light scheduled" if active else "Raman off; carrier calibration is not applied"
+        self.schedule_note.setText(f"Sequence: {duration:g} ms ({source}). {raman}.")
 
     def _lattice_visibility(self, *_):
         ensemble = self.fields["ensemble.enabled"].get()
@@ -807,11 +850,23 @@ class MainWindow(QMainWindow):
         self.t_joint.draw(lambda f: pl.plot_joint(pl._new(f, 111), a, f, nshow=min(a["P_final"].shape[1], 30)))
         self.diag.setPlainText(pl.diagnostics_text(a))
         st = a["validity"].status.upper()
+        problems = [category for category, status, _ in a["validity"].items if status == "invalid"]
+        self.validity_banner.setText(f"Model validity: {st}. " +
+            ("Outside model limits: " + ", ".join(problems) + ". See Diagnostics / validity." if problems else
+             "See Diagnostics / validity for assumptions and warnings."))
+        self.validity_banner.setStyleSheet("padding: 6px; background: #fde8e8; color: #8a1515;" if problems else
+                                          "padding: 6px; background: #fff5d6; color: #574100;")
+        self.validity_banner.show()
         self.status.setText(f"Done ({a['final']['wall_time_s']:.1f} s). P_target={a['final']['P_target']:.4f}. Validity: {st}")
         self.prog.setValue(1000)
 
     def _show_compare(self, res):
         self.last = res
+        invalid = [name for name, a in res.items() if a["validity"].status == "invalid"]
+        self.validity_banner.setText("Comparison: outside model limits: " + ", ".join(invalid) if invalid else
+                                     "Comparison complete. See Diagnostics / validity for each protocol's assumptions.")
+        self.validity_banner.setStyleSheet("padding: 6px; background: #fde8e8; color: #8a1515;" if invalid else "")
+        self.validity_banner.show()
         self.t_cmp.fig.clear()
         fig = pl.comparison_figure(res)
         self.t_cmp.fig = fig

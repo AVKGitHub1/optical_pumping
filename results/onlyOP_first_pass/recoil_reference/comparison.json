@@ -1,0 +1,167 @@
+[
+  {
+    "axis": "z",
+    "position_um": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bound_levels": 6,
+    "max_population_difference": 1.2324993414747354e-08,
+    "scope": "One local axis; optical pump and repump only. Same spin-resolved rates in both solvers. Coherent version retains motional coherences in every spin block; population version discards them. No Raman, lattice scattering, transverse escape, spin coherences, or recapture. This comparison isolates one approximation; it does not validate the full experiment.",
+    "pumping_validity": [
+      {
+        "category": "magnetic field",
+        "status": "warning",
+        "message": "neglected quadratic 5P3/2 Zeeman shift >5% of Gamma",
+        "applies_to": "both"
+      },
+      {
+        "category": "ground coherences",
+        "status": "ok",
+        "message": "adjacent-mF Zeeman splitting / max pumping rate = 1.41e+03 (neglect of pump-induced Zeeman coherences needs >>1)",
+        "applies_to": "both"
+      },
+      {
+        "category": "motional secular",
+        "status": "ok",
+        "message": "max optical scattering rate / minimum motional angular spacing = 0.0255 (needs <<1)",
+        "applies_to": "population"
+      },
+      {
+        "category": "weak excitation",
+        "status": "ok",
+        "applies_to": "both",
+        "message": "maximum eliminated excited fraction = 0.000163724"
+      }
+    ],
+    "power_scale": 0.03,
+    "coherent": {
+      "survival": 0.9724976793893476,
+      "well_escape_no_recapture": 0.027502320610657223,
+      "P_up_absolute": 0.34802913213085335,
+      "P_target_absolute": 0.15738680447257883,
+      "mean_excitation_hz": 67540.0860099352,
+      "max_conservation_error": 4.884981308350689e-15,
+      "min_eigenvalue": 0.0
+    },
+    "population": {
+      "survival": 0.9724977790636593,
+      "well_escape_no_recapture": 0.02750222093633899,
+      "P_up_absolute": 0.34802915360331627,
+      "P_target_absolute": 0.15738681419422468,
+      "mean_excitation_hz": 67540.09059705379,
+      "max_conservation_error": 1.6653345369377348e-15
+    }
+  },
+  {
+    "axis": "z",
+    "position_um": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bound_levels": 6,
+    "max_population_difference": 3.4794018577422037e-07,
+    "scope": "One local axis; optical pump and repump only. Same spin-resolved rates in both solvers. Coherent version retains motional coherences in every spin block; population version discards them. No Raman, lattice scattering, transverse escape, spin coherences, or recapture. This comparison isolates one approximation; it does not validate the full experiment.",
+    "pumping_validity": [
+      {
+        "category": "magnetic field",
+        "status": "warning",
+        "message": "neglected quadratic 5P3/2 Zeeman shift >5% of Gamma",
+        "applies_to": "both"
+      },
+      {
+        "category": "ground coherences",
+        "status": "ok",
+        "message": "adjacent-mF Zeeman splitting / max pumping rate = 423 (neglect of pump-induced Zeeman coherences needs >>1)",
+        "applies_to": "both"
+      },
+      {
+        "category": "motional secular",
+        "status": "ok",
+        "message": "max optical scattering rate / minimum motional angular spacing = 0.0852 (needs <<1)",
+        "applies_to": "population"
+      },
+      {
+        "category": "weak excitation",
+        "status": "ok",
+        "applies_to": "both",
+        "message": "maximum eliminated excited fraction = 0.000545747"
+      }
+    ],
+    "power_scale": 0.1,
+    "coherent": {
+      "survival": 0.9432518468827118,
+      "well_escape_no_recapture": 0.056748153117295703,
+      "P_up_absolute": 0.6315726229345083,
+      "P_target_absolute": 0.2807101006943419,
+      "mean_excitation_hz": 68407.90262649531,
+      "max_conservation_error": 7.549516567451064e-15,
+      "min_eigenvalue": 0.0
+    },
+    "population": {
+      "survival": 0.943251155202489,
+      "well_escape_no_recapture": 0.05674884479751433,
+      "P_up_absolute": 0.6315726018762752,
+      "P_target_absolute": 0.2807097527541561,
+      "mean_excitation_hz": 68408.17464623915,
+      "max_conservation_error": 3.552713678800501e-15
+    }
+  },
+  {
+    "axis": "z",
+    "position_um": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "bound_levels": 6,
+    "max_population_difference": 0.00013015430925467086,
+    "scope": "One local axis; optical pump and repump only. Same spin-resolved rates in both solvers. Coherent version retains motional coherences in every spin block; population version discards them. No Raman, lattice scattering, transverse escape, spin coherences, or recapture. This comparison isolates one approximation; it does not validate the full experiment.",
+    "pumping_validity": [
+      {
+        "category": "magnetic field",
+        "status": "warning",
+        "message": "neglected quadratic 5P3/2 Zeeman shift >5% of Gamma",
+        "applies_to": "both"
+      },
+      {
+        "category": "ground coherences",
+        "status": "ok",
+        "message": "adjacent-mF Zeeman splitting / max pumping rate = 42.3 (neglect of pump-induced Zeeman coherences needs >>1)",
+        "applies_to": "both"
+      },
+      {
+        "category": "motional secular",
+        "status": "invalid",
+        "message": "max optical scattering rate / minimum motional angular spacing = 0.852 (needs <<1)",
+        "applies_to": "population"
+      },
+      {
+        "category": "weak excitation",
+        "status": "ok",
+        "applies_to": "both",
+        "message": "maximum eliminated excited fraction = 0.00545747"
+      }
+    ],
+    "power_scale": 1.0,
+    "coherent": {
+      "survival": 0.8715010852740479,
+      "well_escape_no_recapture": 0.12849891472596311,
+      "P_up_absolute": 0.8106041045268798,
+      "P_target_absolute": 0.34412864678230903,
+      "mean_excitation_hz": 70371.81768337257,
+      "max_conservation_error": 1.1102230246251565e-14,
+      "min_eigenvalue": 0.0
+    },
+    "population": {
+      "survival": 0.8714441563381545,
+      "well_escape_no_recapture": 0.12855584366184714,
+      "P_up_absolute": 0.810548650661032,
+      "P_target_absolute": 0.3439985353555155,
+      "mean_excitation_hz": 70407.88407443228,
+      "max_conservation_error": 4.440892098500626e-15
+    }
+  }
+]

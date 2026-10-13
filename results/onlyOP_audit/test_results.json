@@ -1,0 +1,9 @@
+{
+  "command": "conda run --no-capture-output -n scripts python -m pytest -q -p no:cacheprovider --basetemp=.test_tmp/physics_review_20261012",
+  "passed": 184,
+  "failed": 1,
+  "duration_s": 218.57,
+  "failed_test": "tests/test_io_gui.py::test_examples_load",
+  "reason": "Recursively treats every examples/**/*.json as a configuration, including exported run_metadata.json files. SimConfig correctly rejects metadata keys.",
+  "production_code_modified": false
+}

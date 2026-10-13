@@ -27,6 +27,7 @@ from .analysis import _derivative, _threshold_time
 from .dynamics import RunResult, SimulationStopped, _single_thread
 from .far_detuned import DLineResponse, calibrate_carrier, envelope, raman_fields, spatial_samples
 from .model import Model, Validity
+from .protocols import raman_is_active
 
 
 # Populations use local lattice axes: [spin, nx, ny, nz], z along trap.axis.
@@ -156,7 +157,10 @@ class LocalExperiment:
         c.raman.lattice_phase_deg = np.rad2deg(phase)
         intensity = calibration["intensity_per_unit_tone_w_m2"] * envelope(position, axes[ra], rc.waist_um)
         self.intensity = intensity
-        low, high, eps, paths = raman_fields(cfg, response)
+        if intensity > 0:
+            low, high, eps, paths = raman_fields(cfg, response)
+        else:
+            paths = np.zeros((2, 2), complex)
         # Model's carrier field is now a units scale: microscopic complex path
         # coefficients contain Hz per W/m²; the measurement stays in parent cfg.
         c.raman.carrier_rabi_hz = intensity
@@ -201,10 +205,11 @@ class LocalExperiment:
             k = 2 * np.pi / (rc.wavelength_nm * 1e-9)
             for direction in dirs:
                 self.terms.append(_term(sites, W, k * direction, k * direction, k, bdir, "isotropic", nq, 2, "raman", axes))
-        for freq, powers, phases in (
+        raman_tones = (
             (low, rc.tone_powers_low, [phase / 2, -phase / 2]),
             (high, rc.tone_powers_high, [phase / 2, -phase / 2 + np.deg2rad(rc.beam_beat_phase_deg)]),
-        ):
+        ) if intensity > 0 else ()
+        for freq, powers, phases in raman_tones:
             amplitudes = [response.scattering_amplitudes(freq, e) * np.sqrt(intensity * p) * np.exp(1j * ph)
                           for e, p, ph in zip(eps, powers, phases)]
             self._add_coherent_light(amplitudes, dirs, freq, bdir, nq, 2, "raman")
@@ -624,12 +629,18 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
     with _single_thread():
         atom = at.load_atomic_data()
         response = DLineResponse(atom, cfg.magnetic.magnitude_gauss, cfg.magnetic.direction)
-        calibration = calibrate_carrier(cfg, response)
+        active_raman = raman_is_active(cfg)
+        calibration = calibrate_carrier(cfg, response) if active_raman else dict(
+            status="skipped", reason="Raman light is off throughout the schedule; no carrier calibration is applied.",
+            intensity_per_unit_tone_w_m2=0., residual_coherence_decay_rate_s=0.,
+            calibration_compatible=None, carrier_decay_mode="not_applied")
         _check_stop(stop)
         central = LocalExperiment(cfg, response, calibration, [0, 0, 0], 0.)
         # One fixed experimental beat, resonant with the central n=1->0 red
         # sideband including phase-AVERAGED Raman and lattice differential shift.
-        if cfg.raman.frequency_mode == "absolute_beat":
+        if not active_raman:
+            beat = central.model.nu_beat  # reporting reference only; no driven Hamiltonian
+        elif cfg.raman.frequency_mode == "absolute_beat":
             beat = cfg.raman.beat_frequency_hz
         else:
             low, high, eps, _ = raman_fields(cfg, response)
@@ -739,11 +750,35 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                  spin_populations_absolute_final={at.ground_label(i): float(P[-1, i].sum()) for i in range(12)},
                  max_conservation_error=float(np.max(np.abs(survival + loss - 1))), min_eigenvalue=float(mins.min()),
                  max_boundary_population=None, final_overflow=float(loss[-1]), lattice_loss=float(loss[-1]),
-                 well_loss_fraction_no_recapture=float(loss[-1]), loss_label="Well-loss fraction, assuming no recapture",
+                 well_loss_fraction_no_recapture=float(loss[-1]), loss_label="Well escape assuming no recapture",
                  initial_tail_discarded=float(np.mean([local.initial_tail for local, _ in components])),
                  initial_unbound_fraction=None, solver="coherent_3d_split_ensemble",
                  wall_time_s=sum(r["wall_time_s"] for _, r in components), rhs_evaluations=0)
     validity = Validity()
+    magnetic = at.zeeman_validity(central.model.atom, central.model.B, central.model.nu_t, up, down)
+    validity.add("magnetic field", magnetic["status"], "; ".join(magnetic["notes"]) or
+                 "Breit-Rabi ground energies; weak-field excited energies and dipoles.")
+    final["magnetic_validity"] = magnetic
+    # Use every active photon source, including lattice and Raman light. The
+    # spin-population reduction requires adjacent Zeeman splittings >> rates.
+    max_rate = max(float(local.operators(seg)[1].max())
+                   for local, _ in components for seg in local.model.schedule)
+    zeeman_spacing = (min(abs(central.model.atom.g_ground[f]) for f in (2, 3))
+                      * at.MU_B * abs(central.model.B) / at.H * 2 * np.pi)
+    ratio = zeeman_spacing / max_rate if max_rate > 0 else np.inf
+    final["min_ground_secular_ratio"] = float(ratio) if np.isfinite(ratio) else None
+    validity.add("ground coherences", "ok" if ratio > 10 else ("warning" if ratio > 1 else "invalid"),
+                 f"adjacent-mF Zeeman angular splitting / maximum photon rate across nodes = {ratio:.3g} (needs >>1)")
+    for name in ("spin_pump", "repump"):
+        beam = central.model.beams[name]
+        pc = getattr(cfg, name)
+        if not pc.enabled:
+            continue
+        if "EFFECTIVE" in beam.fraction_source:
+            validity.add(f"{name} polarization", "warning", beam.fraction_source)
+        if pc.polarization.mode == "geometry" and not np.allclose(beam.direction, pol.unit(pc.direction), atol=1e-8):
+            validity.add(f"{name} direction", "warning",
+                         f"geometry angles set lab direction {np.round(beam.direction, 6).tolist()}; stored direction is inactive")
     validity.add("conservation", "ok" if final["max_conservation_error"] < cfg.numerics.conservation_tolerance else "invalid", f"max |survival + well loss - 1| = {final['max_conservation_error']:.3g}")
     validity.add("positivity", "ok" if final["min_eigenvalue"] > -cfg.numerics.positivity_tolerance else "invalid", f"minimum density eigenvalue / population = {final['min_eigenvalue']:.3g}")
     if final["initial_tail_discarded"] > cfg.numerics.boundary_tolerance:
@@ -772,7 +807,9 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     final["target_state_scattering_rate_per_s"] = float(target_rate / target_weight) if target_weight > 0 else None
     final["P_3d_ground_absolute"] = float(sum(r["P_final_3d"][:, 0, 0, 0].sum() for _, r in components) / n)
     final["P_target_3d_absolute"] = float(sum(r["P_final_3d"][up, 0, 0, 0] for _, r in components) / n)
-    if calibration.get("carrier_decay_mode") == "modeled":
+    if calibration.get("status") == "skipped":
+        validity.add("carrier calibration", "ok", calibration["reason"])
+    elif calibration.get("carrier_decay_mode") == "modeled":
         validity.add("carrier calibration", "ok", f"Modeled spatial/thermal decay; RMS carrier frequency = {calibration['modeled_rms_carrier_hz']:.6g} Hz fixes initial curvature. No fitted homogeneous damping; reported decay is not a calibration constraint or an experimental validation.")
     else:
         validity.add("carrier calibration", "warning" if not calibration["calibration_compatible"] else "ok", f"Synthetic measured-envelope fit RMS = {calibration['synthetic_trace_rmse']:.3g}; residual gamma = {calibration['residual_coherence_decay_rate_s']:.3g}/s. A poor fit is an unresolved calibration-model mismatch, not a validated intensity estimate.")
@@ -784,6 +821,7 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     validity.add("temperature", "warning", "Axis temperatures are energy-matched bound-state mixture proxies; survivor cooling of undriven axes may result from preferential loss.")
     final["calibration_compatible"] = calibration["calibration_compatible"]
     final["carrier_decay_mode"] = calibration.get("carrier_decay_mode", "measured_envelope")
+    final["raman_active"] = raman_is_active(cfg)
     center_model = central.model
     # Reporting model holds the USER config and common fixed experimental beat.
     center_model.cfg = cfg
