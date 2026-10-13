@@ -14,7 +14,7 @@ from typing import Any, Optional, get_type_hints
 
 import numpy as np
 
-from . import polarization as pol
+from . import atomic as at, polarization as pol
 
 
 class ConfigError(ValueError):
@@ -66,9 +66,9 @@ class InitialStateConfig:
         "uniform_all",
         "",
         "uniform_all: 1/12 per ground sublevel; uniform_F3: 1/7 per F=3 sublevel; "
-        "stretched: all in |3,3>; manifold_split: F3 fraction set below, uniform within each manifold; "
+        "stretched: all in |3,3>; raman_up: all in selected Raman state A; manifold_split: F3 fraction set below, uniform within each manifold; "
         "custom: 12 populations below.",
-        choices=["uniform_all", "uniform_F3", "stretched", "manifold_split", "custom"],
+        choices=["uniform_all", "uniform_F3", "stretched", "raman_up", "manifold_split", "custom"],
     )
     f3_fraction: float = P(7.0 / 12.0, "", "Total F=3 population for manifold_split (uniform per sublevel within each F).", min=0.0, max=1.0)
     custom_spin_populations: list = P(
@@ -93,9 +93,16 @@ class FieldConfig:
 
 @dataclass
 class RamanConfig:
+    state_up: list = P([3, 3], "", "State A [F, mF]. Raman cooling couples |A,n> to |B,n-1>; P_up and the cooling target refer to A. Does not change initial preparation or optical pumping.", ground_state=True)
+    state_down: list = P([2, 2], "", "State B [F, mF], the coherent Raman partner of state A. P_down refers to B.", ground_state=True)
     calibration: str = P("pathway", "", "pathway: legacy one-path Rabi. measured_carrier: calibrate the ensemble carrier using ARC D1+D2 amplitudes and carrier_decay_mode (ensemble mode).", choices=["pathway", "measured_carrier"])
     carrier_decay_mode: str = P("measured_envelope", "", "modeled: predict spatial/thermal dephasing, with carrier_rabi_hz interpreted as the RMS local carrier frequency (initial-curvature calibration), and no fitted damping. measured_envelope: fit intensity and nonnegative residual damping to the reported envelope.", choices=["modeled", "measured_envelope"])
     beam_helicities: list = P([1, -1], "", "Helicity along each beam's OWN propagation vector: +1 and -1 are opposite circular polarizations.")
+    polarization_mode: str = P("helicity", "", "helicity: use the two circular beam helicities. jones: set each beam's ellipticity and orientation; both tones in a beam share its polarization. Used by measured_carrier calibration; pathway mode uses the supplied Rabi directly.", choices=["helicity", "jones"])
+    beam_low_ellipticity_deg: float = P(45.0, "deg", "Beam 1 ellipticity: 0 = linear, +45/-45 = circular along its propagation direction.", min=-45.0, max=45.0)
+    beam_high_ellipticity_deg: float = P(-45.0, "deg", "Beam 2 ellipticity: 0 = linear, +45/-45 = circular along its propagation direction.", min=-45.0, max=45.0)
+    beam_low_orientation_deg: float = P(0.0, "deg", "Beam 1 polarization ellipse orientation. Zero is along the transverse projection of B, or the field-frame x axis when k is parallel to B.")
+    beam_high_orientation_deg: float = P(0.0, "deg", "Beam 2 polarization ellipse orientation in its own transverse frame, using the same convention as beam 1.")
     waist_um: float = P(200.0, "um", "Raman 1/e^2 intensity radius.", min=1.0)
     flop_contrast: float = P(0.9, "", "Observed carrier contrast; treated as preparation/readout visibility, not atom loss.", min=0.0, max=1.0)
     flop_decay_periods: float = P(3.5, "periods", "Reported 1/e carrier decay in measured periods. Fit input only in measured_envelope mode; comparison only in modeled mode.", min=0.1)
@@ -112,15 +119,15 @@ class RamanConfig:
         choices=["sideband_offset", "absolute_beat"],
     )
     red_sideband_offset_hz: float = P(0.0, "Hz", "delta_beat - nu_10; 0 is the first red-sideband (n=1->0) resonance of the reference nu_ud (nu_10 = nu_t harmonic, exact level spacing lattice).")
-    beat_frequency_hz: float = P(3.0357324e9 + 70e3, "Hz", "|nu_high - nu_low| in absolute_beat mode.")
-    wavelength_nm: float = P(783.0, "nm", "Raman beam wavelength (sets |k|). Experimental value.", min=100.0)
+    beat_frequency_hz: float = P(3.0357324e9 + 70e3, "Hz", "Signed beat: emitted tone minus absorbed tone for A -> B. Negative when B is higher in energy than A. Used in absolute_beat mode.")
+    wavelength_nm: float = P(783.0, "nm", "Wavelength of the tone absorbed from state A. Sets recoil and D1+D2 optical detunings in measured_carrier mode.", min=100.0)
     beam_low_direction: list = P(
         [0.70710678, 0.70710678, 0.0], "lab unit vector",
-        "Lower-frequency Raman beam (absorbed on |up,n> -> |down,n-1>); beam 1 in both_tones_both_beams.", illustrative=True,
+        "Beam 1: absorbed tone on |A,n> -> |B,n-1>. The legacy low/high names assume A is higher in energy than B.", illustrative=True,
     )
     beam_high_direction: list = P(
         [-0.70710678, 0.70710678, 0.0], "lab unit vector",
-        "Higher-frequency Raman beam (stimulated emission on up -> down); beam 2 in both_tones_both_beams.", illustrative=True,
+        "Beam 2: emitted tone on A -> B. The legacy low/high names assume A is higher in energy than B.", illustrative=True,
     )
     tone_layout: str = P(
         "one_tone_per_beam",
@@ -161,6 +168,19 @@ class RamanConfig:
     )
     max_sideband_order: int = P(3, "", "Keep Raman couplings with |n-m| <= this order (exact matrix elements; convergence parameter).", min=1, max=20)
 
+    def state_indices(self) -> tuple[int, int]:
+        """Indices in the fixed 12-state population order, never module globals."""
+        return at.GROUND_STATES.index(tuple(self.state_up)), at.GROUND_STATES.index(tuple(self.state_down))
+
+    def field_vectors(self, bdir):
+        dirs = (self.beam_low_direction, self.beam_high_direction)
+        if self.polarization_mode == "helicity":
+            angles = [(45 * h, 0) for h in self.beam_helicities]
+        else:
+            angles = [(self.beam_low_ellipticity_deg, self.beam_low_orientation_deg),
+                      (self.beam_high_ellipticity_deg, self.beam_high_orientation_deg)]
+        return [pol.jones_field_vector(k, chi, psi, bdir) for k, (chi, psi) in zip(dirs, angles)]
+
 
 @dataclass
 class PolarizationConfig:
@@ -198,8 +218,8 @@ class PumpConfig:
     detuning_mhz: float = P(0.0, "MHz", "Laser detuning from the named zero-field hyperfine transition (positive = blue).")
     direction: list = P([0.0, 0.0, 1.0], "lab unit vector", "Propagation direction (spherical mode; derived in geometry mode).")
     polarization: PolarizationConfig = field(default_factory=PolarizationConfig)
-    light_shift_override_up_hz: Optional[float] = P(None, "Hz", "Measured light shift of |3,3> from this beam at full intensity; replaces (not adds to) the computed value.")
-    light_shift_override_down_hz: Optional[float] = P(None, "Hz", "Measured light shift of |2,2> from this beam at full intensity; replaces the computed value.")
+    light_shift_override_up_hz: Optional[float] = P(None, "Hz", "Measured light shift of selected Raman state A from this beam at full intensity; replaces (not adds to) the computed value.")
+    light_shift_override_down_hz: Optional[float] = P(None, "Hz", "Measured light shift of selected Raman state B from this beam at full intensity; replaces the computed value.")
 
 
 @dataclass
@@ -366,6 +386,20 @@ class SimConfig:
     # ------------------------------------------------------------------
     def validate(self) -> None:
         errs = []
+        valid_states = True
+        for name in ("state_up", "state_down"):
+            state = getattr(self.raman, name)
+            if (not isinstance(state, (list, tuple)) or len(state) != 2
+                    or any(isinstance(x, bool) or not isinstance(x, (int, np.integer)) for x in state)
+                    or tuple(state) not in at.GROUND_STATES):
+                errs.append(f"raman.{name} must be [F, mF] with integer F=2 or 3 and -F <= mF <= F")
+                valid_states = False
+        if valid_states:
+            up, down = self.raman.state_indices()
+            if up == down:
+                errs.append("Raman states A and B must be different")
+            elif abs(self.raman.state_up[1] - self.raman.state_down[1]) > 2:
+                errs.append("Raman states require |delta mF| <= 2 for a two-photon dipole transition")
         directions = {}
         for path, f, value in iter_fields(self):
             md = f.metadata

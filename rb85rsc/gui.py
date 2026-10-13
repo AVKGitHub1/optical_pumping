@@ -55,7 +55,13 @@ class FieldWidget:
         self.path, self.f = path, f
         md = f.metadata
         self.kind = "text"
-        if isinstance(value, bool):
+        if md.get("ground_state"):
+            self.kind = "ground_state"
+            self.w = QComboBox()
+            for fvalue, mvalue in at.GROUND_STATES:
+                self.w.addItem(f"F = {fvalue}, mF = {mvalue:+d}", [fvalue, mvalue])
+            self.set(value)
+        elif isinstance(value, bool):
             self.kind = "bool"
             self.w = QCheckBox()
             self.w.setChecked(value)
@@ -93,6 +99,8 @@ class FieldWidget:
         self.w.setToolTip(tip)
 
     def get(self):
+        if self.kind == "ground_state":
+            return list(self.w.currentData())
         if self.kind == "bool":
             return self.w.isChecked()
         if self.kind == "choice":
@@ -111,7 +119,9 @@ class FieldWidget:
         return float(t)
 
     def set(self, v):
-        if self.kind == "bool":
+        if self.kind == "ground_state":
+            self.w.setCurrentIndex(self.w.findData(list(v)))
+        elif self.kind == "bool":
             self.w.setChecked(v)
         elif self.kind == "choice":
             self.w.setCurrentText(v)
@@ -421,11 +431,17 @@ class MainWindow(QMainWindow):
         self.pol_widgets = {}
         self.lattice_widgets = {}
         self.legacy_lattice_rows = []
+        self.raman_polarization_rows = {}
         legacy_lattice_fields = {"trap.wavelength_nm", "trap.frequency_hz", "trap.depth_uk",
                                  "ensemble.lattice_waist_um", "ensemble.transverse_wavelength_nm", "ensemble.transverse_depth_uk"}
         for key, title in GROUPS:
             page = QWidget()
             form = QFormLayout(page)
+            if key == "raman":
+                note = QLabel("Choose the two ground states coupled by Raman light. State A defines P_up and the cooling target; "
+                              "state B defines P_down. Initial populations and optical-pump settings are set separately.")
+                note.setWordWrap(True)
+                form.addRow(note)
             for p, f in info:
                 if p.split(".")[0] != key:
                     continue
@@ -433,12 +449,22 @@ class MainWindow(QMainWindow):
                 self.fields[p] = fw
                 unit = f.metadata.get("unit", "")
                 name = {"trap.potential": "Potential", "trap.n_max": "Maximum level n",
-                        "trap.heating_rate_quanta_per_s": "Heating rate"}.get(p, p.split(".", 1)[1])
+                        "trap.heating_rate_quanta_per_s": "Heating rate",
+                        "raman.state_up": "State A (cooling target)", "raman.state_down": "State B (Raman partner)",
+                        "raman.polarization_mode": "Polarization input",
+                        "raman.beam_helicities": "Beam 1, 2 helicities",
+                        "raman.beam_low_ellipticity_deg": "Beam 1 ellipticity (0 = linear)",
+                        "raman.beam_high_ellipticity_deg": "Beam 2 ellipticity (0 = linear)",
+                        "raman.beam_low_orientation_deg": "Beam 1 orientation",
+                        "raman.beam_high_orientation_deg": "Beam 2 orientation",
+                        "raman.beat_frequency_hz": "Signed beat frequency"}.get(p, p.split(".", 1)[1])
                 lab = QLabel(name + (f" [{unit}]" if unit else ""))
                 if p == "trap.axis":
                     self.trap_axis_label = lab
                 lab.setToolTip(fw.w.toolTip())
                 form.addRow(lab, fw.w)
+                if p == "raman.beam_helicities" or (p.startswith("raman.beam_") and p.endswith(("ellipticity_deg", "orientation_deg"))):
+                    self.raman_polarization_rows[p] = (lab, fw.w)
                 if p in legacy_lattice_fields:
                     self.legacy_lattice_rows.append((lab, fw.w))
             if key == "trap":
@@ -484,13 +510,15 @@ class MainWindow(QMainWindow):
         self.t_over = PlotTab((12, 8))
         self.t_spin = PlotTab()
         self.t_tr = PlotTab()
+        self.t_thermal = PlotTab((13, 8))
         self.t_pnt = PlotTab()
         self.t_joint = PlotTab()
         self.t_cmp = PlotTab((12, 8))
         self.diag = QPlainTextEdit()
         self.diag.setReadOnly(True)
         self.diag.setStyleSheet("font-family: Consolas, monospace; font-size: 9pt;")
-        for w, n in ((self.t_over, "Overview"), (self.t_spin, "Spin"), (self.t_tr, "Time traces"), (self.t_pnt, "p(n,t)"),
+        for w, n in ((self.t_over, "Overview"), (self.t_spin, "Spin"), (self.t_tr, "Time traces"),
+                     (self.t_thermal, "Thermal x/y/z"), (self.t_pnt, "p(n,t)"),
                      (self.t_joint, "Joint P(F,mF,n)"), (self.diag, "Diagnostics / validity"), (self.t_cmp, "Protocol comparison")):
             self.tabs.addTab(w, n)
         self.tabs.addTab(self._scan_tab(), "Scan")
@@ -522,6 +550,7 @@ class MainWindow(QMainWindow):
             m.addAction(act)
         self.load_config(base)
         self.fields["ensemble.enabled"].w.toggled.connect(self._lattice_visibility)
+        self.fields["raman.polarization_mode"].w.currentTextChanged.connect(self._raman_visibility)
 
     # ------------------------------------------------------------------
     def _scan_tab(self):
@@ -571,6 +600,7 @@ class MainWindow(QMainWindow):
         for axis, panel in self.lattice_widgets.items():
             panel.load(cfg, "xyz".index(axis))
         self._lattice_visibility()
+        self._raman_visibility()
         i = self.protocol.findData(cfg.timing.protocol)
         self.protocol.setCurrentIndex(max(i, 0))
 
@@ -582,6 +612,13 @@ class MainWindow(QMainWindow):
                 widget.setVisible(not ensemble)
         for panel in self.lattice_widgets.values():
             panel.setVisible(ensemble)
+
+    def _raman_visibility(self, *_):
+        helicity = self.fields["raman.polarization_mode"].get() == "helicity"
+        for path, row in self.raman_polarization_rows.items():
+            visible = helicity if path == "raman.beam_helicities" else not helicity
+            for widget in row:
+                widget.setVisible(visible)
 
     def current_config(self) -> SimConfig:
         d = SimConfig().to_dict()
@@ -721,7 +758,7 @@ class MainWindow(QMainWindow):
                 msg = f"Could not re-read {self.start_path} ({e}); reset to built-in defaults."
         self.load_config(cfg)
         self.last = None
-        for t in (self.t_over, self.t_spin, self.t_tr, self.t_pnt, self.t_joint, self.t_cmp, self.t_scan):
+        for t in (self.t_over, self.t_spin, self.t_tr, self.t_thermal, self.t_pnt, self.t_joint, self.t_cmp, self.t_scan):
             t.draw(lambda f: None)
         self.diag.clear()
         self.prog.setValue(0)
@@ -765,7 +802,8 @@ class MainWindow(QMainWindow):
         self.t_over.draw(lambda f: _overview(f, a))
         self.t_spin.draw(lambda f: pl.plot_spin_bars(pl._new(f, 111), a))
         self.t_tr.draw(lambda f: _traces(f, a))
-        self.t_pnt.draw(lambda f: pl.plot_pnt(pl._new(f, 111), a, f))
+        self.t_thermal.draw(lambda f: pl.draw_thermal_axes(f, a))
+        self.t_pnt.draw(lambda f: pl.draw_motional_axes(f, a))
         self.t_joint.draw(lambda f: pl.plot_joint(pl._new(f, 111), a, f, nshow=min(a["P_final"].shape[1], 30)))
         self.diag.setPlainText(pl.diagnostics_text(a))
         st = a["validity"].status.upper()

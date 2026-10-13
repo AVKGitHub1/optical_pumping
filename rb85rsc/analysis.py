@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.signal import savgol_filter
 
-from .atomic import DOWN, GROUND_STATES, K_B, UP, H, ground_label
+from .atomic import GROUND_STATES, K_B, H, ground_label
 from .dynamics import RunResult
 from .model import BEAMS, COUNTERS, Model, Validity
 from .motion import boltzmann_pn, temperature_from_energy, temperature_from_nbar
@@ -34,6 +34,7 @@ def _derivative(t, y, window):
 
 def analyze(model: Model, res: RunResult) -> dict:
     cfg = model.cfg
+    up, down = model.up, model.down
     t, P_abs = res.t, res.P
     N = model.N
     n = np.arange(N)
@@ -46,9 +47,9 @@ def analyze(model: Model, res: RunResult) -> dict:
     pn = P.sum(axis=1)  # (T, N)
     f2 = spin[:, [i for i, (f, _) in enumerate(GROUND_STATES) if f == 2]].sum(axis=1)
     f3 = spin[:, [i for i, (f, _) in enumerate(GROUND_STATES) if f == 3]].sum(axis=1)
-    p_up = spin[:, UP]
+    p_up = spin[:, up]
     p_n0 = pn[:, 0]
-    p_target = P[:, UP, 0]
+    p_target = P[:, up, 0]
     with np.errstate(invalid="ignore", divide="ignore"):
         p_n0_given_up = np.where(p_up > 0, p_target / np.where(p_up > 0, p_up, 1), np.nan)
     nbar = pn @ n
@@ -91,18 +92,18 @@ def analyze(model: Model, res: RunResult) -> dict:
     removed = nbar0 - nbar[-1]
     appreciable_loss = res.overflow[-1] > cfg.numerics.boundary_tolerance
     per_photon = removed / total_photons if total_photons > 0 and not appreciable_loss else np.nan
-    # target-state (|3,3>) scattering rate for the final segment configuration
+    # Selected target-state scattering rate for the final segment configuration
     last = model.schedule[-1]
     o = model.ops(last)
-    tgt_rate = float(o.gout[UP * N])
-    tgt_by = {b: float(model.out[b][UP * N]) * (getattr(last, "pump" if b == "spin_pump" else "repump")) for b in BEAMS}
+    tgt_rate = float(o.gout[up * N])
+    tgt_by = {b: float(model.out[b][up * N]) * (getattr(last, "pump" if b == "spin_pump" else "repump")) for b in BEAMS}
 
     cons = np.abs(trace + res.overflow - 1.0)
     boundary = P_abs[:, :, N - 2 :].sum(axis=(1, 2))
     series = {
         "t_s": t,
         "P_up": p_up,
-        "P_down": spin[:, DOWN],
+        "P_down": spin[:, down],
         "P_F2": f2,
         "P_F3": f3,
         "P_n0": p_n0,

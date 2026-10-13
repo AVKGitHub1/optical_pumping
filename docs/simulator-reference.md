@@ -52,7 +52,7 @@ micro-benchmarked cost per evaluation. The GUI shows the same estimate in its st
 
 All 12 ground sublevels (`F=2, mF=-2..2`; `F=3, mF=-3..3`) are included, together with vibrational levels `n = 0..n_max`.
 
-* The **Raman pair** `{up=|3,3>, down=|2,2>} ⊗ motion` carries a full density matrix of dimension 2N (N = n_max+1),
+* The **selected Raman pair** `{up=A, down=B} ⊗ motion` carries a full density matrix of dimension 2N (N = n_max+1). `raman.state_up` and `raman.state_down` default to `|3,3>` and `|2,2>`,
   because the calibrated Raman coupling acts only there.
 * The other **10 sublevels** carry motional populations only. Nothing couples them coherently, and
   the population recoil approximation below drops coherence transfer into these states. This goes beyond secular averaging.
@@ -298,9 +298,9 @@ These are computed directly from `P(F, mF, n, t)`:
 | output | definition |
 | --- | --- |
 | spin populations | all 12 sublevels plus the F=2 and F=3 totals |
-| `P_up` | Σ_n P(3,3,n) — spin-pumping efficiency |
+| `P_up` | Σ_n P(A,n), where A is `raman.state_up` (default `|3,3>`) |
 | `p(n,t)`, `nbar`, `P_n0` | motional marginal over all spins |
-| `P_target` | P(3,3,0) **computed directly**. It generally differs from P_up·P_n0 (both are reported) because spin and motion correlate |
+| `P_target` | P(A,0) **computed directly**. It generally differs from P_up·P_n0 (both are reported) because spin and motion correlate |
 | `P_n0_given_up` | P_target/P_up (undefined when P_up = 0) |
 | `fractional_energy_reduction` | 1 − ⟨E−E_0⟩(t)/⟨E−E_0⟩(0), conditional on survival; includes loss selection |
 | cooling rate | −dn̄/dt and separately −d⟨E−E_0⟩/dt in W, from Savitzky-Golay derivatives; only a harmonic ladder permits multiplication by hν_t |
@@ -311,6 +311,8 @@ These are computed directly from `P(F, mF, n, t)`:
 Figures (dashboard PNG/PDF and GUI tabs): initial and final spin bars, time traces, n̄(t) on its own axis, p(n,t) and
 final P(F,mF,n) heatmaps on a log color scale, photon counts, cooling rate, and a text block with every validity item.
 Protocol comparisons and scans mark invalid points with a dashed line, "INVALID", or ×, and never rank them as optima.
+
+For the 3D ensemble backend, **Thermal x/y/z** compares survivor-conditioned temperature proxies, actual excitation energies, and ground-state fractions along all three local lattices. It also plots each axis's net cooling power, preferential-loss contribution, and their difference. Mean-occupation traces and motional heatmaps include all axes. Exports add `*_thermal_axes.png/.pdf`, `*_motional_axes.png/.pdf`, axis-qualified CSV columns such as `T_equiv_x_K` and `cooling_power_x_W`, and aggregate `pn_x` / `pn_x_absolute` arrays in `*_ensemble.npz` (likewise y/z). See the [three-axis thermal workflow](experiment-workflow.md#thermal-motion-in-all-three-lattices) for normalization and interpretation.
 
 Exports: `*_timeseries.csv`; `*_joint.npz` (P[t,s,n], overflow, counts, final Raman-block ρ); `*_metadata.json` with the exact
 configuration, derived polarization fractions and their source, schedule, SI constants, assumptions, ARC metadata, package versions,

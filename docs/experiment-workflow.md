@@ -19,11 +19,64 @@ Choose a separate output directory for runs you want to compare. The root entry 
 | `run_metadata.json` | Final metrics, all spin populations, calibration assumptions, and validity diagnostics |
 | `run_timeseries.csv` | Time-dependent observables |
 | `run_joint.npz` | Axial joint spin/motional population arrays |
-| `run_ensemble.npz` | Per-node local spectra, axis distributions, and joint 3D populations |
+| `run_ensemble.npz` | Time grid, survival, aggregate x/y/z marginals, per-node spectra/distributions, and final joint 3D populations |
 | `run_dashboard.png` / `.pdf` | Population, cooling, scattering, and validity summary |
 | `run_carrier_calibration.png` / `.pdf` | Modeled carrier trace and reported-envelope comparison |
+| `run_thermal_axes.png` / `.pdf` | x/y/z temperatures, excitation energies, ground fractions, and cooling/heating with loss selection |
+| `run_motional_axes.png` / `.pdf` | x/y/z motional population maps through time |
 
-The main objective is `P_target_absolute`: initially loaded atoms that remain in all three wells and end in `F=3,mF=3,n=0` along the Raman-driven lattice (`z` in the active example). Read absolute yields and survivor-conditioned fractions separately. `T_equiv_axes_K` contains finite-spectrum, energy-matched temperature proxies; a nonthermal distribution can have the same value. Leaving any local well counts as irreversible loss under this model.
+The main objective is `P_target_absolute`: initially loaded atoms that remain in all three wells and end in Raman state A with `n=0` along the Raman-driven lattice (`F=3,mF=3` and `z` in the active example). Read absolute yields and survivor-conditioned fractions separately. `T_equiv_axes_K` contains finite-spectrum, energy-matched temperature proxies; a nonthermal distribution can have the same value. Leaving any local well counts as irreversible loss under this model.
+
+## Thermal motion in all three lattices
+
+After an ensemble run, open **Thermal x/y/z**. The upper panels compare temperature estimates, mean excitation energy above each local ground state, and the fraction in each axis's ground state. **Overview** and **Time traces** show all three mean occupations; **p(n,t)** shows the three distributions. Labels use the local lattice frame, and mark the Raman-driven axis. A ground-state fraction for one axis is not the joint 3D ground-state fraction.
+
+Temperatures are obtained at every sample by matching that axis's mean energy to a mixture of its local bound-state spectra, using the spatial populations that survive at that time. They are not averages of local fitted temperatures and do not imply equilibration. Gaps mean no finite temperature estimate is available (for example, the energy exceeds the positive-temperature canonical range, no excited bound levels exist, or no atoms survive).
+
+The lower panels show energy removal in microkelvin per millisecond: positive is cooling, negative is heating. **Net** is the smoothed derivative of survivor mean energy. **Loss selection** is the instantaneous contribution from preferential escape. **Net minus loss** retains Raman and recoil dynamics, so a decreasing temperature alone does not demonstrate cooling of retained atoms. The subtraction is approximate near sharp pulse edges because only the net derivative is smoothed.
+
+`run_timeseries.csv` includes `T_equiv_x_K`, `nbar_x`, `P_n0_x`, `P_n0_x_absolute`, `mean_excitation_energy_x_hz`, `mean_excitation_energy_x_J`, `cooling_power_x_W`, `selection_cooling_power_x_W`, and `bound_cooling_power_x_W`, with matching y/z columns. `bound_cooling_power` denotes net minus loss selection. Energies use actual local level spacings, not mean occupation times a single trap frequency. In `run_ensemble.npz`, `pn_x` (and y/z) sums to one among survivors, whereas `pn_x_absolute` sums to `survival`; both have shape `(time, level)` and use `t_s`. Conditional observables are undefined once survival is zero. The solver still treats only the selected Raman axis coherently; adding these plots does not introduce Raman cooling on the other axes.
+
+## Raman states and polarization
+
+In **Raman (calibrated)**, choose **State A (cooling target)** and **State B
+(Raman partner)** from the `F=2` and `F=3` ground sublevels. They are saved as
+`raman.state_up: [F, mF]` and `raman.state_down: [F, mF]`. States must differ and
+have `|delta mF| <= 2`; the actual polarization can impose further selection
+rules. Old configurations default to `[3,3]` and `[2,2]`.
+
+The selected pair determines the coherent block, Breit-Rabi splitting, pump and
+Raman differential shifts, carrier calibration, and state labels. Population
+arrays retain the same order: `F=2,mF=-2..2`, then `F=3,mF=-3..3`. `P_up`,
+`P_down`, and `P_target` refer respectively to A, B, and A with motional `n=0`.
+The exported model summary records both states and their indices; the joint NPZ
+also records the spin order of the final Raman density-matrix block.
+
+Changing this pair does not prepare atoms or retune the optical pumps. Under
+**Initial state**, `spin_preset = raman_up` prepares A; `stretched` still means
+`|3,3>`. Optical pumping still follows the configured pump frequencies and
+polarizations.
+
+For the `|3,3> <-> |2,1>` linear-polarization case, select those two states and
+choose **Polarization input: jones**. Set both beam ellipticities to `0` degrees;
+orientations specify their linear polarization directions in the transverse
+beam frames. `+45` and `-45` degrees give circular polarization. The default
+**helicity** mode preserves existing `beam_helicities` settings. Both tones in
+each beam share that beam's polarization.
+
+`raman.wavelength_nm` sets the absorbed tone's optical wavelength, including
+detuning from D1 or D2 in the ensemble atomic calculation. With
+`frequency_mode = sideband_offset`, the beat follows the selected pair and its
+red sideband. In `absolute_beat` mode it is the signed frequency **emitted tone
+minus absorbed tone** for A -> B; reversing the internal energy ordering can
+make this negative. The JSON names `low` and `high` are retained for compatibility
+and assume A is higher in energy than B.
+
+The ensemble carrier measurement must belong to the selected pair, wavelength,
+and polarization; the simulator does not reinterpret a measurement on another
+transition. A zero atomic coupling produces an error naming the selected pair.
+Legacy `calibration = pathway` uses the supplied Rabi frequency directly and
+does not calculate its polarization dependence.
 
 ## Raman and lattice directions
 
@@ -63,7 +116,7 @@ raman.beam_high_direction                = [-1, 0, 0]
 
 Set the magnetic direction and pumping geometry to match the apparatus as well.
 In particular, the active example has the magnetic field along x: Raman beams
-parallel to that field cannot drive the modeled `|3,3> -> |2,2>` transition with
+parallel to that field cannot drive the default `|3,3> -> |2,2>` transition with
 the available transverse polarizations. A positive measured carrier frequency
 in that geometry is inconsistent, and calibration reports this explicitly.
 For an example with nonzero x-axis coupling, use a magnetic direction such as

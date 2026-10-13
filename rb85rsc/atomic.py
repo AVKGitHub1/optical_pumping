@@ -270,7 +270,7 @@ def load_atomic_data(cache_path: str | None = None, regenerate: bool = False) ->
 # ---------------------------------------------------------------------------
 # Magnetic-field validity
 # ---------------------------------------------------------------------------
-def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float) -> dict:
+def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float, up: int = UP, down: int = DOWN) -> dict:
     """Report the included Breit-Rabi correction and weak-field dipole validity.
 
     The legacy quadratic-error key is the correction relative to linear ground
@@ -279,7 +279,7 @@ def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float) -> dict:
     out = {"B_gauss": b_tesla * 1e4}
     lin = ad.ground_energy_linear_hz(b_tesla)
     exact = ad.ground_energy_hz(b_tesla)
-    err_ud = float((exact[UP] - exact[DOWN]) - (lin[UP] - lin[DOWN]))
+    err_ud = float((exact[up] - exact[down]) - (lin[up] - lin[down]))
     out["breit_rabi_source"] = "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors"
     out["ground_energy_model"] = "Breit-Rabi"
     out["raman_quadratic_zeeman_error_hz"] = err_ud

@@ -28,6 +28,14 @@ one of these lattice axes without rotating the trap. See
 [Raman and lattice directions](docs/experiment-workflow.md#raman-and-lattice-directions)
 for axis and polarization settings.
 
+The **Raman (calibrated)** tab now has **State A (cooling target)** and **State B
+(Raman partner)** selectors for the ground sublevels. The default remains
+`|3,3> <-> |2,2>`. For `|3,3> <-> |2,1>` with linear Raman beams, select those
+states, choose **Polarization input: jones**, and set both beam ellipticities to
+**0 degrees**. The wavelength field accepts D1 or D2 detunings. In ensemble mode,
+enter a carrier calibration for the selected transition and polarization.
+See [Raman states and polarization](docs/experiment-workflow.md#raman-states-and-polarization).
+
 If dependencies need installing into the existing environment:
 
 ```powershell
@@ -40,7 +48,9 @@ The pinned [requirements](requirements.txt) were tested with Python 3.14.6 on Wi
 
 Runs export configuration and metadata JSON, time-series CSV, population arrays, and PNG/PDF figures. Ensemble runs also export per-sample 3D populations and carrier-calibration diagnostics. Inspect the validity diagnostics alongside the observables.
 
-`P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches `F=3,mF=3,n=0` along the Raman-driven lattice (`z` in the active example). The full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
+For a 3D ensemble, the GUI's **Thermal x/y/z** tab compares each lattice's temperature estimate, excitation energy, ground-state fraction, and cooling/heating rate. **p(n,t)** shows all three motional distributions, and **Overview** shows all three mean occupations. The thermal plots separate preferential-loss cooling from the remaining energy change; all of these curves describe surviving atoms. The same data and figures are included in exports.
+
+`P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches selected Raman state A with `n=0` along the Raman-driven lattice (`F=3,mF=3` and `z` in the active example). The full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
 
 ## Documentation
 

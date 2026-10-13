@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, LogNorm
 from matplotlib.figure import Figure
 
-from .atomic import GROUND_STATES, UP, ground_label
+from .atomic import GROUND_STATES, K_B, ground_label
 
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 TEXT = "#0b0b0b"
@@ -61,13 +61,26 @@ def plot_spin_bars(ax, a):
     ax.legend(fontsize=7, frameon=False)
 
 
-def plot_traces(ax, a, keys=(("P_up", "P_up"), ("P_n0", "P_n0"), ("P_target", "P_target = P(3,3,0)"), ("P_F3", "P(F=3)"))):
+def _raman_labels(a):
+    model = a.get("model")
+    if model is not None:
+        return ground_label(model.up), ground_label(model.down)
+    summary = a.get("model_summary", {})
+    return tuple(ground_label(GROUND_STATES.index(tuple(summary.get(key, default))))
+                 for key, default in (("raman_state_up", [3, 3]), ("raman_state_down", [2, 2])))
+
+
+def plot_traces(ax, a, keys=None):
     s = a["series"]
     t = _ms(s["t_s"])
     ensemble = "T_equiv_axes_K" in a["final"]
+    up, down = _raman_labels(a)
+    if keys is None:
+        keys = (("P_up", f"P_up = P{up}"), ("P_n0", "P_n0"),
+                ("P_target", f"P_target: {up}, n=0"), ("P_F3", "P(F=3)"))
     if ensemble:
         axis = a["final"].get("raman_axis", "z")
-        keys = (("P_up", "spin |3,3>, among survivors"), ("P_n0", f"{axis} lattice n=0, among survivors"),
+        keys = (("P_up", f"spin {up}, among survivors"), ("P_n0", f"{axis} lattice n=0, among survivors"),
                 ("P_target_absolute", "target / initially loaded atoms"))
     for i, (k, lab) in enumerate(keys):
         ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
@@ -128,11 +141,18 @@ def plot_schedule(ax, a):
 def plot_nbar(ax, a):
     s = a["series"]
     t = _ms(s["t_s"])
-    ax.plot(t, s["nbar"], color=SERIES[0], lw=2)
+    all_axes = all(f"nbar_{axis}" in s for axis in "xyz")
+    if all_axes:
+        for i, axis in enumerate("xyz"):
+            ax.plot(t, s[f"nbar_{axis}"], color=SERIES[i], lw=2, label=_axis_label(a, axis))
+        ax.legend(fontsize=7, frameon=False)
+    else:
+        ax.plot(t, s["nbar"], color=SERIES[0], lw=2)
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("mean vibrational level index")
     axis = a["final"].get("raman_axis")
-    ax.set_title(f"Mean {axis + ' lattice' if axis else 'axial'} occupation, among survivors", fontsize=9)
+    ax.set_title("Mean occupation: x, y, z (survivors)" if all_axes else
+                 f"Mean {axis + ' lattice' if axis else 'axial'} occupation, among survivors", fontsize=9)
 
 
 def plot_photons(ax, a):
@@ -157,8 +177,11 @@ def plot_cooling_rate(ax, a):
     ax.set_title("Net cooling rate (Savitzky-Golay derivative)", fontsize=9)
 
 
-def plot_pnt(ax, a, fig=None):
-    pn = np.clip(a["pn"], 1e-8, None)
+def plot_pnt(ax, a, fig=None, axis=None):
+    if axis is None:
+        axis = a["final"].get("raman_axis")
+    distribution = a["pn_axes"][axis] if axis is not None and "pn_axes" in a else a["pn"]
+    pn = np.clip(distribution, 1e-8, None)
     t = _ms(a["series"]["t_s"])
     im = ax.imshow(
         pn.T, origin="lower", aspect="auto", cmap=SEQ, norm=LogNorm(1e-6, 1),
@@ -167,11 +190,90 @@ def plot_pnt(ax, a, fig=None):
     ax.grid(False)
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("n")
-    ax.set_title("Motional distribution p(n, t)", fontsize=9)
+    ax.set_title(f"{axis} lattice p(n, t), survivors" if axis else "Motional distribution p(n, t)", fontsize=9)
     if fig is not None:
         cb = fig.colorbar(im, ax=ax, pad=0.01)
         cb.ax.tick_params(labelsize=7)
         cb.set_label("p(n)", fontsize=8)
+
+
+def _axis_label(a, axis):
+    return axis + (" (Raman)" if axis == a["final"].get("raman_axis") else "")
+
+
+def draw_motional_axes(fig, a):
+    """GUI and export share the same per-axis population maps."""
+    if "pn_axes" not in a:
+        plot_pnt(_new(fig, 111), a, fig)
+        return
+    gs = fig.add_gridspec(1, 3)
+    for i, axis in enumerate("xyz"):
+        plot_pnt(_new(fig, gs[i]), a, fig, axis)
+    fig.suptitle("Motional distributions in local x, y, z — conditioned on survival", fontsize=10)
+
+
+def draw_thermal_axes(fig, a):
+    """Temperatures, energies, ground fractions, and loss-selection diagnostics."""
+    if "pn_axes" not in a:
+        ax = fig.add_subplot(111)
+        ax.axis("off")
+        ax.text(.5, .5, "Three-axis thermal plots require a 3D spatial ensemble run.\n"
+                "This run models motion along one trap axis.", ha="center", va="center", wrap=True)
+        return
+    s = a["series"]
+    t = _ms(s["t_s"])
+    gs = fig.add_gridspec(2, 3)
+    panels = (("T_equiv_{}_K", 1e6, "Energy-matched temperature", "Temperature estimate (uK)"),
+              ("mean_excitation_energy_{}_J", 1e6 / K_B, "Excitation above the ground state", "Mean energy / kB (uK)"),
+              ("P_n0_{}", 1., "Motional ground-state fractions", "P(n=0 | survived)"))
+    for column, (key, scale, title, ylabel) in enumerate(panels):
+        ax = _new(fig, gs[0, column])
+        for i, axis in enumerate("xyz"):
+            values = np.asarray(s[key.format(axis)]) * scale
+            values = np.where(np.isfinite(values), values, np.nan)
+            ax.plot(t, values, color=SERIES[i], lw=2, label=_axis_label(a, axis))
+        ax.set_title(title, fontsize=9)
+        ax.set_xlabel("time (ms)")
+        ax.set_ylabel(ylabel)
+        ax.legend(fontsize=7, frameon=False)
+        if column == 2:
+            ax.set_ylim(-.02, 1.02)
+        if column == 0 and any(not np.all(np.isfinite(s[f"T_equiv_{axis}_K"])) for axis in "xyz"):
+            ax.text(.02, .02, "Gaps: no finite temperature estimate", transform=ax.transAxes, fontsize=7)
+    reference = None
+    for i, axis in enumerate("xyz"):
+        ax = _new(fig, gs[1, i], **({"sharey": reference} if reference is not None else {}))
+        if reference is None:
+            reference = ax
+        for j, (key, label, style) in enumerate((("cooling_power", "Net", "-"),
+                                                ("selection_cooling_power", "Loss selection", "--"),
+                                                ("bound_cooling_power", "Net minus loss", ":"))):
+            ax.plot(t, s[f"{key}_{axis}_W"] * 1e3 / K_B, color=SERIES[j], lw=1.8, ls=style, label=label)
+        ax.axhline(0, color=MUTED, lw=.8)
+        ax.set_title(f"{_axis_label(a, axis)}: cooling and heating", fontsize=9)
+        ax.set_xlabel("time (ms)")
+        ax.set_ylabel("Energy removal / kB (uK/ms)")
+        ax.legend(fontsize=7, frameon=False)
+    if len(a.get("segments", [])) <= 8:
+        for ax in fig.axes:
+            for seg in a.get("segments", [])[:-1]:
+                ax.axvline(seg.t1 * 1e3, color=MUTED, ls=":", lw=.7)
+    fig.suptitle("Local x, y, z motion among surviving atoms\n"
+                 "Temperature is an energy-matched estimate; distributions need not be thermal.", fontsize=10)
+    fig.supxlabel("Positive rates = cooling; negative = heating. Net uses a smoothed energy derivative.\n"
+                  "Loss selection is preferential escape; net minus loss includes Raman and recoil dynamics.", fontsize=8)
+
+
+def thermal_axes_figure(a):
+    fig = Figure(figsize=(13, 8), facecolor="white", layout="constrained")
+    draw_thermal_axes(fig, a)
+    return fig
+
+
+def motional_axes_figure(a):
+    fig = Figure(figsize=(12, 4.5), facecolor="white", layout="constrained")
+    draw_motional_axes(fig, a)
+    return fig
 
 
 def plot_joint(ax, a, fig=None, nshow=None):
@@ -190,8 +292,10 @@ def plot_joint(ax, a, fig=None, nshow=None):
 def diagnostics_text(a) -> str:
     f = a["final"]
     v = a["validity"]
+    up, down = _raman_labels(a)
     lines = [
         f"MODEL VALIDITY: {STATUS_TEXT[v.status]}",
+        f"Raman pair: A={up} <-> B={down}; P_up and target refer to A, P_down to B.",
         f"P_up={f['P_up']:.4f}  P_n0={f['P_n0']:.4f}  P_target={f['P_target']:.4f}  (P_up*P_n0={f['P_up_times_P_n0']:.4f})",
         *([f"populations are per trapped atom: trapped {f['P_trapped']:.4f} (lost {f['lattice_loss']:.4f}); of all atoms: "
            f"P_up={f['P_up_absolute']:.4f}  P_n0={f['P_n0_absolute']:.4f}  P_target={f['P_target_absolute']:.4f}"] if f.get("lattice_loss") is not None else []),
@@ -199,7 +303,7 @@ def diagnostics_text(a) -> str:
         + (f"T_equiv={f['T_equiv_K'] * 1e6:.3g} uK" if f['T_equiv_K'] is not None else "T_equiv undefined")
         + f" [{f['T_equiv_note']}]",
         f"photons/atom: pump {f['photons']['spin_pump']:.3g}, repump {f['photons']['repump']:.3g}, Raman {f['photons']['raman_scatter']:.3g}",
-        f"target |3,3> scattering rate {_fmt_number(f['target_state_scattering_rate_per_s'])} /s; quanta removed per photon {f['net_quanta_removed_per_photon']}",
+        f"target {up} scattering rate {_fmt_number(f['target_state_scattering_rate_per_s'])} /s; quanta removed per photon {f['net_quanta_removed_per_photon']}",
         f"t(P_up>={f['spin_threshold']}) = {_fmt_t(f['time_to_spin_threshold_s'])};  t(P_target>={f['joint_threshold']}) = {_fmt_t(f['time_to_joint_threshold_s'])}",
         f"conservation err {f['max_conservation_error']:.2g}; min eig {f['min_eigenvalue']:.2g}; boundary pop {_fmt_number(f['max_boundary_population'])}; overflow {f['final_overflow']:.2g}",
         f"solver {f['solver']}, wall {f['wall_time_s']:.1f} s",
@@ -209,6 +313,12 @@ def diagnostics_text(a) -> str:
         lines.insert(1, f"Raman cooling axis: local {f.get('raman_axis', 'z')}; n and target refer to this lattice.")
         lines.insert(4, "Axis temperature proxies (uK): " + ", ".join(f"{axis}={_fmt_number(temp * 1e6 if temp is not None else None)}" for axis, temp in f["T_equiv_axes_K"].items()))
         lines.insert(4, f["loss_label"] + f": {f['well_loss_fraction_no_recapture']:.4f}")
+        if "T_equiv_axes_initial_K" in f:
+            lines.insert(5, "Axis temperature estimates, initial -> final (uK): " + ", ".join(
+                f"{axis}: {_fmt_number(f['T_equiv_axes_initial_K'][axis] * 1e6 if f['T_equiv_axes_initial_K'][axis] is not None else None)}"
+                f" -> {_fmt_number(f['T_equiv_axes_K'][axis] * 1e6 if f['T_equiv_axes_K'][axis] is not None else None)}" for axis in "xyz"))
+            lines.insert(6, "Thermal x/y/z plots separate net energy removal from preferential-loss selection; "
+                         "a falling survivor temperature alone does not establish Raman cooling.")
     for cat, st, msg in v.items:
         lines.append(f"[{STATUS_TEXT[st]:7s}] {cat}: {msg}")
     return "\n".join(lines)
@@ -299,7 +409,7 @@ def comparison_figure(results: dict) -> Figure:
 
 
 METRICS = (("P_up", "final P_up"), ("P_n0", "final P_n0"), ("P_target", "final P_target"), ("nbar", "final nbar"),
-           ("photons_total", "photons / atom"), ("target_state_scattering_rate_per_s", "|3,3> scattering rate (1/s)"))
+           ("photons_total", "photons / atom"), ("target_state_scattering_rate_per_s", "target state scattering rate (1/s)"))
 
 
 def scan_figure(scan) -> Figure:

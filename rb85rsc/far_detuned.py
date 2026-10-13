@@ -139,12 +139,12 @@ class DLineResponse:
         denom = 1 / (2 * np.pi * (frequency_hz - nu)) - 1 / (2 * np.pi * (frequency_hz + nu))
         return np.sum(np.abs(d * self.eunit / at.HBAR) ** 2 * denom, axis=0) / (8 * np.pi)
 
-    def raman_hz(self, low_hz, high_hz, eps_low, eps_high):
+    def raman_hz(self, low_hz, high_hz, eps_low, eps_high, up=at.UP, down=at.DOWN):
         """Complex up->down Rabi / 2pi per sqrt(I_low I_high)."""
-        dl = self.absorption(eps_low)[:, at.UP]
-        dh = self.absorption(eps_high)[:, at.DOWN]
-        den = 1 / (2 * np.pi * (low_hz - (self.ee - self.eg[at.UP])))
-        den += 1 / (2 * np.pi * (high_hz - (self.ee - self.eg[at.DOWN])))
+        dl = self.absorption(eps_low)[:, up]
+        dh = self.absorption(eps_high)[:, down]
+        den = 1 / (2 * np.pi * (low_hz - (self.ee - self.eg[up])))
+        den += 1 / (2 * np.pi * (high_hz - (self.ee - self.eg[down])))
         return np.sum(dl * dh.conj() * den) * self.eunit**2 / (8 * np.pi * at.HBAR**2)
 
     def scattering_amplitudes(self, frequency_hz, eps):
@@ -195,11 +195,11 @@ def envelope(position_um, direction, waist_um):
 
 def raman_fields(cfg, response):
     rc = cfg.raman
-    dirs = (rc.beam_low_direction, rc.beam_high_direction)
-    eps = [pol.jones_field_vector(k, 45 * h, 0, cfg.magnetic.direction) for k, h in zip(dirs, rc.beam_helicities)]
+    up, down = rc.state_indices()
+    eps = rc.field_vectors(cfg.magnetic.direction)
     low = at.C_LIGHT / (rc.wavelength_nm * 1e-9)
-    high = low + response.eg[at.UP] - response.eg[at.DOWN]
-    paths = np.asarray([[response.raman_hz(low, high, a, b) for b in eps] for a in eps])
+    high = low + response.eg[up] - response.eg[down]
+    paths = np.asarray([[response.raman_hz(low, high, a, b, up, down) for b in eps] for a in eps])
     return low, high, eps, paths
 
 
@@ -215,14 +215,17 @@ def calibrate_carrier(cfg, response):
     Contrast is visibility only and never scales initial atom populations.
     """
     rc, ec = cfg.raman, cfg.ensemble
+    up, down = rc.state_indices()
     axes = pol.lattice_frame(cfg.trap.axis, ec.transverse_reference_direction)
     ra = pol.lattice_axis_index(rc.beam_low_direction, axes)
     lattice = cfg.lattice_parameters(ra, response.atom.mass_kg)
     temperature = cfg.initial.temperature_k if ra == 2 else ec.transverse_temperature_k
     ensemble_inputs = {k: getattr(ec, k) for k in ("cloud_radius_um", "lattice_waist_um", "phase_offset_deg", "calibration_samples", "transverse_reference_direction")}
     raman_inputs = {k: getattr(rc, k) for k in ("carrier_rabi_hz", "wavelength_nm", "beam_low_direction", "beam_high_direction",
-                    "tone_powers_low", "tone_powers_high", "beam_beat_phase_deg", "beam_helicities", "waist_um", "flop_contrast", "flop_decay_periods", "carrier_decay_mode")}
-    keydata = dict(format=8, atom=response.source, raman=raman_inputs, ensemble=ensemble_inputs,
+                    "tone_powers_low", "tone_powers_high", "beam_beat_phase_deg", "beam_helicities", "waist_um", "flop_contrast", "flop_decay_periods", "carrier_decay_mode",
+                    "state_up", "state_down", "polarization_mode", "beam_low_ellipticity_deg", "beam_high_ellipticity_deg",
+                    "beam_low_orientation_deg", "beam_high_orientation_deg")}
+    keydata = dict(format=9, atom=response.source, raman=raman_inputs, ensemble=ensemble_inputs,
                    trap=cfg.to_dict()["trap"], lattice=lattice.__dict__, magnetic=cfg.magnetic.__dict__, temperature=temperature,
                    seed=cfg.numerics.seed)
     key = hashlib.sha256(json.dumps(keydata, sort_keys=True).encode()).hexdigest()[:24]
@@ -251,7 +254,13 @@ def calibrate_carrier(cfg, response):
         weights.extend(mo.boltzmann_pn(site.energies_hz, temperature) / len(xyz))
     cs, weights = np.asarray(cs), np.asarray(weights)
     if weights @ cs**2 < 1e-24:
-        raise ValueError("No carrier coupling for the specified Raman polarizations, magnetic direction, and tone phases; cannot infer intensity from a positive measured Rabi frequency. Beams parallel to the magnetic field cannot drive the modeled |3,3> to |2,2> transition with the available transverse polarizations.")
+        message = (f"No carrier coupling for the selected Raman pair {at.ground_label(up)} -> {at.ground_label(down)} "
+                   "with these polarizations, magnetic direction, and tone phases; cannot infer intensity from a positive measured Rabi frequency.")
+        if (abs(rc.state_up[1] - rc.state_down[1]) == 1
+                and all(np.linalg.norm(np.cross(pol.unit(k), pol.unit(cfg.magnetic.direction))) < 1e-8
+                        for k in (rc.beam_low_direction, rc.beam_high_direction))):
+            message += " Beams parallel to the magnetic field have no pi component and cannot drive this delta-mF=1 pair."
+        raise ValueError(message)
     curvature_intensity = rc.carrier_rabi_hz / np.sqrt(weights @ cs**2)
     t = np.linspace(0, 4 / rc.carrier_rabi_hz, 161)
     tau = rc.flop_decay_periods / rc.carrier_rabi_hz
@@ -294,7 +303,8 @@ def calibrate_carrier(cfg, response):
         for ep, power in zip(eps, powers):
             scattering += intensity * power * (abs(response.scattering_amplitudes(freq, ep))**2).sum(axis=(1, 2))
             shifts += intensity * power * response.shift_hz(freq, ep)
-    result = dict(cache_key=key, calibration_model_version=8, carrier_decay_mode=rc.carrier_decay_mode,
+    result = dict(cache_key=key, calibration_model_version=9, carrier_decay_mode=rc.carrier_decay_mode,
+                  raman_state_up=list(rc.state_up), raman_state_down=list(rc.state_down),
                   lattice_axis="xyz"[ra], lattice_direction_lab=axis.tolist(), lattice_parameters=lattice.__dict__,
                   temperature_k=temperature,
                   intensity_calibration="rms_carrier_initial_curvature" if modeled else "synthetic_measured_envelope_fit",
@@ -312,7 +322,7 @@ def calibrate_carrier(cfg, response):
                   curvature_intensity_w_m2=float(curvature_intensity),
                   phase_averaged_central_raman_scattering_by_spin_s={at.ground_label(i): float(scattering[i]) for i in range(12)},
                   phase_averaged_central_raman_light_shifts_by_spin_hz={at.ground_label(i): float(shifts[i]) for i in range(12)},
-                  phase_averaged_central_differential_shift_hz=float(shifts[at.UP] - shifts[at.DOWN]),
+                  phase_averaged_central_differential_shift_hz=float(shifts[up] - shifts[down]),
                   pathway_rabi_per_intensity_hz=[[dict(real=float(v.real), imag=float(v.imag)) for v in row] for row in paths],
                   note=("Modeled spatial/thermal carrier decay; intensity fixes RMS local carrier frequency to the supplied measured frequency (initial-curvature convention). No fitted homogeneous damping. The reported envelope is a comparison only, not a calibration constraint. The inhomogeneous 1/e time is a first crossing, not an exponential fit. Visibility does not remove atoms." if modeled else "Fit to a synthetic damped carrier trace reconstructed from the measurement summary, not raw data. Inhomogeneity included first; residual noise constrained nonnegative. Visibility does not remove atoms."),
                   times_s=t.tolist(), summary_trace=target.tolist(), fitted_trace=trace.tolist(),

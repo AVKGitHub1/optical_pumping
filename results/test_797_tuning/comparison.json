@@ -1,0 +1,607 @@
+{
+  "source_run": "examples/test_797",
+  "candidate_config": "examples/test_797_sigma_pi.json",
+  "yield_definition": "Fraction of initially loaded, locally bound atoms, in F=3,mF=3 and n_x=0 (x target), or n_x=n_y=n_z=0 (3D target). Loading efficiency is not modeled.",
+  "changes": {
+    "raman_state_down": [
+      2,
+      2
+    ],
+    "magnetic_direction": [
+      0,
+      0,
+      1
+    ],
+    "spin_pump_direction": [
+      0,
+      0,
+      1
+    ],
+    "repump_direction": [
+      0,
+      1,
+      0
+    ],
+    "raman_beam1_linear_orientation_deg": 90,
+    "raman_beam2_linear_orientation_deg": 0
+  },
+  "physical_geometry": "Raman propagation remains +/-x. B is along z. Beam 1 is linear along y (equal sigma +/- components); beam 2 is linear along z (pi). Spin pump follows B with sigma+; geometry-mode repump rotates to y and remains linear perpendicular to B.",
+  "unchanged": "Raman wavelength 797 nm; modeled carrier RMS 5 kHz; offset -5 kHz; 4 ms Raman+pumps then 1 ms pumps; 15 uK central well depths; initial Tx=Ty=10 uK, Tz=50 uK; same cloud and beam waists.",
+  "calibration_note": "Carrier frequency is held fixed as a model input, not a new experimental measurement. Recalibrate actual powers/carrier flops for the new pair and geometry. The original inferred large scalar Stark shifts are inconsistent with treating the Raman-induced change of confinement as negligible.",
+  "limitations": [
+    "Candidate is a tested starting point, not a global optimum.",
+    "Only x has coherent Raman cooling; y/z still receive recoil and preferential loss.",
+    "Temperature is a survivor-conditioned energy proxy, not a proof of thermalization.",
+    "No trap-basis deformation, transport or recapture; motional secular approximation remains a warning.",
+    "Quick screen uses 8 fixed samples; selected cases rerun at 64. Exports use 51 output times; saved original/candidate GUI config use 201."
+  ],
+  "main_comparison": [
+    {
+      "case": "saved_original",
+      "samples": 64,
+      "dt_us": 2.0,
+      "survival": 0.2359104741289917,
+      "target_x_absolute": 0.07299025421135216,
+      "target_3d_absolute": 0.006967831185885116,
+      "spin_A_survivors": 0.9707437879319492,
+      "nx0_survivors": 0.32266651133014956,
+      "T_axes_K": {
+        "x": 4.59130984492841e-06,
+        "y": 5.8036249191461726e-06,
+        "z": 7.0462520729170914e-06
+      },
+      "photons": {
+        "spin_pump": 2.5508409122053464,
+        "repump": 2.5208781465183048,
+        "raman_scatter": 2.3891481307780578,
+        "lattice_scatter": 0.006782016847203189
+      },
+      "power_per_tone_per_beam_W": 9.755073417965532,
+      "validity": "warning"
+    },
+    {
+      "case": "raman_off",
+      "samples": 64,
+      "dt_us": 2.0,
+      "survival": 0.5309982311078402,
+      "target_x_absolute": 0.13145208841574454,
+      "target_3d_absolute": 0.009939781174346475,
+      "spin_A_survivors": 0.9898233737025383,
+      "nx0_survivors": 0.25298686412688814,
+      "T_axes_K": {
+        "x": 6.861407648296925e-06,
+        "y": 7.401942431407516e-06,
+        "z": 1.2458431131198457e-05
+      },
+      "photons": {
+        "spin_pump": 2.1975056515667006,
+        "repump": 1.347817937723806,
+        "raman_scatter": 0.0,
+        "lattice_scatter": 0.010108987356872304
+      },
+      "secular_ratio": 0.48043560753500664,
+      "mean_energy_initial_J": 5.03810363228349e-29,
+      "mean_energy_final_J": 4.677857155939533e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 8.497392366741118e-30,
+        "y": 4.2347108504478275e-30,
+        "z": 8.468953388041015e-30
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -4.904804921851495e-30,
+        "y": -1.9592601620802372e-30,
+        "z": -2.702898763439245e-30
+      },
+      "power_per_tone_per_beam_W": 9.755073417965532,
+      "wall_time_s": 6.615629500010982,
+      "validity": "warning",
+      "max_conservation_error": 4.440892098500626e-16
+    },
+    {
+      "case": "sigma_pi_5k",
+      "samples": 64,
+      "dt_us": 2.0,
+      "survival": 0.3961377534605238,
+      "target_x_absolute": 0.24861885196636357,
+      "target_3d_absolute": 0.02079069193774338,
+      "spin_A_survivors": 0.9794428031024767,
+      "nx0_survivors": 0.6372688075574928,
+      "T_axes_K": {
+        "x": 2.1830451688479304e-06,
+        "y": 6.003724574090808e-06,
+        "z": 8.286416748873553e-06
+      },
+      "photons": {
+        "spin_pump": 2.6027949991251003,
+        "repump": 3.004764950498976,
+        "raman_scatter": 0.0013388143553639722,
+        "lattice_scatter": 0.00854797739090011
+      },
+      "secular_ratio": 0.3013642167656445,
+      "mean_energy_initial_J": 5.03810363228349e-29,
+      "mean_energy_final_J": 1.8841654774569018e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 9.579257035985878e-30,
+        "y": 1.8216079925760846e-29,
+        "z": 1.8762840242932392e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": 2.1905636675619923e-29,
+        "y": -1.0920252265069763e-29,
+        "z": -6.557894054328748e-30
+      },
+      "power_per_tone_per_beam_W": 0.004300917916458766,
+      "wall_time_s": 77.53371069999412,
+      "validity": "warning",
+      "max_conservation_error": 3.3306690738754696e-14
+    },
+    {
+      "case": "sigma_pi_off",
+      "samples": 64,
+      "dt_us": 2.0,
+      "survival": 0.5269969186098714,
+      "target_x_absolute": 0.1263105631617698,
+      "target_3d_absolute": 0.009991311878606435,
+      "spin_A_survivors": 0.9891308005824575,
+      "nx0_survivors": 0.24485179661709666,
+      "T_axes_K": {
+        "x": 7.343544980735666e-06,
+        "y": 7.1415933260405035e-06,
+        "z": 1.1167647097400723e-05
+      },
+      "photons": {
+        "spin_pump": 2.1814352529666263,
+        "repump": 1.3334375005593804,
+        "raman_scatter": 0.0,
+        "lattice_scatter": 0.01002765140118474
+      },
+      "secular_ratio": 0.3013642167656445,
+      "mean_energy_initial_J": 5.03810363228349e-29,
+      "mean_energy_final_J": 4.782190886928148e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 4.54379534798289e-30,
+        "y": 6.771695479935982e-30,
+        "z": 1.0470675869580993e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -1.9668870191255105e-30,
+        "y": -3.9597433150957865e-30,
+        "z": -3.444393952871894e-30
+      },
+      "power_per_tone_per_beam_W": 0.004300917916458766,
+      "wall_time_s": 5.3811747001018375,
+      "validity": "warning",
+      "max_conservation_error": 8.881784197001252e-16
+    }
+  ],
+  "quick_screen": [
+    {
+      "case": "baseline",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.2247875493876735,
+      "target_x_absolute": 0.06726665000927798,
+      "target_3d_absolute": 0.00584079576615108,
+      "spin_A_survivors": 0.9887373430962678,
+      "nx0_survivors": 0.30223791271372685,
+      "T_axes_K": {
+        "x": 4.830347837945437e-06,
+        "y": 5.738074077250899e-06,
+        "z": 6.489155694309309e-06
+      },
+      "photons": {
+        "spin_pump": 2.538952628331723,
+        "repump": 2.504012631801959,
+        "raman_scatter": 2.6049959627739874,
+        "lattice_scatter": 0.006596277606145834
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.0387868205216013e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 3.705097266991724e-29,
+        "y": 1.5043011379604838e-29,
+        "z": 2.7735662062495523e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -2.2174017593819824e-29,
+        "y": -8.618724770696854e-30,
+        "z": -1.3327332606400332e-29
+      },
+      "power_per_tone_per_beam_W": 9.755073417965532,
+      "wall_time_s": 30.975959399947897,
+      "validity": "warning",
+      "max_conservation_error": 1.4770407119613083e-12
+    },
+    {
+      "case": "raman_off",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.526860532985966,
+      "target_x_absolute": 0.12587060722755655,
+      "target_3d_absolute": 0.00908060130518978,
+      "spin_A_survivors": 0.9994549009173013,
+      "nx0_survivors": 0.23905941134872388,
+      "T_axes_K": {
+        "x": 6.889505310126146e-06,
+        "y": 7.404022621418876e-06,
+        "z": 1.216651457754802e-05
+      },
+      "photons": {
+        "spin_pump": 2.20688117318448,
+        "repump": 1.3520970672422896,
+        "raman_scatter": 0.0,
+        "lattice_scatter": 0.009915118192798127
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.985332061931846e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.0667976243287123e-29,
+        "y": 4.097050199562079e-30,
+        "z": 8.21052967837826e-30
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -5.239964266773643e-30,
+        "y": -2.016317237119717e-30,
+        "z": -2.8856080636310666e-30
+      },
+      "power_per_tone_per_beam_W": 9.755073417965532,
+      "wall_time_s": 1.7312669998500496,
+      "validity": "warning",
+      "max_conservation_error": 8.881784197001252e-16
+    },
+    {
+      "case": "1k",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.4342303173598549,
+      "target_x_absolute": 0.10742487493179899,
+      "target_3d_absolute": 0.008389002574483405,
+      "spin_A_survivors": 0.9977001761519886,
+      "nx0_survivors": 0.24804057291376091,
+      "T_axes_K": {
+        "x": 6.3094864700604135e-06,
+        "y": 6.815463103415832e-06,
+        "z": 9.760925648907006e-06
+      },
+      "photons": {
+        "spin_pump": 2.262535810176778,
+        "repump": 1.60904356178351,
+        "raman_scatter": 0.7126074485477365,
+        "lattice_scatter": 0.009064273314929832
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.778299487075289e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.5597250096581183e-29,
+        "y": 6.350567487464777e-30,
+        "z": 1.2107006848962154e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -8.102237547695885e-30,
+        "y": -3.079899877551353e-30,
+        "z": -4.360191339177808e-30
+      },
+      "power_per_tone_per_beam_W": 1.9510146835931064,
+      "wall_time_s": 29.282372399931774,
+      "validity": "warning",
+      "max_conservation_error": 2.0248247523113605e-12
+    },
+    {
+      "case": "2k",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.3289806925323072,
+      "target_x_absolute": 0.0938725939786893,
+      "target_3d_absolute": 0.007906478898693519,
+      "spin_A_survivors": 0.9917232158183522,
+      "nx0_survivors": 0.2873088045411959,
+      "T_axes_K": {
+        "x": 5.271936639625265e-06,
+        "y": 6.34704582577483e-06,
+        "z": 8.004823206932652e-06
+      },
+      "photons": {
+        "spin_pump": 2.471714346542359,
+        "repump": 2.1342428731557215,
+        "raman_scatter": 1.2697595604022596,
+        "lattice_scatter": 0.007968637908660372
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.393243931598706e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 2.3639794089773086e-29,
+        "y": 9.059257699434256e-30,
+        "z": 1.805548567541309e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -1.2298469869451986e-29,
+        "y": -4.91417821621883e-30,
+        "z": -7.543470968728624e-30
+      },
+      "power_per_tone_per_beam_W": 3.9020293671862127,
+      "wall_time_s": 27.938751599984244,
+      "validity": "warning",
+      "max_conservation_error": 3.781863711083133e-12
+    },
+    {
+      "case": "prep_1k",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.4525978424327624,
+      "target_x_absolute": 0.11097508602523445,
+      "target_3d_absolute": 0.008523928379506218,
+      "spin_A_survivors": 0.9977272705790448,
+      "nx0_survivors": 0.2458345206250822,
+      "T_axes_K": {
+        "x": 6.434500102941582e-06,
+        "y": 6.9318194274923545e-06,
+        "z": 1.0190604567131972e-05
+      },
+      "photons": {
+        "spin_pump": 2.2829472194289524,
+        "repump": 1.5741540223291375,
+        "raman_scatter": 0.5096472494418576,
+        "lattice_scatter": 0.009356912161903536
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.824745127098619e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.4397199641563905e-29,
+        "y": 5.824238449148389e-30,
+        "z": 1.1209176531708842e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -7.363220372386599e-30,
+        "y": -2.810856311916878e-30,
+        "z": -3.989155662044415e-30
+      },
+      "power_per_tone_per_beam_W": 1.9510146835931064,
+      "wall_time_s": 21.980215900111943,
+      "validity": "warning",
+      "max_conservation_error": 2.036815160977312e-12
+    },
+    {
+      "case": "prep_1k_weak_pump",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.4595609805614578,
+      "target_x_absolute": 0.11148709127415424,
+      "target_3d_absolute": 0.008463838441490588,
+      "spin_A_survivors": 0.9877206044689828,
+      "nx0_survivors": 0.24613962561533098,
+      "T_axes_K": {
+        "x": 6.440276130003211e-06,
+        "y": 6.951002069831132e-06,
+        "z": 1.0277238935764266e-05
+      },
+      "photons": {
+        "spin_pump": 2.231068497366792,
+        "repump": 1.5291244021517403,
+        "raman_scatter": 0.5246369953246144,
+        "lattice_scatter": 0.009529910714405466
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.8247730771670753e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.4202919538714028e-29,
+        "y": 5.741135344596508e-30,
+        "z": 1.1005025660893503e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -7.168923677952527e-30,
+        "y": -2.713856293894626e-30,
+        "z": -3.822581336582387e-30
+      },
+      "power_per_tone_per_beam_W": 1.9510146835931064,
+      "wall_time_s": 19.56784230004996,
+      "validity": "warning",
+      "max_conservation_error": 2.824407374646398e-13
+    },
+    {
+      "case": "1k_offset0",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.4356644013359646,
+      "target_x_absolute": 0.10829226048374115,
+      "target_3d_absolute": 0.00842358958696621,
+      "spin_A_survivors": 0.9978815814117828,
+      "nx0_survivors": 0.24913867617280308,
+      "T_axes_K": {
+        "x": 6.298898912370646e-06,
+        "y": 6.8225409048745755e-06,
+        "z": 9.795722205385537e-06
+      },
+      "photons": {
+        "spin_pump": 2.256671716680395,
+        "repump": 1.5978119373627664,
+        "raman_scatter": 0.7130709115654896,
+        "lattice_scatter": 0.00907563771328983
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.772723018076097e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.5609880402644958e-29,
+        "y": 6.312038436681603e-30,
+        "z": 1.2019410889674123e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -8.059085383481319e-30,
+        "y": -3.0600058677598132e-30,
+        "z": -4.319898168053972e-30
+      },
+      "power_per_tone_per_beam_W": 1.9510146835931064,
+      "wall_time_s": 30.292070399969816,
+      "validity": "warning",
+      "max_conservation_error": 6.128431095930864e-13
+    },
+    {
+      "case": "1k_offsetm15",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.42152474400704487,
+      "target_x_absolute": 0.10818442537684607,
+      "target_3d_absolute": 0.008494106375891581,
+      "spin_A_survivors": 0.9962981992414909,
+      "nx0_survivors": 0.2576145992306356,
+      "T_axes_K": {
+        "x": 6.254399541132151e-06,
+        "y": 6.772409998219306e-06,
+        "z": 9.540450819571981e-06
+      },
+      "photons": {
+        "spin_pump": 2.3081405895336444,
+        "repump": 1.6980684031291728,
+        "raman_scatter": 0.708115987407015,
+        "lattice_scatter": 0.008959197822507457
+      },
+      "secular_ratio": 0.21619440426901212,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 4.782126351354667e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.583861629971459e-29,
+        "y": 6.51555692459362e-30,
+        "z": 1.2696781012367458e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -8.381897201701172e-30,
+        "y": -3.2357585260162504e-30,
+        "z": -4.687743840979984e-30
+      },
+      "power_per_tone_per_beam_W": 1.9510146835931064,
+      "wall_time_s": 30.166556200012565,
+      "validity": "warning",
+      "max_conservation_error": 1.6842083283563625e-12
+    },
+    {
+      "case": "sigma_pi_5k",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.38584670006084404,
+      "target_x_absolute": 0.24770480441069434,
+      "target_3d_absolute": 0.019710885128805276,
+      "spin_A_survivors": 0.987451335237222,
+      "nx0_survivors": 0.6463977225604963,
+      "T_axes_K": {
+        "x": 2.249686957491435e-06,
+        "y": 5.9841252784580886e-06,
+        "z": 7.920129517426859e-06
+      },
+      "photons": {
+        "spin_pump": 2.6200191549594667,
+        "repump": 3.077038458268769,
+        "raman_scatter": 0.0014284926729382157,
+        "lattice_scatter": 0.008408106971240545
+      },
+      "secular_ratio": 0.19837224240836368,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 2.082863413316964e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 1.1074576366787963e-29,
+        "y": 1.8980161241128733e-29,
+        "z": 1.917257112195301e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": 2.3338996569121047e-29,
+        "y": -1.16259420585631e-29,
+        "z": -6.964696783872185e-30
+      },
+      "power_per_tone_per_beam_W": 0.004300917916458766,
+      "wall_time_s": 20.237601599888876,
+      "validity": "warning",
+      "max_conservation_error": 2.7977620220553945e-14
+    },
+    {
+      "case": "sigma_pi_off",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.521473983210756,
+      "target_x_absolute": 0.12007709125907383,
+      "target_3d_absolute": 0.008890542841889953,
+      "spin_A_survivors": 0.9960276121124452,
+      "nx0_survivors": 0.2312064074021115,
+      "T_axes_K": {
+        "x": 7.370200027588943e-06,
+        "y": 7.163045367440481e-06,
+        "z": 1.0998564615791696e-05
+      },
+      "photons": {
+        "spin_pump": 2.176876073673571,
+        "repump": 1.3246440764545113,
+        "raman_scatter": 0.0,
+        "lattice_scatter": 0.009946222761898283
+      },
+      "secular_ratio": 0.19837224240836368,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 5.111516313610361e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 6.237087423852943e-30,
+        "y": 6.582244127121084e-30,
+        "z": 9.886570127614861e-30
+      },
+      "mean_energy_bound_removed_J": {
+        "x": -2.052406469357402e-30,
+        "y": -4.050299586039163e-30,
+        "z": -3.5319200250243524e-30
+      },
+      "power_per_tone_per_beam_W": 0.004300917916458766,
+      "wall_time_s": 1.7754551998805255,
+      "validity": "warning",
+      "max_conservation_error": 4.440892098500626e-16
+    },
+    {
+      "case": "prep_sigma_pi_5k",
+      "samples": 8,
+      "dt_us": 2.0,
+      "survival": 0.3967068590802754,
+      "target_x_absolute": 0.2455354053687106,
+      "target_3d_absolute": 0.019285756782986295,
+      "spin_A_survivors": 0.9873010452276235,
+      "nx0_survivors": 0.6233758835732508,
+      "T_axes_K": {
+        "x": 2.4018508670135093e-06,
+        "y": 6.070920235911714e-06,
+        "z": 8.139137695394859e-06
+      },
+      "photons": {
+        "spin_pump": 2.585809181038619,
+        "repump": 2.937192130929162,
+        "raman_scatter": 0.0009884512809779766,
+        "lattice_scatter": 0.008724541224220133
+      },
+      "secular_ratio": 0.19837224240836368,
+      "mean_energy_initial_J": 5.529627435558409e-29,
+      "mean_energy_final_J": 2.2512870100277667e-29,
+      "mean_energy_loss_removed_J": {
+        "x": 8.726729228800361e-30,
+        "y": 1.7570978718265453e-29,
+        "z": 1.803040125266431e-29
+      },
+      "mean_energy_bound_removed_J": {
+        "x": 2.4059374947345598e-29,
+        "y": -1.0566440871420784e-29,
+        "z": -6.307222617681572e-30
+      },
+      "power_per_tone_per_beam_W": 0.004300917916458766,
+      "wall_time_s": 16.679134499980137,
+      "validity": "warning",
+      "max_conservation_error": 2.0650148258027912e-14
+    }
+  ],
+  "timestep_check": {
+    "samples": 8,
+    "from_us": 2.0,
+    "to_us": 1.0,
+    "absolute_differences": {
+      "survival": 7.766003602416305e-07,
+      "target_x_absolute": 1.5148259313590984e-09,
+      "target_3d_absolute": 2.1068766755533153e-08
+    }
+  }
+}

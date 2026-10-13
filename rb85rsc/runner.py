@@ -24,7 +24,7 @@ ASSUMPTIONS = [
     "Rates through different excited sublevels are summed independently unless optical.path_model = kramers_heisenberg.",
     "Pump-induced ground Zeeman coherences neglected (secular in the Zeeman splitting, checked).",
     "Ground energies use analytic Breit-Rabi with cached ARC constants. Excited energies and all dipoles use the weak-field basis; excited-state mixing is diagnosed.",
-    "Calibrated Raman mode: only the |3,3> <-> |2,2> pair is coupled; Raman polarization imperfections enter only through the calibrated decay, shift, and scattering inputs.",
+    "Calibrated pathway Raman mode: only the configured state_up <-> state_down pair is coupled; Raman polarization imperfections enter only through the calibrated decay, shift, and scattering inputs.",
     "The up->down Raman operator imparts hbar*(k_low-k_high); its adjoint occupies the |up><down| Hamiltonian block. Exact motional overlaps are used; |n-m| > raman.max_sideband_order is dropped.",
     "raman.tone_layout = both_tones_both_beams: the four tone pathways add coherently (co-propagating ones carrier-only); the result depends on raman.lattice_phase_deg.",
     "Every optical scattering event applies absorption + emission recoil via a single displacement (excited lifetime << trap period); emission directions integrated over the dipole pattern.",
@@ -152,6 +152,8 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
         counts=res.counts,
         photon_counter_labels=np.array(["spin_pump", "repump", "raman_scatter"] + (["lattice_scatter"] if res.counts.shape[1] == 4 else [])),
         spin_labels=np.array([atomic.ground_label(i) for i in range(12)]),
+        raman_state_indices=np.array([a["model"].up, a["model"].down]),
+        raman_spin_labels=np.array([atomic.ground_label(i) for i in (a["model"].up, a["model"].down)]),
         rho_raman_block_final=res.rho_final if res.rho_final is not None else np.zeros(0),
         description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n along the Raman-driven lattice (model_summary.raman_axis; other axes marginalized in ensemble mode), "
                              "as fractions of all atoms (sum = 1 - overflow); divide by P[t].sum() for per-trapped-atom values"),
@@ -159,8 +161,12 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
     (outdir / f"{stem}_metadata.json").write_text(json.dumps(metadata(a), indent=2, default=_json_default))
     (outdir / f"{stem}_config.json").write_text(a["model"].cfg.to_json())
     if "ensemble_nodes" in a:
-        arrays = {"lattice_axes_lab": np.asarray([a["model_summary"]["lattice_axes_lab"][axis] for axis in "xyz"]),
+        arrays = {"t_s": res.t, "survival": a["series"]["P_trapped"],
+                  "lattice_axes_lab": np.asarray([a["model_summary"]["lattice_axes_lab"][axis] for axis in "xyz"]),
                   "raman_axis": np.asarray(a["model_summary"]["raman_axis"])}
+        for axis in a.get("pn_axes", {}):
+            arrays[f"pn_{axis}"] = a["pn_axes"][axis]
+            arrays[f"pn_{axis}_absolute"] = a["pn_axes_absolute"][axis]
         for i, (local, result) in enumerate(a["ensemble_nodes"]):
             arrays[f"node_{i}_position_um"] = local.position
             arrays[f"node_{i}_phase_rad"] = np.asarray(local.phase)
@@ -178,6 +184,12 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
             fig = carrier_calibration_figure(a["ensemble_details"]["calibration"])
             fig.savefig(outdir / f"{stem}_carrier_calibration.png", dpi=140)
             fig.savefig(outdir / f"{stem}_carrier_calibration.pdf")
+        if "pn_axes" in a:
+            from .plotting import thermal_axes_figure, motional_axes_figure
+            for name, build in (("thermal_axes", thermal_axes_figure), ("motional_axes", motional_axes_figure)):
+                fig = build(a)
+                fig.savefig(outdir / f"{stem}_{name}.png", dpi=140)
+                fig.savefig(outdir / f"{stem}_{name}.pdf")
     return outdir
 
 

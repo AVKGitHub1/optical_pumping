@@ -304,12 +304,12 @@ class LocalExperiment:
         # local Stark shifts. Never retune the beat separately for each node.
         up = eps + 2 * np.pi * (m.nu_ud_zeeman - m.nu_beat) + hu
         down = eps + hd
-        up = up + 2 * np.pi * scales["raman"] * (self.raman_shifts_hz[at.UP] + m.cfg.raman.differential_light_shift_hz)
-        down = down + 2 * np.pi * scales["raman"] * self.raman_shifts_hz[at.DOWN]
+        up = up + 2 * np.pi * scales["raman"] * (self.raman_shifts_hz[m.up] + m.cfg.raman.differential_light_shift_hz)
+        down = down + 2 * np.pi * scales["raman"] * self.raman_shifts_hz[m.down]
         H = np.zeros(self.raman_view(self.P0).shape[1:3] + (2 * nz, 2 * nz), complex)
         di = np.arange(2 * nz)
         local_shifts = self.raman_view(self.lattice_shifts_hz)
-        shifts = np.concatenate([local_shifts[at.UP], local_shifts[at.DOWN]], axis=-1)
+        shifts = np.concatenate([local_shifts[m.up], local_shifts[m.down]], axis=-1)
         H[..., di, di] = np.concatenate([up, down]) + 2 * np.pi * shifts
         V = .5 * m.omega_c * m.D * scales["raman"]
         n = np.arange(nz)
@@ -395,7 +395,7 @@ def solve_local(local, cfg, stop=None, progress=None):
     Pc = local.raman_view(P)
     rho = np.zeros(Pc.shape[1:3] + (2 * nz, 2 * nz), complex)
     di = np.arange(2 * nz)
-    rho[..., di, di] = np.concatenate([Pc[at.UP], Pc[at.DOWN]], axis=-1)
+    rho[..., di, di] = np.concatenate([Pc[m.up], Pc[m.down]], axis=-1)
     cn, loss = np.zeros(4), 0.
     histories, axial, transverse, energies, allcounts, losses, mins, coherences = [], [], [], [], [], [], [], []
     level_energies = [site.energies_hz - site.energies_hz[0] for site in local.sites]
@@ -426,7 +426,7 @@ def solve_local(local, cfg, stop=None, progress=None):
         gamma = m.cfg.raman.extra_coherence_decay_rate_s
         # Phenomenological extra gamma acts only on the Raman spin coherence.
         goutc = local.raman_view(gout)
-        pair_out = np.concatenate([goutc[at.UP], goutc[at.DOWN]], axis=-1)
+        pair_out = np.concatenate([goutc[m.up], goutc[m.down]], axis=-1)
         damp = (pair_out[..., :, None] + pair_out[..., None, :]) / 2
         damp[..., :nz, nz:] += gamma
         damp[..., nz:, :nz] += gamma
@@ -452,16 +452,16 @@ def solve_local(local, cfg, stop=None, progress=None):
                     raise SimulationStopped()
                 rho = U @ rho @ Uh
                 pd = rho[..., di, di].real
-                Pc[at.UP], Pc[at.DOWN] = pd[..., :nz], pd[..., nz:]
+                Pc[m.up], Pc[m.down] = pd[..., :nz], pd[..., nz:]
                 P, lf, dc = scattering.step(P, dt)
                 Pc = local.raman_view(P)
                 loss += lf.sum()
                 cn += dc
                 rho *= decay
-                rho[..., di, di] = np.concatenate([Pc[at.UP], Pc[at.DOWN]], axis=-1)
+                rho[..., di, di] = np.concatenate([Pc[m.up], Pc[m.down]], axis=-1)
                 rho = U @ rho @ Uh
                 pd = rho[..., di, di].real
-                Pc[at.UP], Pc[at.DOWN] = pd[..., :nz], pd[..., nz:]
+                Pc[m.up], Pc[m.down] = pd[..., :nz], pd[..., nz:]
                 steps += 1
             now = target
             if sample_index < len(ts) and abs(now - ts[sample_index]) < 1e-13:
@@ -479,20 +479,25 @@ def solve_local(local, cfg, stop=None, progress=None):
     return result
 
 
-def mixture_temperature(mean_hz, components, axis):
+def mixture_temperature(mean_hz, components, axis, sample_index=-1):
     """Fit energy to a mixture of local finite canonical spectra.
 
-    Spatial weights are the FINAL survivor weights; averaging temperatures is
-    not used. Returns NaN if no positive-temperature mixture can match energy.
+    Spatial weights are the survivor weights at the requested sample (final by
+    default); temperatures are not averaged. NaN means no temperature can be
+    inferred, including no survivors or a spectrum with no excited levels.
     """
     from scipy.optimize import brentq
     levels, weights = [], []
     for local, result in components:
         site = local.sites[axis]
         levels.append(site.energies_hz - site.energies_hz[0])
-        weights.append(result["P"][-1].sum())
-    weights = np.asarray(weights) / max(sum(weights), 1e-300)
+        weights.append(result["P"][sample_index].sum())
+    if not np.isfinite(mean_hz) or sum(weights) <= 0:
+        return np.nan
+    weights = np.asarray(weights) / sum(weights)
     upper_energy = sum(w * e.mean() for w, e in zip(weights, levels))
+    if upper_energy <= 0:
+        return np.nan
     if mean_hz > upper_energy + 1e-8:
         return np.nan
     if mean_hz <= 0:
@@ -502,6 +507,42 @@ def mixture_temperature(mean_hz, components, axis):
     def f(logt):
         return sum(w * (mo.boltzmann_pn(e, np.exp(logt)) @ e) for w, e in zip(weights, levels)) - mean_hz
     return float(np.exp(brentq(f, -40., 10.)))
+
+
+def axis_thermal_data(ts, components, survival, energy_hz, selection_power, derivative_window):
+    """Three-axis observables from local marginals and actual local spectra.
+
+    Energies/temperatures and conditional populations describe survivors.
+    Absolute marginals sum to the survival fraction, not one. The cooling
+    remainder subtracts the exact instantaneous loss-selection contribution
+    from the smoothed derivative; it includes all retained-state dynamics.
+    """
+    series, pn_axes, absolute_axes = {}, {}, {}
+    denominator = np.where(survival > 0, survival, np.nan)
+    for axis, label in enumerate("xyz"):
+        size = max(local.sites[axis].N for local, _ in components)
+        absolute = np.zeros((len(ts), size))
+        for local, result in components:
+            marginal = np.asarray(result["pn_axes"][axis])
+            absolute[:, :marginal.shape[1]] += marginal / len(components)
+        pn = absolute / denominator[:, None]
+        absolute_axes[label], pn_axes[label] = absolute, pn
+        energy = np.where(survival > 0, energy_hz[:, axis], np.nan)
+        temperature = np.array([mixture_temperature(e, components, axis, it) for it, e in enumerate(energy)])
+        cooling = -at.H * _derivative(ts, energy, derivative_window)
+        selection = np.where(survival > 0, selection_power[:, axis], np.nan)
+        series.update({
+            f"T_equiv_{label}_K": temperature,
+            f"nbar_{label}": pn @ np.arange(size),
+            f"P_n0_{label}": pn[:, 0],
+            f"P_n0_{label}_absolute": absolute[:, 0],
+            f"mean_excitation_energy_{label}_hz": energy,
+            f"mean_excitation_energy_{label}_J": at.H * energy,
+            f"cooling_power_{label}_W": cooling,
+            f"selection_cooling_power_{label}_W": selection,
+            f"bound_cooling_power_{label}_W": cooling - selection,
+        })
+    return series, pn_axes, absolute_axes
 
 
 def _check_stop(stop):
@@ -575,6 +616,7 @@ def _parallel_components(cfg, calibration, xyz, phases, beat, workers, stop, pro
 def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=None):
     started = time.perf_counter()
     cfg.validate()
+    up, down = cfg.raman.state_indices()
     worker_count = cfg.ensemble.workers if workers is None else workers
     if isinstance(worker_count, bool) or not isinstance(worker_count, (int, np.integer)) or worker_count < 1:
         raise ValueError("ensemble workers must be a positive integer")
@@ -597,8 +639,8 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
                     shift += response.shift_hz(freq, ep) * power * calibration["intensity_per_unit_tone_w_m2"]
             excited = [0, 0, 0]
             excited[central.raman_axis] = min(1, central.model.N - 1)
-            lattice_delta = central.lattice_shifts_hz[(at.UP, *excited)] - central.lattice_shifts_hz[at.DOWN, 0, 0, 0]
-            beat = (central.model.nu_ud_zeeman + central.model.nu_ref + shift[at.UP] - shift[at.DOWN]
+            lattice_delta = central.lattice_shifts_hz[(up, *excited)] - central.lattice_shifts_hz[down, 0, 0, 0]
+            beat = (central.model.nu_ud_zeeman + central.model.nu_ref + shift[up] - shift[down]
                     + lattice_delta + cfg.raman.differential_light_shift_hz + cfg.raman.red_sideband_offset_hz)
         xyz, phases = spatial_samples(cfg)
         components = []
@@ -634,6 +676,7 @@ def _solve_node(data, calibration, position, phase, beat):
 
 
 def analyze_ensemble(cfg, central, components, calibration, beat):
+    up, down = cfg.raman.state_indices()
     n = len(components)
     ra = central.raman_axis
     ts = components[0][1]["t"]
@@ -652,30 +695,25 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     spin, pn = normalized.sum(axis=2), normalized.sum(axis=1)
     energy /= safe[:, None]
     selection_power = at.H * (loss_energy_flux - energy * loss_flux[:, None]) / safe[:, None]
-    temperatures = [mixture_temperature(energy[-1, a], components, a) for a in range(3)]
+    thermal_series, pn_axes, pn_axes_absolute = axis_thermal_data(
+        ts, components, survival, energy, selection_power, cfg.analysis.derivative_window)
+    temperatures = [thermal_series[f"T_equiv_{axis}_K"][-1] for axis in "xyz"]
     mins = np.min([r["min_eig"] for _, r in components], axis=0)
     coh = sum(r["coherence"] for _, r in components) / n
     nbar = pn @ np.arange(nz)
-    series = dict(t_s=ts, P_up=spin[:, at.UP], P_down=spin[:, at.DOWN], P_F2=spin[:, :5].sum(axis=1), P_F3=spin[:, 5:].sum(axis=1),
-                  P_n0=pn[:, 0], P_target=normalized[:, at.UP, 0], P_n0_given_up=np.divide(normalized[:, at.UP, 0], spin[:, at.UP], out=np.zeros(len(ts)), where=spin[:, at.UP] > 0),
-                  P_trapped=survival, P_up_absolute=P[:, at.UP].sum(axis=1), P_n0_absolute=P[:, :, 0].sum(axis=1), P_target_absolute=P[:, at.UP, 0],
+    series = dict(t_s=ts, P_up=spin[:, up], P_down=spin[:, down], P_F2=spin[:, :5].sum(axis=1), P_F3=spin[:, 5:].sum(axis=1),
+                  P_n0=pn[:, 0], P_target=normalized[:, up, 0], P_n0_given_up=np.divide(normalized[:, up, 0], spin[:, up], out=np.zeros(len(ts)), where=spin[:, up] > 0),
+                  P_trapped=survival, P_up_absolute=P[:, up].sum(axis=1), P_n0_absolute=P[:, :, 0].sum(axis=1), P_target_absolute=P[:, up, 0],
                   nbar=nbar, mean_excitation_energy_J=at.H * energy[:, ra], mean_excitation_energy_hz=energy[:, ra],
                   fractional_energy_reduction=1 - energy[:, ra] / max(energy[0, ra], 1e-300),
                   cooling_rate_quanta_per_s=-_derivative(ts, nbar, cfg.analysis.derivative_window),
                   cooling_power_W=-at.H * _derivative(ts, energy[:, ra], cfg.analysis.derivative_window),
                   selection_cooling_power_W=selection_power[:, ra],
-                  # Full time-dependent energy-matched mixture temperatures are
-                  # expensive; compute with the appropriate weights at each time.
-                  T_equiv_K=np.full(len(ts), np.nan), photons_spin_pump=count[:, 0], photons_repump=count[:, 1],
+                  T_equiv_K=thermal_series[f"T_equiv_{'xyz'[ra]}_K"], photons_spin_pump=count[:, 0], photons_repump=count[:, 1],
                   photons_raman_scatter=count[:, 2], photons_lattice_scatter=count[:, 3], overflow=loss,
                   trace_plus_overflow_minus_1=survival + loss - 1, boundary_population=np.full(len(ts), np.nan),
                   min_eigenvalue=mins, raman_coherence_l1=coh)
-    for it in range(len(ts)):
-        temp_components = [(local, {"P": r["P"][it:it+1]}) for local, r in components]
-        series["T_equiv_K"][it] = mixture_temperature(energy[it, ra], temp_components, ra)
-    for axis, a in enumerate("xyz"):
-        series[f"mean_excitation_energy_{a}_hz"] = energy[:, axis]
-        series[f"selection_cooling_power_{a}_W"] = selection_power[:, axis]
+    series.update(thermal_series)
     for i in range(12):
         series[f"P{at.ground_label(i)}"] = spin[:, i]
     final = {k: float(v[-1]) for k, v in series.items() if k in ("P_up", "P_n0", "P_target", "P_n0_given_up", "P_trapped", "P_up_absolute", "P_n0_absolute", "P_target_absolute", "nbar", "mean_excitation_energy_J", "mean_excitation_energy_hz", "fractional_energy_reduction")}
@@ -683,6 +721,9 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     final.update(raman_axis="xyz"[ra], nbar_initial=float(nbar[0]), mean_excitation_energy_initial_J=float(at.H * energy[0, ra]),
                  P_up_times_P_n0=final["P_up"] * final["P_n0"], T_equiv_K=finite(temperatures[ra]),
                  T_equiv_axes_K={a: finite(t) for a, t in zip("xyz", temperatures)},
+                 T_equiv_axes_initial_K={a: finite(series[f"T_equiv_{a}_K"][0]) for a in "xyz"},
+                 nbar_axes={a: finite(series[f"nbar_{a}"][-1]) for a in "xyz"},
+                 P_n0_axes={a: finite(series[f"P_n0_{a}"][-1]) for a in "xyz"},
                  mean_excitation_energy_axes_hz={a: float(e) for a, e in zip("xyz", energy[-1])},
                  T_equiv_note="Energy-matched mixture of local bound canonical distributions, weighted by surviving spatial populations; proxy only. None means no finite positive-temperature match.",
                  final_pn_TVD_from_thermal=None, energy_observable_note=f"Actual local excitation energies per survivor, including loss selection; n_{'xyz'[ra]}=0 is not the 3D ground state.",
@@ -724,13 +765,13 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                  f"max optical rate / smallest local motional angular spacing across all axes = {secular_ratio:.3g}")
     target_rate, target_weight = 0., 0.
     for local, r in components:
-        rate = local.raman_view(local.operators(local.model.schedule[-1])[1])[at.UP, :, :, 0]
-        weight = local.raman_view(r["P_final_3d"])[at.UP, :, :, 0]
+        rate = local.raman_view(local.operators(local.model.schedule[-1])[1])[up, :, :, 0]
+        weight = local.raman_view(r["P_final_3d"])[up, :, :, 0]
         target_rate += np.sum(rate * weight)
         target_weight += weight.sum()
     final["target_state_scattering_rate_per_s"] = float(target_rate / target_weight) if target_weight > 0 else None
     final["P_3d_ground_absolute"] = float(sum(r["P_final_3d"][:, 0, 0, 0].sum() for _, r in components) / n)
-    final["P_target_3d_absolute"] = float(sum(r["P_final_3d"][at.UP, 0, 0, 0] for _, r in components) / n)
+    final["P_target_3d_absolute"] = float(sum(r["P_final_3d"][up, 0, 0, 0] for _, r in components) / n)
     if calibration.get("carrier_decay_mode") == "modeled":
         validity.add("carrier calibration", "ok", f"Modeled spatial/thermal decay; RMS carrier frequency = {calibration['modeled_rms_carrier_hz']:.6g} Hz fixes initial curvature. No fitted homogeneous damping; reported decay is not a calibration constraint or an experimental validation.")
     else:
@@ -748,6 +789,8 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     center_model.cfg = cfg
     center_model.nu_beat = beat
     summary = dict(N_motional=nz, eta_R=center_model.eta_R, nu_10_hz=center_model.nu_ref, nu_beat_hz=beat,
+                   raman_state_up=list(cfg.raman.state_up), raman_state_down=list(cfg.raman.state_down),
+                   raman_state_indices=[up, down], nu_ud_zeeman_hz=center_model.nu_ud_zeeman,
                    raman_axis="xyz"[ra], raman_direction_lab=central.axes_lab[ra].tolist(),
                    lattice_axes_lab={a: v.tolist() for a, v in zip("xyz", central.axes_lab)},
                    lattice_parameters={a: spec.__dict__ for a, spec in zip("xyz", central.lattices)},
@@ -756,15 +799,16 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                    calibration=calibration, lattice_optical_estimates=central.lattice_estimates,
                    selected_lattice_linear_polarizations=cfg.ensemble.lattice_linear_polarizations,
                    node_results=[dict(position_um=l.position.tolist(), phase_deg=float(np.rad2deg(l.phase) % 360),
-                                      depths_uk=l.depths.tolist(), survival=float(r["P"][-1].sum()), target_absolute=float(r["P"][-1, at.UP, 0])) for l, r in components])
+                                      depths_uk=l.depths.tolist(), survival=float(r["P"][-1].sum()), target_absolute=float(r["P"][-1, up, 0])) for l, r in components])
     result = RunResult(ts, P, loss, count, mins, coh, final["solver"], center_model.schedule, final["wall_time_s"],
                        notes=["3D recoil with Cartesian marginal approximation; absorbing local bound manifolds; Strang splitting"], rho_final=None)
-    return dict(series=series, final=final, validity=validity, pn=pn, P_final=normalized[-1], segments=center_model.schedule,
+    return dict(series=series, final=final, validity=validity, pn=pn, pn_axes=pn_axes, pn_axes_absolute=pn_axes_absolute,
+                P_final=normalized[-1], segments=center_model.schedule,
                 cooling_rate_method=f"Savitzky-Golay derivative of survivor mean local {'xyz'[ra]} energy / level index",
                 model=center_model, model_summary=summary, result=result, ensemble_nodes=components,
                 ensemble_details=dict(assumptions=[f"Initially loaded Gaussian cloud, conditional on local bound states; axial preparation mode {cfg.initial.motion_mode}, configured axial temperature {cfg.initial.temperature_k:g} K, transverse temperature {cfg.ensemble.transverse_temperature_k:g} K. Loading survival unspecified.",
                     "Uniform static Raman/lattice registration, not rapid temporal phase noise.",
-                    f"x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The Raman pair is coherent along {'xyz'[ra]}; other axes are population resolved.",
+                    f"x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected {at.ground_label(up)}<->{at.ground_label(down)} Raman pair is coherent along {'xyz'[ra]}; other axes are population resolved.",
                     "Emission Cartesian components use independent dipole marginals; recoil coherence transfer omitted.",
                     "ARC D1+D2 scattering includes fine/hyperfine interference and coherent same-tone beam absorption.",
                     "D-line diagonal trap shifts are estimates; higher excited states and hyperfine-mediated trap polarizability omitted.",

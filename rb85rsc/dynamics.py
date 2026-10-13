@@ -42,8 +42,8 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.linalg import expm
 
-from .atomic import DOWN, N_GROUND, UP
-from .model import COUNTERS, SPECTATOR_IDX, Model, SegmentOps, Validity
+from .atomic import N_GROUND
+from .model import COUNTERS, Model, SegmentOps, Validity
 from .motion import annihilation
 
 
@@ -96,6 +96,7 @@ class _Progress:
 class CoherentSolver:
     def __init__(self, model: Model, stop: threading.Event | None = None, progress=None):
         self.m = model
+        self.up, self.down, self.spectators = model.up, model.down, model.spectators
         self.stop = stop or threading.Event()
         self.progress = progress
         N = model.N
@@ -105,19 +106,19 @@ class CoherentSolver:
         self.ad = self.a.T.copy()
         self.two_n1 = 2.0 * np.arange(N) + 1.0
         self.nrhs = 0
-        self.n_spec = len(SPECTATOR_IDX)
+        self.n_spec = len(self.spectators)
         self.size = 3 * self.N2 + self.n_spec * N + 2 + len(COUNTERS)
-        self.up_sl = slice(UP * N, (UP + 1) * N)
-        self.dn_sl = slice(DOWN * N, (DOWN + 1) * N)
-        self.spec_idx = (SPECTATOR_IDX[:, None] * N + np.arange(N)[None, :]).ravel()
+        self.up_sl = slice(self.up * N, (self.up + 1) * N)
+        self.dn_sl = slice(self.down * N, (self.down + 1) * N)
+        self.spec_idx = (self.spectators[:, None] * N + np.arange(N)[None, :]).ravel()
 
     # -- packing ---------------------------------------------------------
     def pack(self, P0: np.ndarray) -> np.ndarray:
         N = self.N
         y = np.zeros(self.size, dtype=complex)
-        y[: self.N2] = np.diag(P0[UP]).ravel()
-        y[2 * self.N2 : 3 * self.N2] = np.diag(P0[DOWN]).ravel()
-        y[3 * self.N2 : 3 * self.N2 + self.n_spec * N] = P0[SPECTATOR_IDX].ravel()
+        y[: self.N2] = np.diag(P0[self.up]).ravel()
+        y[2 * self.N2 : 3 * self.N2] = np.diag(P0[self.down]).ravel()
+        y[3 * self.N2 : 3 * self.N2 + self.n_spec * N] = P0[self.spectators].ravel()
         return y
 
     def unpack(self, y):
@@ -132,9 +133,9 @@ class CoherentSolver:
     def populations(self, y) -> np.ndarray:
         A, _, Dm, Ps, _ = self.unpack(y)
         P = np.zeros((N_GROUND, self.N))
-        P[UP] = np.diag(A).real
-        P[DOWN] = np.diag(Dm).real
-        P[SPECTATOR_IDX] = Ps.real
+        P[self.up] = np.diag(A).real
+        P[self.down] = np.diag(Dm).real
+        P[self.spectators] = Ps.real
         return P
 
     def rho_block(self, y) -> np.ndarray:
@@ -281,7 +282,7 @@ class CoherentSolver:
             cn[i] = tail[2:]
             rho = self.rho_block(y)
             rho = 0.5 * (rho + rho.conj().T)
-            me[i] = min(np.linalg.eigvalsh(rho).min(), P[i][SPECTATOR_IDX].min())
+            me[i] = min(np.linalg.eigvalsh(rho).min(), P[i][self.spectators].min())
             coh[i] = np.abs(self.unpack(y)[1]).sum()
         return RunResult(ts, P, ov, cn, me, coh, "coherent", self.m.schedule, wall, self.nrhs,
                          rho_final=self.rho_block(y_final))
@@ -317,8 +318,8 @@ class RateSolver:
                         M[b + k, b + k + 1] += gh * (k + 1)
         worst = 0.0
         if o.vk:
-            gu = o.gout[UP * N : (UP + 1) * N]
-            gd = o.gout[DOWN * N : (DOWN + 1) * N]
+            gu = o.gout[m.up * N : (m.up + 1) * N]
+            gd = o.gout[m.down * N : (m.down + 1) * N]
             V = sum(Vk for _, Vk in o.vk)
             occ = np.ones(N, bool)
             if p_start is not None:
@@ -339,7 +340,7 @@ class RateSolver:
                     if den == 0:
                         continue
                     w = 0.5 * om**2 * g / (g**2 + dl**2)
-                    a, b = UP * N + i, DOWN * N + j
+                    a, b = m.up * N + i, m.down * N + j
                     M[a, a] -= w
                     M[b, a] += w
                     M[b, b] -= w

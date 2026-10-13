@@ -5,7 +5,7 @@ State space
 Ground sublevels s = 0..11 (see ``atomic.GROUND_STATES``) times vibrational
 levels n = 0..n_max (N = n_max + 1).  Population index = s*N + n.
 
-* The Raman pair {up=|3,3>, down=|2,2>} (x motion) keeps a full density matrix,
+* The selected Raman pair {up=A, down=B} times motion keeps a full density matrix,
   because the calibrated Raman coupling acts only there.
 * The other 10 sublevels keep motional populations only. Coherence transfer
   through scattering is omitted, including degenerate motional transitions.
@@ -53,11 +53,9 @@ import numpy as np
 from . import motion as mo
 from . import polarization as pol
 from .atomic import (
-    DOWN,
     GROUND_STATES,
     MU_B,
     N_GROUND,
-    SPECTATORS,
     UP,
     H,
     K_B,
@@ -110,6 +108,8 @@ class Model:
         if cfg.raman.calibration == "measured_carrier" and raman_path_coefficients is None:
             raise ConfigError("measured_carrier configs must run through runner.run (spatial calibration and 3D ensemble), not the legacy 1D Model")
         self.cfg = cfg
+        self.up, self.down = cfg.raman.state_indices()
+        self.spectators = np.array([i for i in range(N_GROUND) if i not in (self.up, self.down)])
         self.atom = atom or load_atomic_data()
         at = self.atom
         self.b_dir = pol.unit(cfg.magnetic.direction)
@@ -196,7 +196,7 @@ class Model:
             if np.any(Vk != 0):
                 self.vk_unit.append((float(f), Vk))
         eg = at.ground_energy_hz(self.B)
-        self.nu_ud_zeeman = float(eg[UP] - eg[DOWN])  # hyperfine + Breit-Rabi Zeeman
+        self.nu_ud_zeeman = float(eg[self.up] - eg[self.down])  # signed hyperfine + Breit-Rabi Zeeman
         self.nu_ud_ref = self.nu_ud_zeeman + rc.differential_light_shift_hz
         if rc.frequency_mode == "sideband_offset":
             self.nu_beat = self.nu_ud_ref + self.nu_ref + rc.red_sideband_offset_hz
@@ -245,9 +245,9 @@ class Model:
             spin = np.full(N_GROUND, 1.0 / N_GROUND)
         elif ic.spin_preset == "uniform_F3":
             spin = np.array([1.0 / 7 if f == 3 else 0.0 for f, _ in GROUND_STATES])
-        elif ic.spin_preset == "stretched":
+        elif ic.spin_preset in ("stretched", "raman_up"):
             spin = np.zeros(N_GROUND)
-            spin[UP] = 1.0
+            spin[UP if ic.spin_preset == "stretched" else self.up] = 1.0
         elif ic.spin_preset == "manifold_split":
             f3 = ic.f3_fraction
             spin = np.array([f3 / 7 if f == 3 else (1 - f3) / 5 for f, _ in GROUND_STATES])
@@ -295,8 +295,8 @@ class Model:
             if not pc.enabled or scale == 0:
                 continue
             r = self.rates[b]
-            u = 2 * np.pi * pc.light_shift_override_up_hz if pc.light_shift_override_up_hz is not None else r.light_shift[UP]
-            d = 2 * np.pi * pc.light_shift_override_down_hz if pc.light_shift_override_down_hz is not None else r.light_shift[DOWN]
+            u = 2 * np.pi * pc.light_shift_override_up_hz if pc.light_shift_override_up_hz is not None else r.light_shift[self.up]
+            d = 2 * np.pi * pc.light_shift_override_down_hz if pc.light_shift_override_down_hz is not None else r.light_shift[self.down]
             ls_u += scale * u
             ls_d += scale * d
         return ls_u, ls_d
@@ -326,15 +326,13 @@ class Model:
 
     # ------------------------------------------------------------------
     def raman_isolation(self) -> dict:
-        """Nearest unmodeled inter-hyperfine Raman channel relative to the drive."""
+        """Nearest other two-photon spin channel relative to the signed drive."""
         at = self.atom
         eg = at.ground_energy_hz(self.B)
         best = None
         for i, (f, m) in enumerate(GROUND_STATES):
-            if f != 3:
-                continue
             for j, (f2, m2) in enumerate(GROUND_STATES):
-                if f2 != 2 or abs(m - m2) > 2 or (i, j) == (UP, DOWN):
+                if i == j or abs(m - m2) > 2 or (i, j) == (self.up, self.down):
                     continue
                 nu = eg[i] - eg[j]
                 # Use actual level differences through the configured Raman
@@ -356,7 +354,7 @@ class Model:
     def static_validity(self) -> Validity:
         cfg = self.cfg
         v = Validity()
-        z = zeeman_validity(self.atom, self.B, self.nu_t)
+        z = zeeman_validity(self.atom, self.B, self.nu_t, self.up, self.down)
         self.zeeman = z
         v.add("magnetic field", z["status"], "; ".join(z["notes"]) or
               f"Breit-Rabi ground energies (correction to linear nu_ud {z['raman_quadratic_zeeman_error_hz']:.3g} Hz included; "
@@ -381,7 +379,7 @@ class Model:
         iso = self.raman_isolation()
         if self.omega_c > 0 and any(s.raman > 0 for s in self.schedule):
             st = "ok" if iso["ratio_to_carrier_rabi"] > 20 else ("warning" if iso["ratio_to_carrier_rabi"] > 3 else "invalid")
-            v.add("Raman isolation", st, f"only |3,3>-|2,2> Raman pair modeled; nearest unmodeled channel {iso['pair']} (sideband {iso['sideband']:+d}) "
+            v.add("Raman isolation", st, f"only {ground_label(self.up)}<->{ground_label(self.down)} Raman pair modeled; nearest unmodeled channel {iso['pair']} (sideband {iso['sideband']:+d}) "
                   f"is {iso['nearest_detuning_hz'] / 1e3:.4g} kHz from the drive = {iso['ratio_to_carrier_rabi']:.3g} x carrier Rabi "
                   "(conservative bound through max_sideband_order; unmodeled polarization strengths and light shifts unknown)")
             if cfg.raman.scattering_rate_s == 0:
@@ -434,6 +432,9 @@ class Model:
 
     def summary(self) -> dict:
         return {
+            "raman_state_up": list(GROUND_STATES[self.up]),
+            "raman_state_down": list(GROUND_STATES[self.down]),
+            "raman_state_indices": [self.up, self.down],
             "N_motional": self.N,
             "x0_m": self.x0,
             "eta_single_photon_D2_along_axis": self.eta_d2,
@@ -458,18 +459,15 @@ class Model:
             "cos_trap_axis_field": self.cos_beta,
             "pump_rates_per_s": {
                 b: {
-                    "gamma_out_up": float(self.rates[b].gamma_out[UP]),
-                    "gamma_out_down": float(self.rates[b].gamma_out[DOWN]),
+                    "gamma_out_up": float(self.rates[b].gamma_out[self.up]),
+                    "gamma_out_down": float(self.rates[b].gamma_out[self.down]),
                     "gamma_out_max": float(self.rates[b].gamma_out.max()),
                     "p_exc_max": float(self.rates[b].p_exc.max()),
-                    "light_shift_up_hz": float(self.rates[b].light_shift[UP] / (2 * np.pi)),
-                    "light_shift_down_hz": float(self.rates[b].light_shift[DOWN] / (2 * np.pi)),
+                    "light_shift_up_hz": float(self.rates[b].light_shift[self.up] / (2 * np.pi)),
+                    "light_shift_down_hz": float(self.rates[b].light_shift[self.down] / (2 * np.pi)),
                     **self.rates[b].detail,
                 }
                 for b in BEAMS
             },
             "illustrative_parameters": illustrative_parameters(self.cfg),
         }
-
-
-SPECTATOR_IDX = np.array(SPECTATORS)
