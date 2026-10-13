@@ -24,6 +24,18 @@ def _threshold_time(t, y, thr):
 
 
 def _derivative(t, y, window):
+    t, y = np.asarray(t), np.asarray(y)
+    finite = np.isfinite(y)
+    if not finite.all():
+        # Conditional observables cease to exist when no atoms survive.
+        # Fit each finite interval separately; never bridge an undefined gap.
+        result = np.full(y.shape, np.nan)
+        edges = np.flatnonzero(np.diff(np.r_[False, finite, False]))
+        for start, end in zip(edges[::2], edges[1::2]):
+            result[start:end] = _derivative(t[start:end], y[start:end], window)
+        return result
+    if len(t) < 2:
+        return np.full(y.shape, np.nan)
     if len(t) < 5:
         return np.gradient(y, t)
     w = min(window, len(t) - (1 - len(t) % 2))

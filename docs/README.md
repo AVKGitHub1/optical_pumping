@@ -10,7 +10,7 @@ Start with the [repository README](../README.md) to run **[examples/experiment.j
 | [Experiment workflow](experiment-workflow.md) | Running the active config, outputs, optimization, controls, and numerical checks |
 | [Performance](performance.md) | Exact computational optimizations, benchmarks, validation, and worker settings |
 | [RSC physics corrections and current results](astra-physics-corrections.md) | Agreed experimental inputs, implemented model, current results, validation, and unresolved physical uncertainties |
-| [3D coherent optical pumping](coherent-pumping.md) | Pumping-only trajectory solver, motional coherence, Monte Carlo errors, and matched population checks |
+| [3D coherent optical pumping](coherent-pumping.md) | Pumping-only trajectory solver, shared GUI/thermal views, Monte Carlo errors, and matched population checks |
 
 The current config uses a spatial 3D ensemble with coherent axial Raman cooling and modeled carrier decay. Read the current physics report before interpreting temperature or loss estimates.
 

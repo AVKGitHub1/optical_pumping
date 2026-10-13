@@ -182,7 +182,7 @@ class SegmentEvolution:
 
 
 def simulate(hamiltonians, groups, initial, schedule, times, trajectories, seed,
-             *, mode='coherent', target_spin=11, target_axis=2, stop=None, progress=None):
+             *, mode='coherent', target_spin=11, target_axis=2, levels_hz=None, stop=None, progress=None):
     """Average independent trajectories; standard errors are Monte Carlo only.
 
     Population mode collapses motion after each jump and has no conditional
@@ -219,6 +219,10 @@ def simulate(hamiltonians, groups, initial, schedule, times, trajectories, seed,
     for cdf in angular_cdf:
         cdf[:, -1] = 1.
     means, errors = {}, {}
+    recorder = None
+    if levels_hz is not None:
+        from .trajectory_observables import ObservableRecorder
+        recorder = ObservableRecorder(n, times, levels_hz, target_axis)
     proposed = accepted = 0
     started = time.perf_counter()
 
@@ -241,6 +245,8 @@ def simulate(hamiltonians, groups, initial, schedule, times, trajectories, seed,
         for key, value in values.items():
             means.setdefault(key, np.zeros(len(times)))[index] = value.mean()
             errors.setdefault(key, np.zeros(len(times)))[index] = value.std(ddof=1)/np.sqrt(n)
+        if recorder is not None:
+            recorder.record(index, spin, current, alive, shape[0])
         return current
 
     sample_index = 0
@@ -331,6 +337,7 @@ def simulate(hamiltonians, groups, initial, schedule, times, trajectories, seed,
             rho[s] = v.T @ v.conj()/n
         densities.append(rho)
     return dict(t_s=times, mean=means, standard_error=errors, rho_axes_final=densities,
+                **({'observables': recorder.result()} if recorder is not None else {}),
                 trajectories=n, mode=mode, proposed_events=proposed, photon_events=accepted,
                 max_conservation_error=float(np.max(abs(means['survival']+means['loss']-1))),
                 wall_time_s=time.perf_counter()-started)
@@ -343,6 +350,7 @@ def run_local(cfg, position_um=(0., 0., 0.), *, trajectories=4096, seed=0,
         ts = np.linspace(0, local.model.schedule[-1].t1, cfg.timing.n_samples)
         result = simulate(hamiltonians, groups, local.P0, local.model.schedule, ts, trajectories, seed,
                           mode=mode, target_spin=local.model.up, target_axis=local.raman_axis,
+                          levels_hz=[s.energies_hz for s in local.sites],
                           stop=stop, progress=progress)
         result['position_um'] = list(position_um)
         result['bound_levels'] = [s.N for s in local.sites]
@@ -356,7 +364,11 @@ def average_nodes(nodes, mode):
     n = len(results)
     means = {k: sum(r['mean'][k] for r in results)/n for k in results[0]['mean']}
     errors = {k: np.sqrt(sum(r['standard_error'][k]**2 for r in results))/n for k in means}
-    return dict(t_s=results[0]['t_s'], mean=means, standard_error=errors)
+    output = dict(t_s=results[0]['t_s'], mean=means, standard_error=errors)
+    if 'observables' in results[0]:
+        from .trajectory_observables import average_observables
+        output['observables'] = average_observables(results)
+    return output
 
 
 _WORKER_STOP = None
@@ -373,7 +385,8 @@ def _cloud_node(cfg, index, position, trajectories, seed, modes, stop=None):
         local, h, groups = prepare_local(cfg, position, stop)
         ts = np.linspace(0, local.model.schedule[-1].t1, cfg.timing.n_samples)
         output = dict(index=index, position_um=list(position), bound_levels=[s.N for s in local.sites],
-                      depths_uk=local.depths.tolist(), initial_tail_discarded=local.initial_tail, modes={})
+                      depths_uk=local.depths.tolist(), initial_tail_discarded=local.initial_tail,
+                      energies_hz=[s.energies_hz.tolist() for s in local.sites], modes={})
         # Evaluate the remaining validity criteria from the actual local
         # inputs, without constructing or running the population backend.
         bounds = np.array([g.rates.sum(axis=(1, 2))*(1. if g.absorption_axis is None
@@ -395,7 +408,7 @@ def _cloud_node(cfg, index, position, trajectories, seed, modes, stop=None):
             entropy = [seed, index, 0 if mode == 'coherent' else 1]
             r = simulate(h, groups, local.P0, local.model.schedule, ts, trajectories,
                          np.random.SeedSequence(entropy), mode=mode, target_spin=local.model.up,
-                         target_axis=local.raman_axis, stop=stop)
+                         target_axis=local.raman_axis, levels_hz=[s.energies_hz for s in local.sites], stop=stop)
             r['seed_entropy'] = entropy
             output['modes'][mode] = r
         return output

@@ -5,10 +5,11 @@ from pathlib import Path
 
 import numpy as np
 
-from . import atomic as at, polarization as pol
+from . import atomic as at
 from .coherent_pumping import run_cloud
 from .model import Validity
 from .protocols import build_schedule
+from .trajectory_observables import analyze_observables
 
 
 ASSUMPTIONS = [
@@ -29,7 +30,6 @@ def run(cfg, *, stop=None, progress=None, workers=None):
     cfg = cfg.copy()
     raw = run_cloud(cfg, trajectories=cfg.ensemble.trajectories_per_site, seed=cfg.ensemble.trajectory_seed,
                     workers=workers, modes=('coherent',), stop=stop, progress=progress)
-    values = raw['modes']['coherent']
     validity = Validity()
     diagnostics = [node['diagnostics'] for node in raw['nodes']]
     peak = max(d['max_excited_fraction'] for d in diagnostics)
@@ -56,14 +56,12 @@ def run(cfg, *, stop=None, progress=None, workers=None):
     validity.add('Monte Carlo precision', 'warning', f"{raw['trajectories_per_site']} trajectories per site; repeat with more trajectories and independent seeds. Rare unobserved events may have zero empirical error.")
     validity.add('spatial and angular quadrature', 'warning', f"{raw['sites']} frozen cloud sites, {cfg.numerics.recoil_quadrature_points} polar nodes; refine separately. Error bands exclude quadrature error.")
     validity.add('remaining model assumptions', 'warning', 'Resolved spin/emission channels, diagonal Stark shifts, frozen isolated wells, no recapture; Raman coupling is unsupported.')
-    axes = pol.lattice_frame(cfg.trap.axis, cfg.ensemble.transverse_reference_direction)
-    axis = 'xyz'[pol.lattice_axis_index(cfg.raman.beam_low_direction, axes)]
-    final = {k: float(v[-1]) for k, v in values['mean'].items()}
-    final.update(wall_time_s=raw['wall_time_s'], solver=raw['solver'], raman_axis=axis,
+    validity.add('thermal observables', 'warning', 'Energy and temperature describe survivors and include loss selection. Temperature is an energy-matched proxy; coherent loss-selection decomposition is not recorded.')
+    analysis = analyze_observables(cfg, raw, stop)
+    analysis['final'].update(wall_time_s=raw['wall_time_s'], solver=raw['solver'],
                  max_excited_fraction=peak, max_conservation_error=conservation, min_eigenvalue=min_eigenvalue)
     return dict(kind='coherent_pumping', config=cfg, trajectory_result=raw,
-                series=dict(t_s=values['t_s'], **values['mean']), standard_error=values['standard_error'],
-                final=final, validity=validity, segments=build_schedule(cfg.timing))
+                **analysis, validity=validity, segments=build_schedule(cfg.timing))
 
 
 def diagnostics_text(a):
@@ -74,9 +72,15 @@ def diagnostics_text(a):
              f"Target: spin {target}, local {a['final']['raman_axis']} ground state.",
              f"{raw['sites']} cloud sites x {raw['trajectories_per_site']} trajectories; "
              f"trajectory seed {raw['trajectory_seed']}, spatial seed {raw['spatial_seed']}.",
-             'Means +/- one-sigma Monte Carlo standard errors; probabilities are per initially loaded bound atom.', '']
+             'Means +/- one-sigma Monte Carlo standard errors.',
+             'Absolute probabilities use initially loaded bound atoms; conditional distributions use survivors.',
+             'Conditional errors include survival covariance. Thermal derivatives use trajectory batches with temporal covariance.',
+             'Temperature is an energy-matched proxy; net cooling includes loss selection (decomposition unavailable).', '']
     for key, value in final_estimates(raw['modes']['coherent']).items():
         lines.append(f"{key}: {value['mean']:.7g} +/- {value['standard_error']:.3g}")
+    for axis in 'xyz':
+        for key in (f'nbar_{axis}', f'T_equiv_{axis}_K', f'mean_excitation_energy_{axis}_hz'):
+            lines.append(f"{key}: {a['series'][key][-1]:.7g} +/- {a['standard_error'][key][-1]:.3g}")
     lines += ['', f"Wall time: {a['final']['wall_time_s']:.2f} s.", '']
     lines.extend(f'[{status.upper()}] {category}: {message}' for category, status, message in a['validity'].items)
     return '\n'.join(lines)
@@ -90,7 +94,14 @@ def metadata(a):
                 validity=[dict(category=c, status=s, message=m) for c, s, m in a['validity'].items],
                 schedule=[s.__dict__ for s in a['segments']], assumptions=ASSUMPTIONS,
                 sampling={k: raw[k] for k in ('sites', 'trajectories_per_site', 'trajectory_seed', 'spatial_seed', 'workers')},
-                versions=versions(), constants_SI=constants(), solver=raw['solver'])
+                versions=versions(), constants_SI=constants(), solver=raw['solver'],
+                uncertainty=dict(interval='Pointwise approximate 95% Monte Carlo (mean +/- 1.96 SE)',
+                    conditional='Delta method with within-site survival covariance; undefined when the denominator is zero.',
+                    temperature='Implicit energy-match derivative including uncertain spatial survivor weights.',
+                    cooling=a['cooling_rate_method'],
+                    unavailable='Coherent loss-selection decomposition; uncertainty of heatmaps is stored in run_observables.npz.'),
+                observable_final_estimates={k: dict(mean=a['final'][k],
+                    standard_error=float(v[-1]) if np.isfinite(v[-1]) else None) for k, v in a['standard_error'].items()})
 
 
 def save_trajectories(result, output):
@@ -102,6 +113,8 @@ def save_trajectories(result, output):
         arrays['t_s'] = values['t_s']
         arrays.update({f'{mode}_mean_{k}': v for k, v in values['mean'].items()})
         arrays.update({f'{mode}_se_{k}': v for k, v in values['standard_error'].items()})
+        for stat, items in values.get('observables', {}).items():
+            arrays.update({f'{mode}_observables_{stat}_{k}': v for k, v in items.items()})
     np.savez_compressed(output/'cloud_trajectories.npz', **arrays)
     (output/'nodes').mkdir(exist_ok=True)
     for node in result['nodes']:
@@ -109,39 +122,20 @@ def save_trajectories(result, output):
         summary['modes'], arrays = {}, {}
         for mode, values in node['modes'].items():
             summary['modes'][mode] = {k: v for k, v in values.items()
-                                      if k not in ('t_s', 'mean', 'standard_error', 'rho_axes_final')}
+                                      if k not in ('t_s', 'mean', 'standard_error', 'rho_axes_final', 'observables')}
             summary['modes'][mode]['final'] = final_estimates(values)
             arrays['t_s'] = values['t_s']
             arrays.update({f'{mode}_mean_{k}': v for k, v in values['mean'].items()})
             arrays.update({f'{mode}_se_{k}': v for k, v in values['standard_error'].items()})
             arrays.update({f'{mode}_rho_{a}_final': v for a, v in zip('xyz', values['rho_axes_final'])})
+            for stat, items in values.get('observables', {}).items():
+                if isinstance(items, dict):
+                    arrays.update({f'{mode}_observables_{stat}_{k}': v for k, v in items.items()})
+                else:
+                    arrays[f'{mode}_{stat}'] = items
         np.savez_compressed(output/'nodes'/f"site_{node['index']:03d}.npz", **arrays)
         summaries.append(summary)
     (output/'nodes.json').write_text(json.dumps(summaries, indent=2), encoding='utf-8')
-
-
-def draw_dashboard(fig, a):
-    """Use Figure only: the same renderer works in Qt and in headless exports."""
-    from .plotting import _new, SERIES
-    target = at.ground_label(a['config'].raman.state_indices()[0])
-    axis = a['final']['raman_axis']
-    panels = [
-        ('Well survival and target spin', [('survival', 'Remaining in modeled wells'), ('P_up_absolute', f'Spin {target}')]),
-        (f'Local {axis} ground state and joint target', [('P_n0_absolute', f'{axis}: n=0'), ('P_target_absolute', f'Spin {target}, {axis}: n=0')]),
-        ('Three-dimensional ground state', [('P_3d_ground_absolute', 'All spins, nx=ny=nz=0'), ('P_target_3d_absolute', f'Spin {target}, nx=ny=nz=0')]),
-        ('Scattered photons', [('photons_spin_pump', 'Spin pump'), ('photons_repump', 'Repump'), ('photons_lattice_scatter', 'Lattice')]),
-    ]
-    t = a['series']['t_s']*1e3
-    for panel, (title, entries) in enumerate(panels, 1):
-        ax = _new(fig, 2, 2, panel)
-        for i, (key, label) in enumerate(entries):
-            mean, se = a['series'][key], a['standard_error'][key]
-            ax.plot(t, mean, color=SERIES[i], label=label, lw=1.6)
-            ax.fill_between(t, mean-1.96*se, mean+1.96*se, color=SERIES[i], alpha=.18, linewidth=0)
-        ax.set(xlabel='Time (ms)', ylabel='Photons / initially loaded atom' if panel == 4 else 'Probability / initially loaded atom')
-        ax.set_title(title, fontsize=10)
-        ax.legend(loc='upper center', bbox_to_anchor=(.5, -.24), frameon=False, fontsize=8, ncol=1 if panel < 4 else 3)
-    fig.suptitle('Coherent pumping — shaded bands: pointwise 95% Monte Carlo intervals', fontsize=11)
 
 
 def export(a, outdir, *, figures=True, stem='run'):
@@ -151,6 +145,20 @@ def export(a, outdir, *, figures=True, stem='run'):
     (outdir/f'{stem}_metadata.json').write_text(json.dumps(metadata(a), indent=2), encoding='utf-8')
     (outdir/f'{stem}_diagnostics.txt').write_text(diagnostics_text(a), encoding='utf-8')
     save_trajectories(a['trajectory_result'], outdir)
+    arrays = dict(t_s=a['series']['t_s'], spin=a['spin'], spin_absolute=a['spin_absolute'],
+                  joint=a['joint'], joint_absolute=a['joint_absolute'], P_final=a['P_final'],
+                  spin_labels=np.array([at.ground_label(i) for i in range(12)]),
+                  target_axis=np.array(a['final']['raman_axis']),
+                  description=np.array('spin[t,s], joint[t,s,n_target], pn_axes_axis[t,n] are conditioned on cloud survival; '
+                      '*_absolute arrays are per initially loaded bound atom. Errors are one-sigma Monte Carlo errors.'))
+    for key, value in a['array_standard_error'].items():
+        if isinstance(value, dict):
+            arrays.update({f'{key}_{axis}_standard_error': v for axis, v in value.items()})
+        else:
+            arrays[f'{key}_standard_error'] = value
+    for key in ('pn_axes', 'pn_axes_absolute'):
+        arrays.update({f'{key}_{axis}': v for axis, v in a[key].items()})
+    np.savez_compressed(outdir/f'{stem}_observables.npz', **arrays)
     columns = {'t_s': a['series']['t_s']}
     for key, se in a['standard_error'].items():
         columns[key], columns[key+'_standard_error'] = a['series'][key], se
@@ -159,9 +167,9 @@ def export(a, outdir, *, figures=True, stem='run'):
         writer.writerow(columns)
         writer.writerows(zip(*columns.values()))
     if figures:
-        from matplotlib.figure import Figure
-        fig = Figure(figsize=(11, 8), layout='constrained')
-        draw_dashboard(fig, a)
-        fig.savefig(outdir/f'{stem}_dashboard.png', dpi=150)
-        fig.savefig(outdir/f'{stem}_dashboard.pdf')
+        from .plotting import dashboard, thermal_axes_figure, motional_axes_figure
+        for name, fig in (('dashboard', dashboard(a, title=a['config'].name)),
+                          ('thermal_axes', thermal_axes_figure(a)), ('motional_axes', motional_axes_figure(a))):
+            fig.savefig(outdir/f'{stem}_{name}.png', dpi=150)
+            fig.savefig(outdir/f'{stem}_{name}.pdf')
     return outdir

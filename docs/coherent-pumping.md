@@ -74,18 +74,37 @@ and legacy ODE settings. It explains incompatible Raman schedules before startin
 The actual schedule matters: an enabled Raman beam with zero amplitude in every
 segment is accepted. Disabling Raman also makes its scheduled multipliers inactive.
 
-The **Coherent pumping** tab shows survival, spin/axis targets, 3D ground-state
-fractions, and photon counts with pointwise 95% Monte Carlo bands. **Diagnostics /
-validity** includes one-sigma errors, weak-excitation and ground-spin checks,
-positivity, conditioning, and remaining assumptions. It does not apply the
-population motional-secular test to this solver. Population/thermal result tabs
-are disabled for this result type to avoid showing stale or unavailable outputs.
-Protocol comparisons and scans remain available with population recoil dynamics.
+Both solvers use the existing **Overview**, **Spin**, **Time traces**,
+**Thermal x/y/z**, **p(n,t)**, and **Joint P(F,mF,n)** tabs. There is no separate
+coherent-results panel. Coherent curves and spin bars include pointwise approximate
+95% Monte Carlo intervals; heatmaps show means and their uncertainties are exported.
+The time traces also retain the absolute 3D ground-state and joint spin/3D targets.
+**Diagnostics / validity** includes one-sigma errors, weak-excitation and
+ground-spin checks, positivity, conditioning, and remaining assumptions. It does
+not apply the population motional-secular test. Protocol comparisons and scans
+remain available with population recoil dynamics.
+
+Each recorded distribution is computed from the current wavefunction amplitudes;
+recording does not collapse motion or consume random numbers. Absolute marginal
+populations sum to survival. Conditional distributions divide the cloud's absolute
+populations by the cloud's survival, rather than averaging local conditional
+distributions. Sites with different numbers of bound levels are padded with zero
+absolute population. Energies use each site's actual excitation spectrum.
+
+Thermal plots report survivor mean energies, energy-matched temperatures, and net
+energy change. The temperature solves a mixture of local canonical spectra with
+the current spatial survivor weights; it is a proxy, not an assertion of thermal
+equilibrium. Net cooling uses the same smoothed energy derivative as the population
+view and includes preferential escape. A separate coherent loss-selection term is
+not recorded, so that decomposition is explicitly unavailable. With no survivors,
+conditional probabilities and thermal estimates are undefined, shown as gaps.
 
 Save config preserves `ensemble.recoil_dynamics`, `trajectories_per_site`, and
 `trajectory_seed`. Export results writes `run_config.json`, `run_metadata.json`,
 `run_diagnostics.txt`, `run_timeseries.csv` with standard-error columns, the
-trajectory NPZ files below, and a PNG/PDF dashboard. The normal headless entry
+trajectory NPZ files below, `run_observables.npz` with absolute and conditional
+distributions and their errors, and PNG/PDF dashboard, thermal, and motional
+figures. The normal headless entry
 point runs the same saved configuration:
 
 ```powershell
@@ -96,7 +115,8 @@ Stop and closing the window signal every spawned worker and wait for cleanup;
 cancelled runs preserve the last successful result. The GUI runs only the selected
 coherent model. Use the comparison command to add the population controls.
 
-The [GUI preview](../results/coherent_gui_validation/gui_preview.png) and its
+The [shared Overview preview](../results/coherent_shared_tabs_validation/overview.png)
+and [Thermal preview](../results/coherent_shared_tabs_validation/thermal.png) and their
 exported settings demonstrate a four-site, 4096-trajectory run. These preview
 settings are for checking the interface; the 64-site scientific comparison below
 uses its separately recorded sampling settings. GUI tests cover actual worker
@@ -128,6 +148,18 @@ for a fixed numerical cloud, not the experimental shot-to-shot spread or a
 bound on model error. Very rare events can have zero empirical variance when
 none are sampled; increase the trajectory count before interpreting such a zero.
 
+Errors on survivor-conditioned quantities use the delta method, including the
+within-site covariance of numerator and survival. The covariance is available
+exactly from the sampled moments because bound observables vanish after escape.
+Temperature errors use the implicit energy-match derivative, including the
+uncertainty in spatial survivor weights. Net-cooling errors propagate the
+linearized conditional energy histories through the same derivative filter.
+Up to 32 independent trajectory batches per site retain temporal correlations
+without storing every trajectory at every output time; unequal batches are
+weighted by their trajectory counts. These derivative error estimates can be
+noisier than the direct moment errors. Intervals are normal/delta approximations,
+not exact confidence bounds near zero survival or a temperature singularity.
+
 Outputs include:
 
 - `comparison.json`: final means, one-sigma Monte Carlo errors, population
@@ -138,7 +170,8 @@ Outputs include:
   changes with pointwise 95% Monte Carlo intervals. The legend is above the plots.
 - `cloud_trajectories.npz`: time-dependent means and standard errors.
 - `nodes.json` and `nodes/site_*.npz`: positions, local spectra sizes, seed
-  information, per-site observables, and final reduced density matrices on x/y/z,
+  information, actual local spectra, per-site observables and thermal batch
+  histories, and final reduced density matrices on x/y/z,
   resolved by spin and normalized to initially loaded atoms.
 - `run_config.json` and `population_deterministic/`: exact inputs and the
   matched deterministic calculation.
@@ -146,7 +179,8 @@ Outputs include:
 `P_target_absolute` selects state A and the ground state of the configured Raman
 axis, even though Raman light is off. `P_3d_ground_absolute` sums all spin states
 in the 3D motional ground state; `P_target_3d_absolute` additionally selects state
-A. All probabilities are relative to the initially loaded bound ensemble.
+A. These `*_absolute` probabilities are relative to the initially loaded bound
+ensemble; the shared GUI's conditional distributions are labelled as survivors.
 
 ## Saved 64-site comparison (2026-10-13)
 
@@ -201,10 +235,20 @@ Tests compare both trajectory modes against an independently assembled full
 3D density-matrix generator for two spins and three two-level axes. They include
 correlated kicks, off-diagonal absorption hazards, noncommuting conditional
 evolution, absorbing escape, photon counters, and a schedule boundary between
-output times. An additional test checks the actual photon operators against
+output times, as well as recorded spin/joint populations, axis marginals, and
+energies. Additional checks compare ratio and derivative errors against direct
+per-trajectory statistics and temperature errors against numerical derivatives
+of the mixture fit. Extinct ensembles remain renderable, with undefined
+conditional quantities shown as gaps. Recording observables preserves the
+original trajectories bit for bit. An additional test checks the actual photon operators against
 the production population generator. Tests cover seed reproducibility across
 worker counts, cloud error propagation, cancellation, unsupported inputs, and
 exported arrays.
+
+The shared-tab update passed the 272-test full regression suite and 33 final
+focused checks after layout and rendering refinements. The saved four-site GUI
+run reproduces every earlier probability/photon trace bit for bit; see its
+[integration check](../results/coherent_shared_tabs_validation/integration_validation.json).
 
 Repeat with more trajectories and another seed to check statistical stability;
 double `--quadrature` to test angular integration. Refine `--samples` separately

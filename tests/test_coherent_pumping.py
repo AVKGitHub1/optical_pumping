@@ -87,8 +87,9 @@ def test_full_joint_master_equation_with_loss_and_unsampled_boundary(mode):
     schedule = [Segment(0., .31, 0., 1., 1., 'on'), Segment(.31, .8, 0., 0., 0., 'lattice only')]
     with _single_thread():
         exact, rho = dense_reference(h, groups, initial, schedule, mode)
+        levels = [np.array([0., e]) for e in (3., 5., 7.)]
         result = simulate(h, groups, initial, schedule, np.linspace(0, .8, 5), 40000, 276,
-                          mode=mode, target_spin=1)
+                          mode=mode, target_spin=1, levels_hz=levels)
     for key, expected in exact.items():
         assert abs(result['mean'][key][-1]-expected) < 7*result['standard_error'][key][-1]+1/40000, key
     for axis, marginal in enumerate(result['rho_axes_final']):
@@ -99,6 +100,15 @@ def test_full_joint_master_equation_with_loss_and_unsampled_boundary(mode):
         reduced = np.einsum(''.join(labels)+'->s'+labels[axis+1]+'d', joint)
         np.testing.assert_allclose(marginal, reduced, atol=.015, rtol=0)
         assert np.linalg.eigvalsh(marginal).min() > -1e-12
+    populations = np.diagonal(rho, axis1=1, axis2=2).real.reshape(initial.shape)
+    expected = dict(spin=populations.sum(axis=(1, 2, 3)), joint=populations.sum(axis=(1, 2)))
+    for axis, label in enumerate('xyz'):
+        expected[f'pn_{label}'] = populations.sum(axis=tuple(i for i in range(4) if i != axis+1))
+    expected['energy_hz'] = np.array([expected[f'pn_{a}'] @ e for a, e in zip('xyz', levels)])
+    expected['nbar'] = np.array([expected[f'pn_{a}'][1] for a in 'xyz'])
+    for key, value in expected.items():
+        obs = result['observables']
+        assert np.all(abs(obs['mean'][key][-1]-value) < 7*obs['standard_error'][key][-1]+1/40000), key
     assert result['max_conservation_error'] < 1e-15
     assert result['photon_events'] <= result['proposed_events']
 
@@ -147,6 +157,19 @@ def test_zero_rates_and_seed_reproducibility():
     np.testing.assert_array_equal(a['mean']['P_target_absolute'], [1., 1.])
     np.testing.assert_array_equal(a['rho_axes_final'], b['rho_axes_final'])
     assert a['photon_events'] == 0
+
+
+def test_recording_observables_does_not_change_trajectories():
+    h, groups, initial = toy()
+    schedule = [Segment(0., .8, 0., 1., 1., '')]
+    plain = simulate(h, groups, initial, schedule, [0., .4, .8], 1000, 48, target_spin=1)
+    recorded = simulate(h, groups, initial, schedule, [0., .4, .8], 1000, 48, target_spin=1,
+                        levels_hz=[np.array([0., 10.])]*3)
+    for key, value in plain['mean'].items():
+        np.testing.assert_array_equal(value, recorded['mean'][key])
+    for axis, rho in enumerate(recorded['rho_axes_final']):
+        np.testing.assert_allclose(recorded['observables']['mean'][f'pn_{"xyz"[axis]}'][-1],
+                                   np.diagonal(rho, axis1=1, axis2=2).real.sum(axis=0))
 
 
 def test_invalid_trajectory_inputs_and_cancellation():

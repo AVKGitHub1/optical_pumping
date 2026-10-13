@@ -48,13 +48,34 @@ def _ms(t):
     return np.asarray(t) * 1e3
 
 
+def _trace(ax, a, key, *, scale=1., **kwargs):
+    """Shared line renderer; deterministic results simply have no error band."""
+    values = np.asarray(a['series'][key])*scale
+    values = np.where(np.isfinite(values), values, np.nan)
+    line, = ax.plot(_ms(a['series']['t_s']), values, **kwargs)
+    error = a.get('standard_error', {}).get(key)
+    if error is not None:
+        width = 1.96*np.asarray(error)*abs(scale)
+        ax.fill_between(_ms(a['series']['t_s']), values-width, values+width,
+                        color=line.get_color(), alpha=.18, linewidth=0)
+
+
+def uncertainty_note(fig, a):
+    if 'standard_error' in a:
+        fig.supxlabel('Bands / error bars: pointwise approximate 95% Monte Carlo intervals. Heatmaps show means.', fontsize=8)
+
+
 def plot_spin_bars(ax, a):
     fin = a["final"]
     labels = [ground_label(i) for i in range(12)]
     x = np.arange(12)
     w = 0.38
-    ax.bar(x - w / 2 - 0.01, list(fin["spin_populations_initial"].values()), w, color=SERIES[0], label="initial")
-    ax.bar(x + w / 2 + 0.01, list(fin["spin_populations_final"].values()), w, color=SERIES[1], label="final")
+    errors = a.get('array_standard_error', {}).get('spin')
+    for offset, index, key, color, label in ((-w/2-.01, 0, 'spin_populations_initial', SERIES[0], 'initial'),
+                                            (w/2+.01, -1, 'spin_populations_final', SERIES[1], 'final')):
+        ax.bar(x+offset, np.asarray(list(fin[key].values()), dtype=float), w, color=color, label=label,
+               yerr=None if errors is None else 1.96*errors[index], capsize=2,
+               error_kw={'elinewidth': .8})
     ax.set_xticks(x, labels, rotation=60, fontsize=7)
     ax.set_ylabel("fraction among survivors")
     ax.set_title("Spin sublevels (F=2 left, F=3 right)", fontsize=9)
@@ -73,7 +94,6 @@ def _raman_labels(a):
 
 def plot_traces(ax, a, keys=None):
     s = a["series"]
-    t = _ms(s["t_s"])
     ensemble = "T_equiv_axes_K" in a["final"]
     up, down = _raman_labels(a)
     if keys is None:
@@ -85,11 +105,11 @@ def plot_traces(ax, a, keys=None):
                 ("P_target_absolute", "joint target / initially loaded"),
                 ("P_up_absolute", f"spin {up} / initially loaded"))
     for i, (k, lab) in enumerate(keys):
-        ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
+        _trace(ax, a, k, color=SERIES[i], lw=2, label=lab)
     m = a.get("model")
-    lattice = m is not None and m.motion.kind == "lattice"  # harmonic overflow is numerical, not survival
+    lattice = (m is not None and m.motion.kind == "lattice") or a.get('model_summary', {}).get('potential') == 'lattice'
     if lattice and "P_trapped" in s and np.min(s["P_trapped"]) < 1 - 1e-4:
-        ax.plot(t, s["P_trapped"], color=TEXT2, lw=1.5, ls="--", label="survival in modeled wells")
+        _trace(ax, a, 'P_trapped', color=TEXT2, lw=1.5, ls="--", label="survival in modeled wells")
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("probability")
     ax.set_ylim(-0.02, 1.02)
@@ -105,6 +125,9 @@ def plot_traces(ax, a, keys=None):
 
 
 def _shade_segments(ax, a):
+    cfg = a['model'].cfg if a.get('model') is not None else a.get('config')
+    if cfg is not None and not cfg.raman.enabled:
+        return
     segs = a.get("segments") or []
     if len(segs) > 60:
         return
@@ -123,8 +146,9 @@ def plot_schedule(ax, a):
     segs = a.get("segments") or []
     m = a.get("model")
     enabled = {"raman": True, "pump": True, "repump": True}
-    if m is not None:
-        enabled = {"raman": m.cfg.raman.enabled, "pump": m.cfg.spin_pump.enabled, "repump": m.cfg.repump.enabled}
+    cfg = m.cfg if m is not None else a.get('config')
+    if cfg is not None:
+        enabled = {"raman": cfg.raman.enabled, "pump": cfg.spin_pump.enabled, "repump": cfg.repump.enabled}
     labels = []
     for i, (key, lab, col) in enumerate(SCHEDULE_LANES):
         y = len(SCHEDULE_LANES) - 1 - i  # Raman on top
@@ -148,14 +172,13 @@ def plot_schedule(ax, a):
 
 def plot_nbar(ax, a):
     s = a["series"]
-    t = _ms(s["t_s"])
     all_axes = all(f"nbar_{axis}" in s for axis in "xyz")
     if all_axes:
         for i, axis in enumerate("xyz"):
-            ax.plot(t, s[f"nbar_{axis}"], color=SERIES[i], lw=2, label=_axis_label(a, axis))
+            _trace(ax, a, f'nbar_{axis}', color=SERIES[i], lw=2, label=_axis_label(a, axis))
         ax.legend(fontsize=7, frameon=False)
     else:
-        ax.plot(t, s["nbar"], color=SERIES[0], lw=2)
+        _trace(ax, a, 'nbar', color=SERIES[0], lw=2)
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("mean vibrational level index")
     axis = a["final"].get("raman_axis")
@@ -165,11 +188,10 @@ def plot_nbar(ax, a):
 
 def plot_photons(ax, a):
     s = a["series"]
-    t = _ms(s["t_s"])
     for i, (k, lab) in enumerate((("photons_spin_pump", "spin pump"), ("photons_repump", "repump"), ("photons_raman_scatter", "Raman scatter"))):
-        ax.plot(t, s[k], color=SERIES[i], lw=2, label=lab)
+        _trace(ax, a, k, color=SERIES[i], lw=2, label=lab)
     if "photons_lattice_scatter" in s:
-        ax.plot(t, s["photons_lattice_scatter"], color=SERIES[3], lw=2, label="lattice scatter")
+        _trace(ax, a, 'photons_lattice_scatter', color=SERIES[3], lw=2, label="lattice scatter")
     ax.set_xlabel("time (ms)")
     ax.set_ylabel("photons / initially loaded atom")
     ax.set_title("Integrated scattered photons", fontsize=9)
@@ -182,7 +204,7 @@ def plot_cooling_rate(ax, a):
     for key, label, color, style in (("cooling_power_W", "Net", SERIES[0], "-"),
                                     ("selection_cooling_power_W", "Loss selection", SERIES[1], "--")):
         if key in s:
-            ax.plot(_ms(s["t_s"]), s[key] * scale, color=color, lw=2, ls=style, label=label)
+            _trace(ax, a, key, scale=scale, color=color, lw=2, ls=style, label=label)
     if "selection_cooling_power_W" in s:
         ax.plot(_ms(s["t_s"]), (s["cooling_power_W"] - s["selection_cooling_power_W"]) * scale,
                 color=SERIES[2], ls=":", label="Net minus selection")
@@ -226,6 +248,8 @@ def draw_motional_axes(fig, a):
     for i, axis in enumerate("xyz"):
         plot_pnt(_new(fig, gs[i]), a, fig, axis)
     fig.suptitle("Motional distributions in local x, y, z — conditioned on survival", fontsize=10)
+    if 'standard_error' in a:
+        fig.supxlabel('Heatmaps show Monte Carlo means; population uncertainties are included in the exported observables.', fontsize=8)
 
 
 def draw_thermal_axes(fig, a):
@@ -237,7 +261,6 @@ def draw_thermal_axes(fig, a):
                 "This run models motion along one trap axis.", ha="center", va="center", wrap=True)
         return
     s = a["series"]
-    t = _ms(s["t_s"])
     gs = fig.add_gridspec(2, 3)
     panels = (("T_equiv_{}_K", 1e6, "Energy-matched temperature", "Temperature estimate (uK)"),
               ("mean_excitation_energy_{}_J", 1e6 / K_B, "Excitation above the ground state", "Mean energy / kB (uK)"),
@@ -245,9 +268,7 @@ def draw_thermal_axes(fig, a):
     for column, (key, scale, title, ylabel) in enumerate(panels):
         ax = _new(fig, gs[0, column])
         for i, axis in enumerate("xyz"):
-            values = np.asarray(s[key.format(axis)]) * scale
-            values = np.where(np.isfinite(values), values, np.nan)
-            ax.plot(t, values, color=SERIES[i], lw=2, label=_axis_label(a, axis))
+            _trace(ax, a, key.format(axis), scale=scale, color=SERIES[i], lw=2, label=_axis_label(a, axis))
         ax.set_title(title, fontsize=9)
         ax.set_xlabel("time (ms)")
         ax.set_ylabel(ylabel)
@@ -264,7 +285,8 @@ def draw_thermal_axes(fig, a):
         for j, (key, label, style) in enumerate((("cooling_power", "Net", "-"),
                                                 ("selection_cooling_power", "Loss selection", "--"),
                                                 ("bound_cooling_power", "Net minus loss", ":"))):
-            ax.plot(t, s[f"{key}_{axis}_W"] * 1e3 / K_B, color=SERIES[j], lw=1.8, ls=style, label=label)
+            if f'{key}_{axis}_W' in s:
+                _trace(ax, a, f'{key}_{axis}_W', scale=1e3/K_B, color=SERIES[j], lw=1.8, ls=style, label=label)
         ax.axhline(0, color=MUTED, lw=.8)
         ax.set_title(f"{_axis_label(a, axis)}: survivor energy change", fontsize=9)
         ax.set_xlabel("time (ms)")
@@ -276,8 +298,12 @@ def draw_thermal_axes(fig, a):
                 ax.axvline(seg.t1 * 1e3, color=MUTED, ls=":", lw=.7)
     fig.suptitle("Local x, y, z motion among surviving atoms\n"
                  "Temperature is an energy-matched estimate; distributions need not be thermal.", fontsize=10)
-    fig.supxlabel("Positive = decreasing survivor energy; negative = increasing energy. Net uses a smoothed derivative.\n"
-                  "Loss selection is preferential escape; net minus loss includes Raman and recoil dynamics.", fontsize=8)
+    if 'standard_error' in a:
+        fig.supxlabel('Bands: pointwise approximate 95% Monte Carlo intervals; derivative bands include temporal covariance.\n'
+                      'Positive = decreasing survivor energy. Net includes loss selection; its separate contribution is unavailable.', fontsize=8)
+    else:
+        fig.supxlabel("Positive = decreasing survivor energy; negative = increasing energy. Net uses a smoothed derivative.\n"
+                      "Loss selection is preferential escape; net minus loss includes Raman and recoil dynamics.", fontsize=8)
 
 
 def thermal_axes_figure(a):
@@ -299,10 +325,19 @@ def plot_joint(ax, a, fig=None, nshow=None):
     ax.grid(False)
     ax.set_yticks(range(12), [ground_label(i) for i in range(12)], fontsize=7)
     ax.set_xlabel("n")
-    ax.set_title("Final joint P(F, mF, n)", fontsize=9)
+    ax.set_title("Final joint P(spin, n), survivors" if 'pn_axes' in a else "Final joint P(F, mF, n)", fontsize=9)
     if fig is not None:
         cb = fig.colorbar(im, ax=ax, pad=0.01)
         cb.ax.tick_params(labelsize=7)
+
+
+def plot_ground_3d(ax, a):
+    for i, (key, label) in enumerate((('P_3d_ground_absolute', 'All spins, nx=ny=nz=0'),
+                                     ('P_target_3d_absolute', 'Target spin, nx=ny=nz=0'))):
+        _trace(ax, a, key, color=SERIES[i], lw=2, label=label)
+    ax.set(xlabel='time (ms)', ylabel='probability / initially loaded')
+    ax.set_title('Three-dimensional ground state', fontsize=9)
+    ax.legend(fontsize=7, frameon=False)
 
 
 def diagnostics_text(a) -> str:
@@ -403,6 +438,7 @@ def dashboard(a, title="") -> Figure:
     notice = " — outside model validity limits" if status == "invalid" else ""
     fig.suptitle(f"{title}\nModel validity: {STATUS_TEXT[status]}{notice}", fontsize=11,
                  color="#a32121" if status == "invalid" else TEXT)
+    uncertainty_note(fig, a)
     return fig
 
 

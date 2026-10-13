@@ -1,0 +1,42 @@
+MODEL VALIDITY: WARNING
+Solver: 3D coherent optical-pumping trajectories (Raman off).
+Target: spin |3,+3>, local z ground state.
+4 cloud sites x 4096 trajectories; trajectory seed 1729, spatial seed 0.
+Means +/- one-sigma Monte Carlo standard errors.
+Absolute probabilities use initially loaded bound atoms; conditional distributions use survivors.
+Conditional errors include survival covariance. Thermal derivatives use trajectory batches with temporal covariance.
+Temperature is an energy-matched proxy; net cooling includes loss selection (decomposition unavailable).
+
+survival: 0.4259033 +/- 0.00373
+loss: 0.5740967 +/- 0.00373
+P_up_absolute: 0.4038086 +/- 0.0037
+P_n0_absolute: 0.191975 +/- 0.00262
+P_target_absolute: 0.1810516 +/- 0.00257
+P_3d_ground_absolute: 0.01217575 +/- 0.000529
+P_target_3d_absolute: 0.01118547 +/- 0.000513
+photons_spin_pump: 2.99823 +/- 0.0203
+photons_repump: 1.806763 +/- 0.0196
+photons_lattice_scatter: 0.001342773 +/- 0.000286
+photons_total: 4.806335 +/- 0.0367
+nbar_x: 2.10043 +/- 0.0173
+T_equiv_x_K: 6.086645e-06 +/- 1.05e-07
+mean_excitation_energy_x_hz: 70276.6 +/- 586
+nbar_y: 2.184516 +/- 0.0213
+T_equiv_y_K: 6.733238e-06 +/- 1.37e-07
+mean_excitation_energy_y_hz: 75903.75 +/- 749
+nbar_z: 0.981912 +/- 0.0111
+T_equiv_z_K: 4.382323e-06 +/- 6.83e-08
+mean_excitation_energy_z_hz: 46887.98 +/- 557
+
+Wall time: 2.92 s.
+
+[OK] weak excitation: Maximum eliminated excited fraction across cloud sites = 0.004927.
+[OK] ground coherences: Adjacent-spin angular splitting / conservative full photon-rate bound = 46.7; requires >> 1.
+[OK] magnetic field: Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted.
+[OK] motional recoil: Coherent wavefunctions retained on x/y/z; the population motional-secular criterion does not apply to this solver.
+[OK] conservation: Maximum |survival + escape - 1| = 0.
+[OK] positivity: Minimum final reduced-density eigenvalue = -6.65e-20.
+[WARNING] Monte Carlo precision: 4096 trajectories per site; repeat with more trajectories and independent seeds. Rare unobserved events may have zero empirical error.
+[WARNING] spatial and angular quadrature: 4 frozen cloud sites, 24 polar nodes; refine separately. Error bands exclude quadrature error.
+[WARNING] remaining model assumptions: Resolved spin/emission channels, diagonal Stark shifts, frozen isolated wells, no recapture; Raman coupling is unsupported.
+[WARNING] thermal observables: Energy and temperature describe survivors and include loss selection. Temperature is an energy-matched proxy; coherent loss-selection decomposition is not recorded.

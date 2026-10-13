@@ -521,7 +521,6 @@ class MainWindow(QMainWindow):
         self.t_pnt = PlotTab()
         self.t_joint = PlotTab()
         self.t_cmp = PlotTab((12, 8))
-        self.t_coherent = PlotTab((11, 8))
         self.diag = QPlainTextEdit()
         self.diag.setReadOnly(True)
         self.diag.setStyleSheet("font-family: Consolas, monospace; font-size: 9pt;")
@@ -529,8 +528,6 @@ class MainWindow(QMainWindow):
                      (self.t_thermal, "Thermal x/y/z"), (self.t_pnt, "p(n,t)"),
                      (self.t_joint, "Joint P(F,mF,n)"), (self.diag, "Diagnostics / validity"), (self.t_cmp, "Protocol comparison")):
             self.tabs.addTab(w, n)
-        self.tabs.addTab(self.t_coherent, "Coherent pumping")
-        self.tabs.setTabEnabled(self.tabs.indexOf(self.t_coherent), False)
         self.tabs.addTab(self._scan_tab(), "Scan")
 
         right = QWidget()
@@ -840,7 +837,6 @@ class MainWindow(QMainWindow):
         self.last = None
         for t in (self.t_over, self.t_spin, self.t_tr, self.t_thermal, self.t_pnt, self.t_joint, self.t_cmp, self.t_scan):
             t.draw(lambda f: None)
-        self.t_coherent.draw(lambda f: None)
         self._result_tabs(False)
         self.validity_banner.hide()
         self.diag.clear()
@@ -881,25 +877,20 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------------
     def _result_tabs(self, coherent):
-        for tab in (self.t_over, self.t_spin, self.t_tr, self.t_thermal, self.t_pnt, self.t_joint, self.t_cmp):
-            self.tabs.setTabEnabled(self.tabs.indexOf(tab), not coherent)
-        self.tabs.setTabEnabled(self.tabs.indexOf(self.t_coherent), coherent)
+        self.tabs.setTabEnabled(self.tabs.indexOf(self.t_cmp), not coherent)
 
     def _show_result(self, a):
         self.last = a
         coherent = a.get('kind') == 'coherent_pumping'
         self._result_tabs(coherent)
-        if coherent:
-            from .coherent_results import draw_dashboard
-            self.t_coherent.draw(lambda f: draw_dashboard(f, a))
-            self.tabs.setCurrentWidget(self.t_coherent)
-        else:
-            self.t_over.draw(lambda f: _overview(f, a))
-            self.t_spin.draw(lambda f: pl.plot_spin_bars(pl._new(f, 111), a))
-            self.t_tr.draw(lambda f: _traces(f, a))
-            self.t_thermal.draw(lambda f: pl.draw_thermal_axes(f, a))
-            self.t_pnt.draw(lambda f: pl.draw_motional_axes(f, a))
-            self.t_joint.draw(lambda f: pl.plot_joint(pl._new(f, 111), a, f, nshow=min(a["P_final"].shape[1], 30)))
+        self.t_over.draw(lambda f: _overview(f, a))
+        self.t_spin.draw(lambda f: (pl.plot_spin_bars(pl._new(f, 111), a), pl.uncertainty_note(f, a)))
+        self.t_tr.draw(lambda f: _traces(f, a))
+        self.t_thermal.draw(lambda f: pl.draw_thermal_axes(f, a))
+        self.t_pnt.draw(lambda f: pl.draw_motional_axes(f, a))
+        self.t_joint.draw(lambda f: (pl.plot_joint(pl._new(f, 111), a, f, nshow=min(a["P_final"].shape[1], 30)),
+                                    pl.uncertainty_note(f, a)))
+        self.tabs.setCurrentWidget(self.t_over)
         self.diag.setPlainText(pl.diagnostics_text(a))
         st = a["validity"].status.upper()
         problems = [category for category, status, _ in a["validity"].items if status == "invalid"]
@@ -952,13 +943,18 @@ def _overview(fig, a):
     pl.plot_pnt(pl._new(fig, gs[2, 0]), a, fig)
     pl.plot_joint(pl._new(fig, gs[2, 1]), a, fig)
     pl.plot_photons(pl._new(fig, gs[2, 2]), a)
+    pl.uncertainty_note(fig, a)
 
 
 def _traces(fig, a):
-    gs = fig.add_gridspec(3, 1)
+    has_3d = 'P_3d_ground_absolute' in a['series']
+    gs = fig.add_gridspec(2, 2) if has_3d else fig.add_gridspec(3, 1)
     pl.plot_traces(pl._new(fig, gs[0]), a)
     pl.plot_nbar(pl._new(fig, gs[1]), a)
     pl.plot_cooling_rate(pl._new(fig, gs[2]), a)
+    if has_3d:
+        pl.plot_ground_3d(pl._new(fig, gs[3]), a)
+    pl.uncertainty_note(fig, a)
 
 
 DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / "examples" / "experiment.json"

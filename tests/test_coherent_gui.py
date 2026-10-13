@@ -74,6 +74,13 @@ def test_runner_matches_direct_trajectories_and_exports_uncertainty(tmp_path):
     assert (tmp_path/'run_dashboard.png').stat().st_size > 1000
     assert (tmp_path/'run_dashboard.pdf').stat().st_size > 1000
     assert (tmp_path/'nodes'/'site_001.npz').is_file()
+    assert (tmp_path/'run_thermal_axes.png').stat().st_size > 1000
+    assert (tmp_path/'run_motional_axes.pdf').stat().st_size > 1000
+    arrays = np.load(tmp_path/'run_observables.npz')
+    np.testing.assert_array_equal(arrays['pn_axes_z'], a['pn_axes']['z'])
+    np.testing.assert_array_equal(arrays['spin_standard_error'], a['array_standard_error']['spin'])
+    assert arrays['joint_absolute'].shape == a['joint_absolute'].shape
+    assert 'cooling_power_x_W_standard_error' in (tmp_path/'run_timeseries.csv').read_text().splitlines()[0]
     assert metadata(a) == saved
 
 
@@ -166,10 +173,15 @@ def test_gui_coherent_run_export_stop_restart_and_switch(coherent_window, monkey
     assert not failures and children() == before
     completed = w.last
     assert completed['kind'] == 'coherent_pumping'
-    assert w.tabs.currentWidget() is w.t_coherent
-    assert not w.tabs.isTabEnabled(w.tabs.indexOf(w.t_thermal))
+    assert w.tabs.currentWidget() is w.t_over
+    assert all(w.tabs.tabText(i) != 'Coherent pumping' for i in range(w.tabs.count()))
+    for tab in (w.t_over, w.t_spin, w.t_tr, w.t_thermal, w.t_pnt, w.t_joint):
+        assert w.tabs.isTabEnabled(w.tabs.indexOf(tab))
+        assert tab.fig.axes
     assert 'Monte Carlo' in w.diag.toPlainText()
-    assert len(w.t_coherent.fig.axes) == 4
+    assert len(w.t_thermal.fig.axes) == 6
+    assert len(w.t_tr.fig.axes) == 4
+    assert any(ax.collections for ax in w.t_over.fig.axes)
     expected = run(cfg, ensemble_workers=1)
     np.testing.assert_array_equal(completed['series']['P_target_absolute'], expected['series']['P_target_absolute'])
     monkeypatch.setattr(QFileDialog, 'getExistingDirectory', lambda *args: str(tmp_path))
@@ -203,7 +215,9 @@ def test_gui_coherent_run_export_stop_restart_and_switch(coherent_window, monkey
     pump_until(lambda: w.thread is None, timeout=60)
     assert not failures and w.last.get('kind') != 'coherent_pumping'
     assert w.tabs.isTabEnabled(w.tabs.indexOf(w.t_thermal))
-    assert not w.tabs.isTabEnabled(w.tabs.indexOf(w.t_coherent))
+    assert w.tabs.currentWidget() is w.t_over
+    assert 'standard_error' not in w.last
+    assert w.t_over.fig._supxlabel is None
 
 
 def test_closing_coherent_window_joins_workers(coherent_window):

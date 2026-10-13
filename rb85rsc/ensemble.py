@@ -513,12 +513,17 @@ def mixture_temperature(mean_hz, components, axis, sample_index=-1):
     default); temperatures are not averaged. NaN means no temperature can be
     inferred, including no survivors or a spectrum with no excited levels.
     """
-    from scipy.optimize import brentq
     levels, weights = [], []
     for local, result in components:
         site = local.sites[axis]
         levels.append(site.energies_hz - site.energies_hz[0])
         weights.append(result["P"][sample_index].sum())
+    return canonical_mixture_temperature(mean_hz, levels, weights)
+
+
+def canonical_mixture_temperature(mean_hz, levels, weights):
+    """Energy-matched temperature with arbitrary local survivor weights."""
+    from scipy.optimize import brentq
     if not np.isfinite(mean_hz) or sum(weights) <= 0:
         return np.nan
     weights = np.asarray(weights) / sum(weights)

@@ -92,13 +92,16 @@ For **3D pumping with motional coherence in the GUI**:
 2. Open **3D spatial ensemble** and select **Recoil dynamics → coherent_pumping**.
 3. Set **Trajectories per site**, **Trajectory seed**, and **workers**, then click **Run**.
 
-The **Coherent pumping** tab shows absolute probabilities and photon counts with
-95% Monte Carlo bands. **Diagnostics / validity** reports one-sigma errors and
-the remaining physical assumptions. **Save config** retains the solver settings;
-**Export results** saves figures, means/errors, metadata, and local density
-matrices. Stop and window-close cancellation also work with trajectory workers.
-Thermal/population tabs, scans, and protocol comparisons belong to the population
-backend and are unavailable for this mode. The same saved config works headlessly.
+Both solvers use **Overview**, **Spin**, **Time traces**, **Thermal x/y/z**,
+**p(n,t)**, and **Joint P(F,mF,n)**. Coherent results include approximate
+95% Monte Carlo bands/error bars, survivor-conditioned distributions, actual
+local energies, and energy-matched temperature estimates. Net energy change
+includes loss selection; its separate coherent contribution is not available.
+**Diagnostics / validity** reports one-sigma errors and the remaining physical
+assumptions. **Save config** retains the solver settings; **Export results** saves
+the shared figures, means/errors, metadata, and local density matrices. Stop and
+window-close cancellation also work with trajectory workers. Scans and protocol
+comparisons still require the population backend. Saved configs work headlessly.
 
 To compare the coherent calculation against both population controls, run:
 

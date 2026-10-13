@@ -1,0 +1,19 @@
+{
+  "previous_run": "results/coherent_gui_validation",
+  "existing_observables_bitwise_equal": {
+    "survival": true,
+    "loss": true,
+    "P_up_absolute": true,
+    "P_n0_absolute": true,
+    "P_target_absolute": true,
+    "P_3d_ground_absolute": true,
+    "P_target_3d_absolute": true,
+    "photons_spin_pump": true,
+    "photons_repump": true,
+    "photons_lattice_scatter": true,
+    "photons_total": true
+  },
+  "sites": 4,
+  "trajectories_per_site": 4096,
+  "note": "GUI validation sampling; not the 64-site physics benchmark."
+}
