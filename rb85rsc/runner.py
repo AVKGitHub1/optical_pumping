@@ -54,6 +54,12 @@ def constants() -> dict:
 
 
 def estimate(cfg: SimConfig) -> dict:
+    if cfg.ensemble.recoil_dynamics == 'coherent_pumping':
+        cfg.validate()
+        return dict(backend='coherent_3d_pumping_trajectories', ensemble_samples=cfg.ensemble.samples,
+                    trajectories_per_site=cfg.ensemble.trajectories_per_site,
+                    total_trajectories=cfg.ensemble.samples*cfg.ensemble.trajectories_per_site,
+                    note='Event-driven coherent pumping; refine trajectories, photon angles and spatial samples independently.')
     if cfg.ensemble.enabled:
         return {"backend": "coherent_3d_split_ensemble", "ensemble_samples": cfg.ensemble.samples,
                 "time_step_us": cfg.ensemble.time_step_us,
@@ -64,6 +70,9 @@ def estimate(cfg: SimConfig) -> dict:
 
 def run(cfg: SimConfig, stop=None, progress=None, estimate_cb=None, *, ensemble_workers=None):
     """Run physics unchanged, optionally sharing an outer scan's worker budget."""
+    if cfg.ensemble.recoil_dynamics == 'coherent_pumping':
+        from .coherent_results import run as run_coherent
+        return run_coherent(cfg, stop=stop, progress=progress, workers=ensemble_workers)
     if cfg.ensemble.enabled:
         from .ensemble import run_ensemble
         return run_ensemble(cfg, stop, progress, estimate_cb, workers=ensemble_workers)
@@ -80,6 +89,8 @@ def run(cfg: SimConfig, stop=None, progress=None, estimate_cb=None, *, ensemble_
 
 
 def compare_protocols(cfg: SimConfig, protocols=COMPARISON_SET, stop=None, progress=None, log=print) -> dict:
+    if cfg.ensemble.recoil_dynamics == 'coherent_pumping':
+        raise ValueError('Protocol comparison requires population recoil dynamics; coherent pumping supports individual Raman-off runs.')
     out = {}
     for i, p in enumerate(protocols):
         c = cfg.copy()
@@ -102,6 +113,9 @@ def _json_default(o):
 
 
 def metadata(a: dict) -> dict:
+    if a.get('kind') == 'coherent_pumping':
+        from .coherent_results import metadata as coherent_metadata
+        return coherent_metadata(a)
     m: Model = a["model"]
     return {
         "config": m.cfg.to_dict(),
@@ -134,6 +148,9 @@ def metadata(a: dict) -> dict:
 
 
 def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
+    if a.get('kind') == 'coherent_pumping':
+        from .coherent_results import export as export_coherent
+        return export_coherent(a, outdir, figures=figures, stem=stem)
     from .plotting import dashboard
 
     outdir = Path(outdir)

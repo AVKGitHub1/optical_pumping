@@ -144,11 +144,13 @@ def _term(sites, W, ka, kb, kemit, bdir, pattern, nq, counter, scale_name, axes_
 
 
 class LocalExperiment:
-    def __init__(self, cfg, response, calibration, position, phase, beat_hz=None, stop=None):
+    def __init__(self, cfg, response, calibration, position, phase, beat_hz=None, stop=None,
+                 *, population_recoil=True):
         if response.zeeman_model != cfg.optical.zeeman_model:
             raise ValueError("local optical response and config must use the same zeeman_model")
         self.position, self.phase = np.asarray(position), phase
         self.response = response
+        self.population_recoil = population_recoil
         self.calibration = calibration
         atom = response.atom
         c = cfg.copy()
@@ -203,8 +205,8 @@ class LocalExperiment:
         nq = cfg.numerics.recoil_quadrature_points
         bdir = pol.unit(cfg.magnetic.direction)
         joint = (CorrelatedRecoil(sites, axes @ bdir, nq, lambda: _check_stop(stop))
-                 if ec.recoil_model == 'correlated' else None)
-        for bi, name in enumerate(("spin_pump", "repump")):
+                 if population_recoil and ec.recoil_model == 'correlated' else None)
+        for bi, name in enumerate(("spin_pump", "repump") if population_recoil else ()):
             kvec = m.k_d2 * m.beams[name].direction
             for ci, pattern in enumerate(("sigma", "pi")):
                 pat = pattern if cfg.optical.emission_pattern == "dipole" else "isotropic"
@@ -216,7 +218,7 @@ class LocalExperiment:
         # do not interfere in the spontaneous rate (GHz beat is averaged).
         self.raman_shifts_hz = np.zeros((12, sites[ra].N))
         dirs = (pol.unit(rc.beam_low_direction), pol.unit(rc.beam_high_direction))
-        if rc.scattering_rate_s > 0:
+        if population_recoil and rc.scattering_rate_s > 0:
             W = (np.eye(12) if rc.scattering_model == "spin_preserving" else np.ones((12, 12)) / 12) * rc.scattering_rate_s / 2
             k = 2 * np.pi / (rc.wavelength_nm * 1e-9)
             for direction in dirs:
@@ -273,6 +275,8 @@ class LocalExperiment:
         return array if self.raman_axis == 2 else np.moveaxis(array, array.ndim - 3 + self.raman_axis, -1)
 
     def _add_coherent_light(self, amps, dirs, freq, bdir, nq, counter, scale, joint=None):
+        if not self.population_recoil:
+            return
         k = 2 * np.pi * freq / at.C_LIGHT
         for i in range(2):
             for j in range(2):

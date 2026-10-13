@@ -86,6 +86,53 @@ This includes Cartesian recoil correlations within one photon. Motional coherenc
 
 ## Check the motional population approximation
 
+For **3D pumping with motional coherence in the GUI**:
+
+1. Load `examples/onlyOP_correlated.json`.
+2. Open **3D spatial ensemble** and select **Recoil dynamics → coherent_pumping**.
+3. Set **Trajectories per site**, **Trajectory seed**, and **workers**, then click **Run**.
+
+The **Coherent pumping** tab shows absolute probabilities and photon counts with
+95% Monte Carlo bands. **Diagnostics / validity** reports one-sigma errors and
+the remaining physical assumptions. **Save config** retains the solver settings;
+**Export results** saves figures, means/errors, metadata, and local density
+matrices. Stop and window-close cancellation also work with trajectory workers.
+Thermal/population tabs, scans, and protocol comparisons belong to the population
+backend and are unavailable for this mode. The same saved config works headlessly.
+
+To compare the coherent calculation against both population controls, run:
+
+```powershell
+conda run --no-capture-output -n scripts python scripts/check_coherent_pumping.py --config examples/onlyOP_correlated.json --workers 8 --trajectories 16384 --output results/onlyOP_coherent_3d
+```
+
+This separate event-driven solver retains motional phases on all three axes,
+correlated photon recoil, lattice scattering, and absorbing well escape. It
+compares against the deterministic population solver and a population-trajectory
+control. `--trajectories` is the number **per cloud site and per model**;
+`--seed` sets independent trajectory streams without changing the cloud positions.
+Use `--quadrature 48` to refine photon directions and `--samples` to refine the
+spatial cloud. Outputs include comparison plots, means and Monte Carlo standard
+errors, exact settings, and each site's final reduced density matrices.
+
+**Raman must be off throughout the schedule, and background heating must be
+zero.** This solver removes population projection of motional recoil for that
+case; **Recoil dynamics → population** retains the original Raman-capable
+backend and its warning. Raman driving creates coherent superpositions of spin
+and motion, which the pumping solver's one-spin-per-trajectory representation
+cannot store. This is an implementation limit, not a physical requirement for
+optical pumping.
+Optical elimination, resolved spin/emission channels, diagonal Stark shifts,
+fixed isolated wells, and no recapture remain assumptions. See the
+[3D coherent-pumping model and validation](docs/coherent-pumping.md).
+
+For the same 64-site `onlyOP_correlated.json` cloud, the higher-statistics run
+gives **19.808% +/- 0.017% target yield** and **47.669% +/- 0.024% well survival**
+(one-sigma Monte Carlo errors), versus 19.936% and 47.972% in the population model.
+Independent-seed and doubled-angle runs agree within their statistical precision.
+See the [comparison plot](results/onlyOP_coherent_3d/high_statistics/comparison.png)
+and [saved checks](results/onlyOP_coherent_3d/convergence.json).
+
 The separate [one-well reference solver](rb85rsc/recoil_reference.py) retains the motional density matrix in every ground spin state during optical pumping. It compares coherent recoil jumps with population-resolving jumps using the same optical rates, local spectrum, and absorbing escape boundary:
 
 ```powershell

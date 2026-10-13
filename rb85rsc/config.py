@@ -299,7 +299,7 @@ class NumericsConfig:
     conservation_tolerance: float = P(1e-6, "", "Max allowed |trace + overflow - 1|.", min=0.0)
     positivity_tolerance: float = P(1e-8, "", "Most negative eigenvalue/population tolerated before flagging.", min=0.0)
     rate_validity_epsilon: float = P(0.2, "", "Rate backend requires Omega_nm <= eps*sqrt(gamma^2 + delta^2) for occupied pairs.", min=0.0)
-    seed: int = P(0, "", "Recorded for reproducibility (the solvers are deterministic).")
+    seed: int = P(0, "", "Seed for the reproducible spatial cloud. Coherent pumping uses ensemble.trajectory_seed for independent Monte Carlo trajectories.")
 
 
 @dataclass
@@ -312,7 +312,10 @@ class AnalysisConfig:
 @dataclass
 class EnsembleConfig:
     enabled: bool = P(False, "", "Spatial/phase ensemble with coherent Raman dynamics along the driven lattice and three-axis bound-state recoil/loss.")
-    recoil_model: str = P("cartesian_marginals", "", "cartesian_marginals: independently averaged emission projections. correlated: one shared 3D emission direction for every photon, including coherent absorption paths; higher memory/time cost, at most 1024 joint motional states per site. Both retain population-resolving recoil.", choices=["cartesian_marginals", "correlated"])
+    recoil_dynamics: str = P("population", "", "population: existing Raman-capable solver with population-resolving recoil. coherent_pumping: quantum trajectories retaining motional coherence on all axes; Raman must be off throughout the schedule and recoil_model must be correlated.", choices=["population", "coherent_pumping"])
+    trajectories_per_site: int = P(16384, "", "Independent trajectories per spatial site for coherent pumping. More trajectories reduce Monte Carlo uncertainty; memory and runtime increase. Inactive for population dynamics.", min=2, max=1000000)
+    trajectory_seed: int = P(1729, "", "Monte Carlo seed for coherent pumping. Independent of numerics.seed, which sets cloud positions.", min=0)
+    recoil_model: str = P("cartesian_marginals", "", "cartesian_marginals: independently averaged emission projections. correlated: one shared 3D emission direction for every photon, including coherent absorption paths. Population dynamics uses dense correlated kernels, at most 1024 joint motional states per site. Coherent pumping requires correlated recoil.", choices=["cartesian_marginals", "correlated"])
     samples: int = P(32, "", "Deterministic scrambled Sobol samples of Gaussian position and uniform Raman spatial phase; refine to check convergence.", min=1)
     workers: int = P(1, "", "Worker processes for spatial samples in GUI and headless runs. Set 8 for eight workers, or 1 for sequential execution. Stop cancels all workers.", min=1, max=8)
     cloud_radius_um: float = P(150.0, "um", "Spherical Gaussian 1/e^2 DENSITY radius (coordinate standard deviation = radius/2).", min=0.0)
@@ -519,6 +522,17 @@ class SimConfig:
         if errs:
             raise ConfigError("; ".join(errs))
         from .protocols import raman_is_active
+        if self.ensemble.recoil_dynamics == "coherent_pumping":
+            if not self.ensemble.enabled:
+                raise ConfigError("coherent_pumping requires ensemble.enabled")
+            if self.ensemble.recoil_model != "correlated":
+                raise ConfigError("coherent_pumping requires ensemble.recoil_model = correlated")
+            if raman_is_active(self):
+                raise ConfigError("Coherent pumping requires Raman off throughout the schedule: choose optical_pumping_only, set every custom segment's raman to 0, or disable Raman. This solver cannot represent coherent spin-motion superpositions driven by Raman light.")
+        for name in ("trajectories_per_site", "trajectory_seed"):
+            value = getattr(self.ensemble, name)
+            if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+                raise ConfigError(f"ensemble.{name} must be an integer")
         if (self.raman.calibration == "measured_carrier" and raman_is_active(self)
                 and (self.raman.carrier_rabi_hz <= 0 or self.raman.flop_contrast <= 0)):
             raise ConfigError("active measured_carrier drive requires positive measured frequency and contrast")

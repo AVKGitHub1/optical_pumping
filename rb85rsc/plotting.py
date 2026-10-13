@@ -306,6 +306,9 @@ def plot_joint(ax, a, fig=None, nshow=None):
 
 
 def diagnostics_text(a) -> str:
+    if a.get('kind') == 'coherent_pumping':
+        from .coherent_results import diagnostics_text as coherent_diagnostics
+        return coherent_diagnostics(a)
     f = a["final"]
     v = a["validity"]
     up, down = _raman_labels(a)

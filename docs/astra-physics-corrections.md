@@ -91,7 +91,7 @@ Atomic conventions follow [ARC's hyperfine dipole documentation](https://arc-alk
 
 1. **Calibration:** the RMS/initial-curvature convention is an assumption without a raw carrier trace. It does not validate frequency and the reported decay simultaneously.
 2. **Spatial inputs:** microscopic registration is uniformly averaged and fixed during each sequence. Separate lasers do not specify a phase-diffusion rate. Experimental uncertainties in cloud size, temperature, depth and their correlations are unspecified.
-3. **Recoil coherence:** population-resolving jumps discard coherence transfer, including indistinguishable elastic channels. Resolved spherical emission channels omit mutual interference. The default Cartesian emission marginals also omit correlations within one photon's momentum; the optional correlated model below includes those Cartesian correlations. Passing numerical tests does not bound the remaining physical errors. See [Ozeri et al.](https://arxiv.org/abs/quant-ph/0502063) and [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
+3. **Recoil coherence:** population-resolving jumps discard coherence transfer, including indistinguishable elastic channels. The separate [3D pumping-only trajectory solver](coherent-pumping.md) now retains motional coherence on all axes; the Raman backend still uses population-resolving recoil. Resolved spherical emission channels omit mutual interference. The default Cartesian emission marginals also omit correlations within one photon's momentum; the optional correlated model below includes those Cartesian correlations. Passing numerical tests does not bound the remaining physical errors. See [Ozeri et al.](https://arxiv.org/abs/quant-ph/0502063) and [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
 4. **Trap and Stark model:** isolated separable scalar wells, diagonal shifts, no off-diagonal static dressing or changes of motional basis. Additional Raman standing-wave depth can reach about 6.6% of the central axial depth. Excited-state lattice shifts remain a configurable common shift; state-resolved excited polarizability is absent. D-line estimates omit higher excited states and hyperfine-mediated polarizability corrections.
 5. **Loss:** no recapture, tunnelling, intersite transport, coherent Raman escape to the continuum or collisions. Crossing one site barrier is not necessarily apparatus-level escape. The selected absorbing model estimates well loss; cooling-assisted recapture has not been calculated.
 6. **Optical reduction:** the motional-secular ratio of 0.480 is marginal. Stronger pumping requires a more complete optical master equation. The finite earlier search does not establish a global optimum.
@@ -232,6 +232,41 @@ The [comparison](../results/onlyOP_correlated_recoil/comparison.json) and full
 outputs record both models and the refined run. The command returns nonzero
 if probability or photon-count convergence fails. Motional coherence transfer,
 interference between emitted spherical channels, and recapture remain omitted.
+
+## Coherent 3D optical pumping (2026-10-13)
+
+A separate event-driven trajectory solver now retains motional phases on x/y/z
+during pumping, with correlated emission, standing-wave lattice scattering, and
+absorbing escape. The full absorption hazard drives conditional evolution;
+photons that cause escape remain in the counters. Raman light must be off.
+
+The GUI now exposes this as **3D spatial ensemble → Recoil dynamics →
+coherent_pumping**, with saved trajectory-count and seed controls, a dedicated
+results tab, uncertainty bands, diagnostics, export, and worker cancellation.
+The same config selects this solver in headless runs. Raman is excluded because
+the trajectory representation stores a definite spin and separate axis
+wavefunctions; coherent Raman transfer requires spin-motion superpositions.
+
+For `onlyOP_correlated.json`, 64 cloud sites and 65,536 trajectories per site give
+**19.8077% +/- 0.0167% absolute target yield** and **47.6690% +/- 0.0240% well
+survival**, compared with 19.9356% and 47.9720% in the matched deterministic
+population model. Errors are one-sigma Monte Carlo uncertainties for the fixed
+cloud. The changes are -0.1279 and -0.3031 percentage points, respectively.
+
+The population-trajectory controls agree with deterministic propagation, both
+in cloud averages and at individual sites. Independent seeds and doubling the
+angular grid give consistent final results at the available statistical
+precision. Tests compare the trajectory engine with independent full 3D master
+equations, including noncommuting conditional dynamics and escape.
+
+The population model's motional-secular warning remains applicable to that
+backend. The new solver avoids that recoil approximation for pumping-only
+sequences; optical elimination, resolved spin/emission channels, diagonal Stark
+shifts, frozen isolated wells, and no recapture remain assumptions. It does not
+validate the Raman calculation or apparatus-level loss. See the
+[model and reproduction commands](coherent-pumping.md),
+[high-statistics results](../results/onlyOP_coherent_3d/high_statistics/comparison.json),
+and [repeat/per-site checks](../results/onlyOP_coherent_3d/convergence.json).
 
 ## Validation and cleanup
 

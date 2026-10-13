@@ -128,6 +128,8 @@ def _reject_weak_excitation(cfg):
 
 
 def run_scan(spec: dict, base: SimConfig, stop: threading.Event | None = None, progress=None, log=print, workers=None) -> dict:
+    if base.ensemble.recoil_dynamics == 'coherent_pumping':
+        raise ValueError('Parameter scans currently require population recoil dynamics; coherent pumping is available for individual runs.')
     stop = stop or threading.Event()
     axes = spec["axes"]
     vals = [axis_values(a) for a in axes]

@@ -1,0 +1,596 @@
+{
+  "trajectories_per_site": 65536,
+  "sites": 64,
+  "trajectory_seed": 1730,
+  "spatial_seed": 0,
+  "workers": 8,
+  "wall_time_s": 285.7451522999909,
+  "recoil_model": "correlated",
+  "solver": "coherent_3d_pumping_trajectories",
+  "config": {
+    "name": "onlyOP - diagonalized states and correlated photon recoil",
+    "trap": {
+      "lattice_x": {
+        "confinement": "depth",
+        "wavelength_nm": 1188.0,
+        "frequency_hz": 45622.31109,
+        "waist_um": 200.0,
+        "depth_uk": 15.0
+      },
+      "lattice_y": {
+        "confinement": "depth",
+        "wavelength_nm": null,
+        "frequency_hz": null,
+        "waist_um": null,
+        "depth_uk": null
+      },
+      "lattice_z": {
+        "confinement": "depth",
+        "wavelength_nm": null,
+        "frequency_hz": null,
+        "waist_um": null,
+        "depth_uk": null
+      },
+      "wavelength_nm": 785.0,
+      "frequency_hz": 69043.70137,
+      "potential": "lattice",
+      "n_max": 16,
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "heating_rate_quanta_per_s": 0.0,
+      "depth_uk": 15.0
+    },
+    "initial": {
+      "spin_preset": "uniform_F3",
+      "f3_fraction": 1.0,
+      "custom_spin_populations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285
+      ],
+      "motion_mode": "thermal_temperature",
+      "nbar": 3.0,
+      "temperature_k": 5e-06,
+      "fock_n": 1,
+      "custom_pn": []
+    },
+    "magnetic": {
+      "magnitude_gauss": 3.0,
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "raman": {
+      "state_up": [
+        3,
+        3
+      ],
+      "state_down": [
+        2,
+        2
+      ],
+      "calibration": "measured_carrier",
+      "carrier_decay_mode": "modeled",
+      "beam_helicities": [
+        1,
+        -1
+      ],
+      "polarization_mode": "helicity",
+      "beam_low_ellipticity_deg": 45.0,
+      "beam_high_ellipticity_deg": -45.0,
+      "beam_low_orientation_deg": 0.0,
+      "beam_high_orientation_deg": 0.0,
+      "waist_um": 200.0,
+      "flop_contrast": 0.9,
+      "flop_decay_periods": 3.5,
+      "enabled": true,
+      "carrier_rabi_hz": 5000.0,
+      "frequency_mode": "sideband_offset",
+      "red_sideband_offset_hz": -5000.0,
+      "beat_frequency_hz": 3035802400.0,
+      "wavelength_nm": 783.0,
+      "beam_low_direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "beam_high_direction": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "tone_layout": "both_tones_both_beams",
+      "tone_powers_low": [
+        1.0,
+        1.0
+      ],
+      "tone_powers_high": [
+        1.0,
+        1.0
+      ],
+      "lattice_phase_deg": 0.0,
+      "beam_beat_phase_deg": 0.0,
+      "extra_coherence_decay_rate_s": 0.0,
+      "differential_light_shift_hz": 0.0,
+      "scattering_rate_s": 0.0,
+      "scattering_model": "spin_preserving",
+      "max_sideband_order": 3
+    },
+    "spin_pump": {
+      "enabled": true,
+      "intensity_mode": "power_waist",
+      "peak_intensity_w_m2": 0.1,
+      "power_mw": 5e-05,
+      "waist_um": 200.0,
+      "detuning_mhz": 0.0,
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.01,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.0
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "repump": {
+      "enabled": true,
+      "intensity_mode": "power_waist",
+      "peak_intensity_w_m2": 0.1,
+      "power_mw": 5e-05,
+      "waist_um": 200.0,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "geometry",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 90.0,
+        "beam_azimuth_deg": 90.0,
+        "ellipticity_deg": 0.0,
+        "orientation_deg": 90.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "optical": {
+      "zeeman_model": "diagonalized",
+      "excited_manifold": "all_D2",
+      "path_model": "kramers_heisenberg",
+      "emission_pattern": "dipole",
+      "excited_state_shift_hz": 0.0,
+      "weak_excitation_warning": 0.02,
+      "weak_excitation_invalid": 0.1
+    },
+    "timing": {
+      "protocol": "custom",
+      "total_duration_ms": 5.0,
+      "prep_duration_ms": 1.0,
+      "prep_pump_scale": 1.0,
+      "prep_repump_scale": 1.0,
+      "cooling_pump_scale": 1.0,
+      "cooling_repump_scale": 1.0,
+      "cooling_raman_amplitude": 1.0,
+      "raman_pulse_ms": 0.3,
+      "reset_pulse_ms": 0.1,
+      "reset_pump_scale": 1.0,
+      "reset_repump_scale": 1.0,
+      "repetitions": 0,
+      "pulsed_first": "reset",
+      "custom_segments": [
+        {
+          "duration_ms": 1,
+          "raman": 0.0,
+          "pump": 1.0,
+          "repump": 1.0,
+          "label": "only OP"
+        }
+      ],
+      "n_samples": 201
+    },
+    "numerics": {
+      "solver": "coherent",
+      "method": "DOP853",
+      "rtol": 1e-07,
+      "atol": 1e-10,
+      "recoil_quadrature_points": 24,
+      "boundary_tolerance": 0.0001,
+      "conservation_tolerance": 1e-06,
+      "positivity_tolerance": 1e-08,
+      "rate_validity_epsilon": 0.2,
+      "seed": 0
+    },
+    "analysis": {
+      "spin_threshold": 0.9,
+      "joint_threshold": 0.5,
+      "derivative_window": 11
+    },
+    "ensemble": {
+      "enabled": true,
+      "recoil_model": "correlated",
+      "samples": 64,
+      "workers": 8,
+      "cloud_radius_um": 150.0,
+      "lattice_waist_um": 200.0,
+      "transverse_wavelength_nm": 1188.0,
+      "transverse_depth_uk": 15.0,
+      "transverse_temperature_k": 1e-05,
+      "transverse_reference_direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "transverse_frequency_offset_hz": 160000000.0,
+      "lattice_linear_polarizations": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "phase_offset_deg": 0.0,
+      "time_step_us": 2.0,
+      "calibration_samples": 128
+    }
+  },
+  "versions": {
+    "python": "3.13.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.3.5",
+    "scipy": "1.18.1",
+    "matplotlib": "3.10.7",
+    "qutip": "5.3.1",
+    "PyQt6": "6.9.1",
+    "ARC-Alkali-Rydberg-Calculator": "3.10.2",
+    "threadpoolctl": "3.5.0"
+  },
+  "final": {
+    "coherent": {
+      "survival": {
+        "mean": 0.47668957710266113,
+        "standard_error": 0.0002399806985108165
+      },
+      "loss": {
+        "mean": 0.5233104228973389,
+        "standard_error": 0.0002399806985108165
+      },
+      "P_up_absolute": {
+        "mean": 0.448610782623291,
+        "standard_error": 0.00023886529536521796
+      },
+      "P_n0_absolute": {
+        "mean": 0.21178763436770986,
+        "standard_error": 0.00016965613436489558
+      },
+      "P_target_absolute": {
+        "mean": 0.19807736069523796,
+        "standard_error": 0.00016653580712256195
+      },
+      "P_3d_ground_absolute": {
+        "mean": 0.014774716494468045,
+        "standard_error": 3.789911051181396e-05
+      },
+      "P_target_3d_absolute": {
+        "mean": 0.013589403064228997,
+        "standard_error": 3.6672475913104766e-05
+      },
+      "photons_spin_pump": {
+        "mean": 3.242544412612915,
+        "standard_error": 0.0013357530001665526
+      },
+      "photons_repump": {
+        "mean": 2.040090322494507,
+        "standard_error": 0.0013107428017709248
+      },
+      "photons_lattice_scatter": {
+        "mean": 0.0022029876708984375,
+        "standard_error": 2.294424427493664e-05
+      },
+      "photons_total": {
+        "mean": 5.28483772277832,
+        "standard_error": 0.0024406379194362063
+      }
+    },
+    "population": {
+      "survival": {
+        "mean": 0.47953033447265625,
+        "standard_error": 0.00023998181919800425
+      },
+      "loss": {
+        "mean": 0.5204696655273438,
+        "standard_error": 0.00023998181919800425
+      },
+      "P_up_absolute": {
+        "mean": 0.4511525630950928,
+        "standard_error": 0.00023895104841765763
+      },
+      "P_n0_absolute": {
+        "mean": 0.21291255950927734,
+        "standard_error": 0.00019921950079312647
+      },
+      "P_target_absolute": {
+        "mean": 0.1991279125213623,
+        "standard_error": 0.00019440878376969872
+      },
+      "P_3d_ground_absolute": {
+        "mean": 0.01481938362121582,
+        "standard_error": 5.894968664569823e-05
+      },
+      "P_target_3d_absolute": {
+        "mean": 0.013621091842651367,
+        "standard_error": 5.657132560541756e-05
+      },
+      "photons_spin_pump": {
+        "mean": 3.2594330310821533,
+        "standard_error": 0.0013439463056674702
+      },
+      "photons_repump": {
+        "mean": 2.0535645484924316,
+        "standard_error": 0.001315260376395458
+      },
+      "photons_lattice_scatter": {
+        "mean": 0.002218008041381836,
+        "standard_error": 2.3016446174221736e-05
+      },
+      "photons_total": {
+        "mean": 5.315215587615967,
+        "standard_error": 0.00245211884654555
+      }
+    }
+  },
+  "deterministic_population": {
+    "P_up_absolute": 0.45149223916875886,
+    "P_n0_absolute": 0.21307410893445272,
+    "P_target_absolute": 0.19935601860422233,
+    "P_3d_ground_absolute": 0.014822554247364797,
+    "P_target_3d_absolute": 0.013633709298176692,
+    "photons_total": 5.312718795083016,
+    "survival": 0.47972034173422967,
+    "loss": 0.5202796582657749,
+    "photons_spin_pump": 3.2584425695781603,
+    "photons_repump": 2.052051794084822,
+    "photons_lattice_scatter": 0.0022244314200332337
+  },
+  "population_control": {
+    "passed": true,
+    "observables": {
+      "P_up_absolute": {
+        "difference": -0.0003396760736660842,
+        "standard_error": 0.00023895104841765763,
+        "sigma": -1.42152995735081,
+        "tolerance": 0.0016731441760818064,
+        "passed": true
+      },
+      "P_n0_absolute": {
+        "difference": -0.00016154942517537796,
+        "standard_error": 0.00019921950079312647,
+        "sigma": -0.8109117055921856,
+        "tolerance": 0.0013950233427100884,
+        "passed": true
+      },
+      "P_target_absolute": {
+        "difference": -0.0002281060828600301,
+        "standard_error": 0.00019440878376969872,
+        "sigma": -1.173332184055274,
+        "tolerance": 0.001361348323546094,
+        "passed": true
+      },
+      "P_3d_ground_absolute": {
+        "difference": -3.170626148976674e-06,
+        "standard_error": 5.894968664569823e-05,
+        "sigma": -0.05378529266886351,
+        "tolerance": 0.0004131346436780907,
+        "passed": true
+      },
+      "P_target_3d_absolute": {
+        "difference": -1.2617455525325283e-05,
+        "standard_error": 5.657132560541756e-05,
+        "sigma": -0.2230362359427719,
+        "tolerance": 0.000396486116396126,
+        "passed": true
+      },
+      "photons_total": {
+        "difference": 0.0024967925329510976,
+        "standard_error": 0.00245211884654555,
+        "sigma": 1.0182184017991143,
+        "tolerance": 0.017165318762977055,
+        "passed": true
+      },
+      "survival": {
+        "difference": -0.00019000726157342163,
+        "standard_error": 0.00023998181919800425,
+        "sigma": -0.7917569014536489,
+        "tolerance": 0.0016803595715442327,
+        "passed": true
+      },
+      "loss": {
+        "difference": 0.0001900072615688142,
+        "standard_error": 0.00023998181919800425,
+        "sigma": 0.7917569014344498,
+        "tolerance": 0.0016803595715442327,
+        "passed": true
+      },
+      "photons_spin_pump": {
+        "difference": 0.0009904615039930675,
+        "standard_error": 0.0013439463056674702,
+        "sigma": 0.736979966994407,
+        "tolerance": 0.009408110976830494,
+        "passed": true
+      },
+      "photons_repump": {
+        "difference": 0.0015127544076096733,
+        "standard_error": 0.001315260376395458,
+        "sigma": 1.1501558434805574,
+        "tolerance": 0.009207309471926408,
+        "passed": true
+      },
+      "photons_lattice_scatter": {
+        "difference": -6.423378651397756e-06,
+        "standard_error": 2.3016446174221736e-05,
+        "sigma": -0.2790777778105421,
+        "tolerance": 0.00016160196037775528,
+        "passed": true
+      }
+    },
+    "criterion": "Final cloud observables within 7 Monte Carlo standard errors + 2/N + 1e-8."
+  },
+  "coherent_minus_deterministic_population": {
+    "P_up_absolute": {
+      "difference": -0.002881456545467842,
+      "standard_error": 0.00023886529536521796
+    },
+    "P_n0_absolute": {
+      "difference": -0.0012864745667428568,
+      "standard_error": 0.00016965613436489558
+    },
+    "P_target_absolute": {
+      "difference": -0.0012786579089843764,
+      "standard_error": 0.00016653580712256195
+    },
+    "P_3d_ground_absolute": {
+      "difference": -4.7837752896752114e-05,
+      "standard_error": 3.789911051181396e-05
+    },
+    "P_target_3d_absolute": {
+      "difference": -4.430623394769545e-05,
+      "standard_error": 3.6672475913104766e-05
+    },
+    "photons_total": {
+      "difference": -0.027881072304695387,
+      "standard_error": 0.0024406379194362063
+    },
+    "survival": {
+      "difference": -0.003030764631568539,
+      "standard_error": 0.0002399806985108165
+    },
+    "loss": {
+      "difference": 0.0030307646315639314,
+      "standard_error": 0.0002399806985108165
+    },
+    "photons_spin_pump": {
+      "difference": -0.015898156965245214,
+      "standard_error": 0.0013357530001665526
+    },
+    "photons_repump": {
+      "difference": -0.011961471590315131,
+      "standard_error": 0.0013107428017709248
+    },
+    "photons_lattice_scatter": {
+      "difference": -2.1443749134796193e-05,
+      "standard_error": 2.294424427493664e-05
+    }
+  },
+  "population_validity": [
+    {
+      "category": "magnetic field",
+      "status": "ok",
+      "message": "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+    },
+    {
+      "category": "ground coherences",
+      "status": "ok",
+      "message": "adjacent-mF Zeeman angular splitting / maximum photon rate across nodes = 45.6 (needs >>1)"
+    },
+    {
+      "category": "conservation",
+      "status": "ok",
+      "message": "max |survival + well loss - 1| = 4.66e-15"
+    },
+    {
+      "category": "positivity",
+      "status": "ok",
+      "message": "minimum density eigenvalue / population = 0"
+    },
+    {
+      "category": "weak excitation",
+      "status": "ok",
+      "message": "maximum eliminated excited fraction across nodes and spin states = 0.005052"
+    },
+    {
+      "category": "motional secular",
+      "status": "invalid",
+      "message": "max optical rate / smallest local motional angular spacing across all axes = 2.84"
+    },
+    {
+      "category": "carrier calibration",
+      "status": "ok",
+      "message": "Raman light is off throughout the schedule; no carrier calibration is applied."
+    },
+    {
+      "category": "three-dimensional recoil",
+      "status": "warning",
+      "message": "Joint spin/nx/ny/nz populations and a shared 3D emission direction retained. Interference between emitted spherical dipole channels remains neglected."
+    },
+    {
+      "category": "recoil coherence",
+      "status": "warning",
+      "message": "Population-resolving scattering erases motional coherence and treats elastic spin amplitudes as distinguishable; this is an additional approximation beyond secular averaging."
+    },
+    {
+      "category": "lattice",
+      "status": "warning",
+      "message": "Separable isolated wells with Gaussian local depths; no tunnelling, coherent Raman continuum excitation, envelope transport or recapture. Scalar trap basis with diagonal differential shifts; trap shape changes from spin-dependent shifts neglected."
+    },
+    {
+      "category": "Stark shift approximation",
+      "status": "warning",
+      "message": "Raman/trap Stark operators use diagonal matrix elements; static off-diagonal motional dressing and trap-basis changes are omitted. Excited-state lattice shifts of the pumping transitions remain the configured common optical shift."
+    },
+    {
+      "category": "spatial ensemble",
+      "status": "warning",
+      "message": "64 frozen Gaussian position / uniform registration samples. Refine samples and time_step_us for convergence; samples are numerical quadrature, not experimental error bars."
+    },
+    {
+      "category": "temperature",
+      "status": "warning",
+      "message": "Axis temperatures are energy-matched bound-state mixture proxies; survivor cooling of undriven axes may result from preferential loss."
+    }
+  ],
+  "interpretation": [
+    "Coherent trajectories retain motional phases on all axes and shared photon directions. Raman must be off.",
+    "The population motional-secular criterion does not apply to this trajectory solver. It still applies to the deterministic and population controls.",
+    "Errors are one-sigma Monte Carlo standard errors for the fixed spatial and angular quadratures, not experimental or model uncertainty.",
+    "Repeat with more trajectories and independent seeds; refine angular quadrature and cloud sampling separately.",
+    "Weak-excitation elimination, resolved spin and spherical emission channels, diagonal Stark shifts, frozen isolated wells, and no recapture remain assumptions.",
+    "Initial distributions are conditioned on local bound levels; survival is relative to that loaded ensemble.",
+    "Passing the population control validates stochastic propagation, not the shared physical approximations."
+  ]
+}

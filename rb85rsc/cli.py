@@ -86,7 +86,10 @@ def main(argv=None) -> int:
 
     est = runner.estimate(cfg)
     n_runs = 7 if args.compare_protocols else 1
-    if cfg.ensemble.enabled:
+    if cfg.ensemble.recoil_dynamics == 'coherent_pumping':
+        print(f"Coherent pumping: {cfg.ensemble.samples} sites, {cfg.ensemble.trajectories_per_site} trajectories per site; "
+              "event-driven evolution with Monte Carlo uncertainty.")
+    elif cfg.ensemble.enabled:
         print(f"3D ensemble: {cfg.ensemble.samples} spatial/phase samples, maximum split step {cfg.ensemble.time_step_us:g} us. "
               "Use sample and timestep refinements to check convergence.")
     else:

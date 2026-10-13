@@ -442,6 +442,10 @@ class MainWindow(QMainWindow):
                               "state B defines P_down. Initial populations and optical-pump settings are set separately.")
                 note.setWordWrap(True)
                 form.addRow(note)
+            if key == "ensemble":
+                self.coherent_note = QLabel()
+                self.coherent_note.setWordWrap(True)
+                form.addRow(self.coherent_note)
             for p, f in info:
                 if p.split(".")[0] != key:
                     continue
@@ -458,6 +462,9 @@ class MainWindow(QMainWindow):
                         "raman.beam_low_orientation_deg": "Beam 1 orientation",
                         "raman.beam_high_orientation_deg": "Beam 2 orientation",
                         "raman.beat_frequency_hz": "Signed beat frequency"}.get(p, p.split(".", 1)[1])
+                name = {"ensemble.recoil_dynamics": "Recoil dynamics",
+                        "ensemble.trajectories_per_site": "Trajectories per site",
+                        "ensemble.trajectory_seed": "Trajectory seed"}.get(p, name)
                 lab = QLabel(name + (f" [{unit}]" if unit else ""))
                 if p == "trap.axis":
                     self.trap_axis_label = lab
@@ -514,6 +521,7 @@ class MainWindow(QMainWindow):
         self.t_pnt = PlotTab()
         self.t_joint = PlotTab()
         self.t_cmp = PlotTab((12, 8))
+        self.t_coherent = PlotTab((11, 8))
         self.diag = QPlainTextEdit()
         self.diag.setReadOnly(True)
         self.diag.setStyleSheet("font-family: Consolas, monospace; font-size: 9pt;")
@@ -521,6 +529,8 @@ class MainWindow(QMainWindow):
                      (self.t_thermal, "Thermal x/y/z"), (self.t_pnt, "p(n,t)"),
                      (self.t_joint, "Joint P(F,mF,n)"), (self.diag, "Diagnostics / validity"), (self.t_cmp, "Protocol comparison")):
             self.tabs.addTab(w, n)
+        self.tabs.addTab(self.t_coherent, "Coherent pumping")
+        self.tabs.setTabEnabled(self.tabs.indexOf(self.t_coherent), False)
         self.tabs.addTab(self._scan_tab(), "Scan")
 
         right = QWidget()
@@ -557,6 +567,8 @@ class MainWindow(QMainWindow):
             m.addAction(act)
         self.load_config(base)
         self.fields["ensemble.enabled"].w.toggled.connect(self._lattice_visibility)
+        self.fields["ensemble.enabled"].w.toggled.connect(self._refresh_activity)
+        self.fields["ensemble.recoil_dynamics"].w.currentTextChanged.connect(self._refresh_activity)
         self.fields["raman.polarization_mode"].w.currentTextChanged.connect(self._raman_visibility)
         self.protocol.currentIndexChanged.connect(self._refresh_activity)
         self.fields["raman.enabled"].w.toggled.connect(self._refresh_activity)
@@ -622,6 +634,26 @@ class MainWindow(QMainWindow):
 
     def _refresh_activity(self, *_):
         from .protocols import build_schedule, raman_is_active, schedule_duration
+        coherent = self.fields['ensemble.recoil_dynamics'].get() == 'coherent_pumping'
+        ensemble = self.fields['ensemble.enabled'].get()
+        busy = self.thread is not None
+        if coherent:
+            self.fields['ensemble.recoil_model'].set('correlated')
+        self.fields['ensemble.recoil_model'].w.setEnabled(not coherent)
+        self.fields['ensemble.time_step_us'].w.setEnabled(ensemble and not coherent)
+        for path in ('ensemble.trajectories_per_site', 'ensemble.trajectory_seed'):
+            self.fields[path].w.setEnabled(ensemble and coherent)
+        for path in ('numerics.solver', 'numerics.method', 'numerics.rtol', 'numerics.atol', 'numerics.rate_validity_epsilon'):
+            self.fields[path].w.setEnabled(not ensemble)
+        self.coherent_note.setText(
+            'Coherent pumping retains motional phases on x/y/z and uses correlated photon recoil. '
+            'Raman must be off: this solver cannot represent the spin-motion superpositions created by Raman coupling. '
+            'Results include Monte Carlo errors; increase trajectories to reduce them.' if coherent else
+            'Population recoil supports coherent Raman driving. Scattering resolves motional populations; check the motional-secular diagnostic.')
+        for button in (self.cmp_btn, self.scan_btn):
+            button.setEnabled(not busy and not coherent)
+            button.setToolTip('Available with population recoil dynamics; coherent pumping currently supports individual runs.' if coherent else '')
+        self.run_btn.setEnabled(not busy)
         custom = self.protocol.currentData() == "custom"
         self.fields["timing.total_duration_ms"].w.setEnabled(not custom)
         self.fields["timing.custom_segments"].w.setEnabled(custom)
@@ -646,6 +678,10 @@ class MainWindow(QMainWindow):
         source = "sum of custom segments; total_duration_ms is inactive" if custom else "built-in protocol duration"
         raman = "Raman light scheduled" if active else "Raman off; carrier calibration is not applied"
         self.schedule_note.setText(f"Sequence: {duration:g} ms ({source}). {raman}.")
+        if coherent and active:
+            self.schedule_note.setText(self.schedule_note.text() +
+                ' Coherent pumping requires Raman off: choose the optical-pumping-only protocol, disable Raman, or set every custom Raman multiplier to 0.')
+            self.run_btn.setEnabled(False)
 
     def _lattice_visibility(self, *_):
         ensemble = self.fields["ensemble.enabled"].get()
@@ -718,6 +754,7 @@ class MainWindow(QMainWindow):
         for b in (self.run_btn, self.cmp_btn, self.scan_btn):
             b.setEnabled(True)
         self.stop_btn.setEnabled(False)
+        self._refresh_activity()
         if self._close_when_finished:
             self.close()
 
@@ -803,6 +840,9 @@ class MainWindow(QMainWindow):
         self.last = None
         for t in (self.t_over, self.t_spin, self.t_tr, self.t_thermal, self.t_pnt, self.t_joint, self.t_cmp, self.t_scan):
             t.draw(lambda f: None)
+        self.t_coherent.draw(lambda f: None)
+        self._result_tabs(False)
+        self.validity_banner.hide()
         self.diag.clear()
         self.prog.setValue(0)
         self.status.setText(msg)
@@ -840,14 +880,26 @@ class MainWindow(QMainWindow):
             self.status.setText(f"Exported to {d}")
 
     # ------------------------------------------------------------------
+    def _result_tabs(self, coherent):
+        for tab in (self.t_over, self.t_spin, self.t_tr, self.t_thermal, self.t_pnt, self.t_joint, self.t_cmp):
+            self.tabs.setTabEnabled(self.tabs.indexOf(tab), not coherent)
+        self.tabs.setTabEnabled(self.tabs.indexOf(self.t_coherent), coherent)
+
     def _show_result(self, a):
         self.last = a
-        self.t_over.draw(lambda f: _overview(f, a))
-        self.t_spin.draw(lambda f: pl.plot_spin_bars(pl._new(f, 111), a))
-        self.t_tr.draw(lambda f: _traces(f, a))
-        self.t_thermal.draw(lambda f: pl.draw_thermal_axes(f, a))
-        self.t_pnt.draw(lambda f: pl.draw_motional_axes(f, a))
-        self.t_joint.draw(lambda f: pl.plot_joint(pl._new(f, 111), a, f, nshow=min(a["P_final"].shape[1], 30)))
+        coherent = a.get('kind') == 'coherent_pumping'
+        self._result_tabs(coherent)
+        if coherent:
+            from .coherent_results import draw_dashboard
+            self.t_coherent.draw(lambda f: draw_dashboard(f, a))
+            self.tabs.setCurrentWidget(self.t_coherent)
+        else:
+            self.t_over.draw(lambda f: _overview(f, a))
+            self.t_spin.draw(lambda f: pl.plot_spin_bars(pl._new(f, 111), a))
+            self.t_tr.draw(lambda f: _traces(f, a))
+            self.t_thermal.draw(lambda f: pl.draw_thermal_axes(f, a))
+            self.t_pnt.draw(lambda f: pl.draw_motional_axes(f, a))
+            self.t_joint.draw(lambda f: pl.plot_joint(pl._new(f, 111), a, f, nshow=min(a["P_final"].shape[1], 30)))
         self.diag.setPlainText(pl.diagnostics_text(a))
         st = a["validity"].status.upper()
         problems = [category for category, status, _ in a["validity"].items if status == "invalid"]
@@ -857,11 +909,14 @@ class MainWindow(QMainWindow):
         self.validity_banner.setStyleSheet("padding: 6px; background: #fde8e8; color: #8a1515;" if problems else
                                           "padding: 6px; background: #fff5d6; color: #574100;")
         self.validity_banner.show()
-        self.status.setText(f"Done ({a['final']['wall_time_s']:.1f} s). P_target={a['final']['P_target']:.4f}. Validity: {st}")
+        result_label = (f"Absolute target={a['final']['P_target_absolute']:.5f} +/- {a['standard_error']['P_target_absolute'][-1]:.5f} (MC SE)"
+                        if coherent else f"P_target={a['final']['P_target']:.4f}")
+        self.status.setText(f"Done ({a['final']['wall_time_s']:.1f} s). {result_label}. Validity: {st}")
         self.prog.setValue(1000)
 
     def _show_compare(self, res):
         self.last = res
+        self._result_tabs(False)
         invalid = [name for name, a in res.items() if a["validity"].status == "invalid"]
         self.validity_banner.setText("Comparison: outside model limits: " + ", ".join(invalid) if invalid else
                                      "Comparison complete. See Diagnostics / validity for each protocol's assumptions.")

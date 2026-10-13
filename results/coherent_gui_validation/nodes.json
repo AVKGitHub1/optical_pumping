@@ -1,0 +1,406 @@
+[
+  {
+    "index": 0,
+    "position_um": [
+      77.92107666624156,
+      111.45315624784845,
+      -26.340312885120575
+    ],
+    "bound_levels": [
+      7,
+      8,
+      4
+    ],
+    "depths_uk": [
+      7.785548782369001,
+      10.694984438596208,
+      5.949904623591229
+    ],
+    "initial_tail_discarded": 0.0,
+    "diagnostics": {
+      "max_photon_rate_bound_s": 100858.60491937357,
+      "max_excited_fraction": 0.002646220184271498,
+      "ground_angular_spacing_s": 8777554.282435432,
+      "magnetic": {
+        "B_gauss": 3.0000000000000004,
+        "breit_rabi_source": "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors",
+        "ground_energy_model": "Breit-Rabi",
+        "raman_quadratic_zeeman_error_hz": 3228.9545645713806,
+        "excited_zeeman_over_min_hfs": 0.19071653433508737,
+        "excited_quadratic_zeeman_hz": 1068341.7778811986,
+        "excited_quadratic_over_gamma": 0.17612261355645034,
+        "optical_zeeman_model": "diagonalized",
+        "max_included_excited_correction_hz": 1092969.9367334992,
+        "fine_structure_mixing_shift_over_gamma_estimate": 1.632196394103526e-06,
+        "status": "ok",
+        "notes": [
+          "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+        ]
+      }
+    },
+    "modes": {
+      "coherent": {
+        "trajectories": 4096,
+        "mode": "coherent",
+        "proposed_events": 17236,
+        "photon_events": 17232,
+        "max_conservation_error": 0.0,
+        "wall_time_s": 0.5214323999825865,
+        "seed_entropy": [
+          1729,
+          0,
+          0
+        ],
+        "final": {
+          "survival": {
+            "mean": 0.39599609375,
+            "standard_error": 0.007642551458274036
+          },
+          "loss": {
+            "mean": 0.60400390625,
+            "standard_error": 0.007642551458274036
+          },
+          "P_up_absolute": {
+            "mean": 0.377197265625,
+            "standard_error": 0.007574126777524133
+          },
+          "P_n0_absolute": {
+            "mean": 0.1740313429671314,
+            "standard_error": 0.005080634712954915
+          },
+          "P_target_absolute": {
+            "mean": 0.16572407975655798,
+            "standard_error": 0.005008534712805402
+          },
+          "P_3d_ground_absolute": {
+            "mean": 0.011459758397111757,
+            "standard_error": 0.0010012461519102159
+          },
+          "P_target_3d_absolute": {
+            "mean": 0.01093831128552766,
+            "standard_error": 0.0009872101350359777
+          },
+          "photons_spin_pump": {
+            "mean": 2.6240234375,
+            "standard_error": 0.0354871263118154
+          },
+          "photons_repump": {
+            "mean": 1.582275390625,
+            "standard_error": 0.03573263326427805
+          },
+          "photons_lattice_scatter": {
+            "mean": 0.000732421875,
+            "standard_error": 0.00042276069059612694
+          },
+          "photons_total": {
+            "mean": 4.20703125,
+            "standard_error": 0.06521245001392686
+          }
+        }
+      }
+    }
+  },
+  {
+    "index": 1,
+    "position_um": [
+      -10.942057642129946,
+      -2.0899655363610887,
+      26.088791957081767
+    ],
+    "bound_levels": [
+      9,
+      9,
+      6
+    ],
+    "depths_uk": [
+      14.494953436951924,
+      14.411586722444182,
+      14.907215716950143
+    ],
+    "initial_tail_discarded": 0.0,
+    "diagnostics": {
+      "max_photon_rate_bound_s": 187778.36385382075,
+      "max_excited_fraction": 0.004926675353810746,
+      "ground_angular_spacing_s": 8777554.282435432,
+      "magnetic": {
+        "B_gauss": 3.0000000000000004,
+        "breit_rabi_source": "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors",
+        "ground_energy_model": "Breit-Rabi",
+        "raman_quadratic_zeeman_error_hz": 3228.9545645713806,
+        "excited_zeeman_over_min_hfs": 0.19071653433508737,
+        "excited_quadratic_zeeman_hz": 1068341.7778811986,
+        "excited_quadratic_over_gamma": 0.17612261355645034,
+        "optical_zeeman_model": "diagonalized",
+        "max_included_excited_correction_hz": 1092969.9367334992,
+        "fine_structure_mixing_shift_over_gamma_estimate": 1.632196394103526e-06,
+        "status": "ok",
+        "notes": [
+          "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+        ]
+      }
+    },
+    "modes": {
+      "coherent": {
+        "trajectories": 4096,
+        "mode": "coherent",
+        "proposed_events": 30440,
+        "photon_events": 30439,
+        "max_conservation_error": 0.0,
+        "wall_time_s": 0.8416141998022795,
+        "seed_entropy": [
+          1729,
+          1,
+          0
+        ],
+        "final": {
+          "survival": {
+            "mean": 0.593505859375,
+            "standard_error": 0.007675606418117517
+          },
+          "loss": {
+            "mean": 0.406494140625,
+            "standard_error": 0.007675606418117517
+          },
+          "P_up_absolute": {
+            "mean": 0.5673828125,
+            "standard_error": 0.007742175641124367
+          },
+          "P_n0_absolute": {
+            "mean": 0.2555887818244683,
+            "standard_error": 0.0056469617089351665
+          },
+          "P_target_absolute": {
+            "mean": 0.24487500409692503,
+            "standard_error": 0.005603634277208542
+          },
+          "P_3d_ground_absolute": {
+            "mean": 0.012575370268376674,
+            "standard_error": 0.0010671099620485599
+          },
+          "P_target_3d_absolute": {
+            "mean": 0.011831025446136172,
+            "standard_error": 0.0010303138961479258
+          },
+          "photons_spin_pump": {
+            "mean": 4.458740234375,
+            "standard_error": 0.05504677527402051
+          },
+          "photons_repump": {
+            "mean": 2.969482421875,
+            "standard_error": 0.053051433849885594
+          },
+          "photons_lattice_scatter": {
+            "mean": 0.003173828125,
+            "standard_error": 0.0008789708350939624
+          },
+          "photons_total": {
+            "mean": 7.431396484375,
+            "standard_error": 0.10057531654568475
+          }
+        }
+      }
+    }
+  },
+  {
+    "index": 2,
+    "position_um": [
+      -181.92325924322446,
+      7.396490963522868,
+      -76.4638940595783
+    ],
+    "bound_levels": [
+      8,
+      4,
+      3
+    ],
+    "depths_uk": [
+      11.167172441834534,
+      2.140223437608032,
+      2.859112278421026
+    ],
+    "initial_tail_discarded": 0.0,
+    "diagnostics": {
+      "max_photon_rate_bound_s": 144663.20515740174,
+      "max_excited_fraction": 0.003795589639372223,
+      "ground_angular_spacing_s": 8777554.282435432,
+      "magnetic": {
+        "B_gauss": 3.0000000000000004,
+        "breit_rabi_source": "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors",
+        "ground_energy_model": "Breit-Rabi",
+        "raman_quadratic_zeeman_error_hz": 3228.9545645713806,
+        "excited_zeeman_over_min_hfs": 0.19071653433508737,
+        "excited_quadratic_zeeman_hz": 1068341.7778811986,
+        "excited_quadratic_over_gamma": 0.17612261355645034,
+        "optical_zeeman_model": "diagonalized",
+        "max_included_excited_correction_hz": 1092969.9367334992,
+        "fine_structure_mixing_shift_over_gamma_estimate": 1.632196394103526e-06,
+        "status": "ok",
+        "notes": [
+          "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+        ]
+      }
+    },
+    "modes": {
+      "coherent": {
+        "trajectories": 4096,
+        "mode": "coherent",
+        "proposed_events": 12367,
+        "photon_events": 12366,
+        "max_conservation_error": 0.0,
+        "wall_time_s": 0.38556209998205304,
+        "seed_entropy": [
+          1729,
+          2,
+          0
+        ],
+        "final": {
+          "survival": {
+            "mean": 0.236572265625,
+            "standard_error": 0.006641083306786717
+          },
+          "loss": {
+            "mean": 0.763427734375,
+            "standard_error": 0.006641083306786717
+          },
+          "P_up_absolute": {
+            "mean": 0.209716796875,
+            "standard_error": 0.00636181492414369
+          },
+          "P_n0_absolute": {
+            "mean": 0.12927544158423557,
+            "standard_error": 0.004638016424266635
+          },
+          "P_target_absolute": {
+            "mean": 0.11298461960306544,
+            "standard_error": 0.004407235514562225
+          },
+          "P_3d_ground_absolute": {
+            "mean": 0.012029821373487069,
+            "standard_error": 0.0010349639127338007
+          },
+          "P_target_3d_absolute": {
+            "mean": 0.010093540538130013,
+            "standard_error": 0.0009662169459188543
+          },
+          "photons_spin_pump": {
+            "mean": 2.0859375,
+            "standard_error": 0.028602093646284965
+          },
+          "photons_repump": {
+            "mean": 0.93310546875,
+            "standard_error": 0.023958172701172446
+          },
+          "photons_lattice_scatter": {
+            "mean": 0.0,
+            "standard_error": 0.0
+          },
+          "photons_total": {
+            "mean": 3.01904296875,
+            "standard_error": 0.04719664439822031
+          }
+        }
+      }
+    }
+  },
+  {
+    "index": 3,
+    "position_um": [
+      31.305485535593398,
+      -96.65237104156685,
+      77.46185431316796
+    ],
+    "bound_levels": [
+      6,
+      8,
+      5
+    ],
+    "depths_uk": [
+      6.965359464504182,
+      10.580699993409592,
+      8.952783490619886
+    ],
+    "initial_tail_discarded": 0.0,
+    "diagnostics": {
+      "max_photon_rate_bound_s": 90235.30695857777,
+      "max_excited_fraction": 0.002367451100269198,
+      "ground_angular_spacing_s": 8777554.282435432,
+      "magnetic": {
+        "B_gauss": 3.0000000000000004,
+        "breit_rabi_source": "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors",
+        "ground_energy_model": "Breit-Rabi",
+        "raman_quadratic_zeeman_error_hz": 3228.9545645713806,
+        "excited_zeeman_over_min_hfs": 0.19071653433508737,
+        "excited_quadratic_zeeman_hz": 1068341.7778811986,
+        "excited_quadratic_over_gamma": 0.17612261355645034,
+        "optical_zeeman_model": "diagonalized",
+        "max_included_excited_correction_hz": 1092969.9367334992,
+        "fine_structure_mixing_shift_over_gamma_estimate": 1.632196394103526e-06,
+        "status": "ok",
+        "notes": [
+          "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+        ]
+      }
+    },
+    "modes": {
+      "coherent": {
+        "trajectories": 4096,
+        "mode": "coherent",
+        "proposed_events": 18710,
+        "photon_events": 18710,
+        "max_conservation_error": 0.0,
+        "wall_time_s": 0.5882713999599218,
+        "seed_entropy": [
+          1729,
+          3,
+          0
+        ],
+        "final": {
+          "survival": {
+            "mean": 0.4775390625,
+            "standard_error": 0.007805566190998346
+          },
+          "loss": {
+            "mean": 0.5224609375,
+            "standard_error": 0.007805566190998346
+          },
+          "P_up_absolute": {
+            "mean": 0.4609375,
+            "standard_error": 0.007789572584457686
+          },
+          "P_n0_absolute": {
+            "mean": 0.20900439394505155,
+            "standard_error": 0.005514911374729278
+          },
+          "P_target_absolute": {
+            "mean": 0.20062278519041207,
+            "standard_error": 0.005451989789418162
+          },
+          "P_3d_ground_absolute": {
+            "mean": 0.012638052342090155,
+            "standard_error": 0.0011279019254316536
+          },
+          "P_target_3d_absolute": {
+            "mean": 0.011879016553899627,
+            "standard_error": 0.0011107499549966656
+          },
+          "photons_spin_pump": {
+            "mean": 2.82421875,
+            "standard_error": 0.03816207918556307
+          },
+          "photons_repump": {
+            "mean": 1.7421875,
+            "standard_error": 0.03816857178841273
+          },
+          "photons_lattice_scatter": {
+            "mean": 0.00146484375,
+            "standard_error": 0.0005976547536731011
+          },
+          "photons_total": {
+            "mean": 4.56787109375,
+            "standard_error": 0.07029527746437314
+          }
+        }
+      }
+    }
+  }
+]
