@@ -274,6 +274,12 @@ class LatticeSite:
             self._cache[key] = v.T @ (np.exp(1j * (eta / self.x0) * self.z)[:, None] * v)
         return self._cache[key]
 
+    def displacements(self, etas):
+        """Uncached bulk grid overlaps for angular integration."""
+        phases = np.exp(1j*np.asarray(etas)[:, None]*self.z/self.x0)
+        products = (self._vec[:, :, None]*self._vec[:, None, :]).reshape(len(self.z), -1)
+        return (phases @ products).reshape(-1, self.N, self.N)
+
     def recoil_kernel(self, eta_photon, abs_projection, cos_beta, pattern, n_quad):
         key = ("K", float(eta_photon), float(abs_projection), float(cos_beta), pattern, int(n_quad))
         if key not in self._cache:

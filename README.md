@@ -68,6 +68,22 @@ conda run --no-capture-output -n scripts python scripts/check_finite_field.py --
 
 For the 3 G `onlyOP` example, the corrected 64-site run predicts **19.95% absolute target yield** and **48.02% well survival**, versus 19.31% and 46.59% with weak-field optical states. The run remains outside the motional-secular approximation; correcting magnetic mixing does not validate the entire model. See the [physics report](docs/astra-physics-corrections.md#finite-field-optical-states-2026-10-12).
 
+## Include correlated photon recoil
+
+Set **3D spatial ensemble → recoil_model → correlated**, or load [examples/onlyOP_correlated.json](examples/onlyOP_correlated.json). This example also selects diagonalized atomic states. Each emitted photon now supplies one shared direction for the x/y/z recoil, including pumping, Raman scattering, and lattice scattering. The default `cartesian_marginals` keeps the earlier independent-axis approximation.
+
+To compare complete sequences and double the angular quadrature:
+
+```powershell
+conda run --no-capture-output -n scripts python scripts/check_correlated_recoil.py --config examples/onlyOP_diagonalized.json --workers 8 --output results/onlyOP_correlated_recoil
+```
+
+For these 64-site runs, correlated recoil changes absolute target yield from **19.9536% to 19.9356%**, and well survival from **48.0159% to 47.9720%**. Doubling the angular grid changes checked per-site probabilities by less than 6e-15.
+
+The check compares cloud averages and every site's trajectories and final states, and exits nonzero if angular convergence fails. The correlated model uses `recoil_quadrature_points` polar nodes and twice as many azimuth points. Its dense motional kernels cost more memory and time and currently support up to 1024 joint bound motional states per site. All bound levels must still be retained.
+
+This includes Cartesian recoil correlations within one photon. Motional coherence transfer, interference between spherical emission channels, and recapture remain omitted, so the existing validity checks still apply.
+
 ## Check the motional population approximation
 
 The separate [one-well reference solver](rb85rsc/recoil_reference.py) retains the motional density matrix in every ground spin state during optical pumping. It compares coherent recoil jumps with population-resolving jumps using the same optical rates, local spectrum, and absorbing escape boundary:

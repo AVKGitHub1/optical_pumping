@@ -200,6 +200,17 @@ Isotropic emission is an explicit option. For the default geometry it changes n�
 (0.02706 → 0.02693) and by 9e-4 in optical-pumping-only. The mean recoil per photon, η²[(k̂·u)² + ⟨c²⟩], is reproduced
 to 1e-6 (`test_red_pi_pulse_removes_one_quantum_then_reset_adds_predicted_recoil`). Optical reset is not recoil-free.
 
+**Three-axis ensemble.** `ensemble.recoil_model = "cartesian_marginals"` multiplies three independently averaged emission kernels. The optional `"correlated"` model instead integrates their product over one shared unit direction:
+
+```text
+K_ab(n'|n) = integral dOmega w_q(u) product_j [D_j(k_a,j-k_emit*u_j)[n'_j,n_j]
+                                          * conjugate(D_j(k_b,j-k_emit*u_j)[n'_j,n_j])]
+```
+
+Absorption paths a,b can interfere; their optical amplitudes multiply this kernel before summation. The total photon hazard still uses the full-space overlap for the absorption-path difference. The retained kernel determines the escape hazard, so photons causing loss are counted too. Each emitted spherical channel q remains resolved. This treatment is applied to pumping, Raman scattering, and lattice scattering.
+
+Angular integration uses positive Gauss-Legendre polar weights and a uniform azimuth grid with twice as many points, in a B-aligned frame defined relative to the lattice. Refine `numerics.recoil_quadrature_points` to check convergence. Dense kernels scale as `(Nx Ny Nz)^2`; the current implementation rejects more than 1024 joint motional states and never silently truncates the bound spectrum or switches models. The one-axis reference is unaffected by this Cartesian correlation choice.
+
 **Secular approximations**, documented and checked:
 
 * The jump operators are `sqrt(W K(n'|n)) |s',n'><s,n|`. They resolve individual motional levels, dropping coherence transfer even between degenerate transitions. Scattering rates much smaller than the minimum motional angular spacing are necessary but **not sufficient** to justify this extra approximation. A separate recoil-coherence warning is always shown when scattering is active.

@@ -312,6 +312,7 @@ class AnalysisConfig:
 @dataclass
 class EnsembleConfig:
     enabled: bool = P(False, "", "Spatial/phase ensemble with coherent Raman dynamics along the driven lattice and three-axis bound-state recoil/loss.")
+    recoil_model: str = P("cartesian_marginals", "", "cartesian_marginals: independently averaged emission projections. correlated: one shared 3D emission direction for every photon, including coherent absorption paths; higher memory/time cost, at most 1024 joint motional states per site. Both retain population-resolving recoil.", choices=["cartesian_marginals", "correlated"])
     samples: int = P(32, "", "Deterministic scrambled Sobol samples of Gaussian position and uniform Raman spatial phase; refine to check convergence.", min=1)
     workers: int = P(1, "", "Worker processes for spatial samples in GUI and headless runs. Set 8 for eight workers, or 1 for sequential execution. Stop cancels all workers.", min=1, max=8)
     cloud_radius_um: float = P(150.0, "um", "Spherical Gaussian 1/e^2 DENSITY radius (coordinate standard deviation = radius/2).", min=0.0)
@@ -427,6 +428,12 @@ class SimConfig:
             errs.append("trap.potential = lattice requires trap.depth_uk > 0")
         if self.raman.calibration == "measured_carrier" and not self.ensemble.enabled:
             errs.append("measured_carrier calibration requires ensemble.enabled")
+        if self.ensemble.recoil_model == "correlated":
+            if not self.ensemble.enabled:
+                errs.append("correlated recoil requires ensemble.enabled")
+            nq = self.numerics.recoil_quadrature_points
+            if isinstance(nq, bool) or not isinstance(nq, (int, np.integer)):
+                errs.append("correlated recoil_quadrature_points must be an integer")
         hel = np.asarray(self.raman.beam_helicities)
         if hel.shape != (2,) or not np.all(np.isin(hel, [-1, 1])):
             errs.append("raman.beam_helicities must contain two values, each +1 or -1")

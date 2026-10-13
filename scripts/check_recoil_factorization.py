@@ -39,6 +39,7 @@ def compare_single_photon(c, position_um=(0., 0., 0.), quadratures=(16, 32)):
     # Match production preparation, including a nonthermal axial input.
     preparation = c.copy()
     preparation.ensemble.enabled = False
+    preparation.ensemble.recoil_model = 'cartesian_marginals'  # used only to prepare one-axis populations
     preparation.raman.enabled = False
     preparation.raman.calibration = 'pathway'
     model = Model(preparation, atom, motion_axis=axes[2], motion_basis=sites[2])

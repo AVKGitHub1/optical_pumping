@@ -1,0 +1,780 @@
+{
+  "config": {
+    "name": "onlyOP - diagonalized atomic states",
+    "trap": {
+      "lattice_x": {
+        "confinement": "depth",
+        "wavelength_nm": 1188.0,
+        "frequency_hz": 45622.31109,
+        "waist_um": 200.0,
+        "depth_uk": 15.0
+      },
+      "lattice_y": {
+        "confinement": "depth",
+        "wavelength_nm": null,
+        "frequency_hz": null,
+        "waist_um": null,
+        "depth_uk": null
+      },
+      "lattice_z": {
+        "confinement": "depth",
+        "wavelength_nm": null,
+        "frequency_hz": null,
+        "waist_um": null,
+        "depth_uk": null
+      },
+      "wavelength_nm": 785.0,
+      "frequency_hz": 69043.70137,
+      "potential": "lattice",
+      "n_max": 16,
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "heating_rate_quanta_per_s": 0.0,
+      "depth_uk": 15.0
+    },
+    "initial": {
+      "spin_preset": "uniform_F3",
+      "f3_fraction": 1.0,
+      "custom_spin_populations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285
+      ],
+      "motion_mode": "thermal_temperature",
+      "nbar": 3.0,
+      "temperature_k": 5e-06,
+      "fock_n": 1,
+      "custom_pn": []
+    },
+    "magnetic": {
+      "magnitude_gauss": 3.0,
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "raman": {
+      "state_up": [
+        3,
+        3
+      ],
+      "state_down": [
+        2,
+        2
+      ],
+      "calibration": "measured_carrier",
+      "carrier_decay_mode": "modeled",
+      "beam_helicities": [
+        1,
+        -1
+      ],
+      "polarization_mode": "helicity",
+      "beam_low_ellipticity_deg": 45.0,
+      "beam_high_ellipticity_deg": -45.0,
+      "beam_low_orientation_deg": 0.0,
+      "beam_high_orientation_deg": 0.0,
+      "waist_um": 200.0,
+      "flop_contrast": 0.9,
+      "flop_decay_periods": 3.5,
+      "enabled": true,
+      "carrier_rabi_hz": 5000.0,
+      "frequency_mode": "sideband_offset",
+      "red_sideband_offset_hz": -5000.0,
+      "beat_frequency_hz": 3035802400.0,
+      "wavelength_nm": 783.0,
+      "beam_low_direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "beam_high_direction": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "tone_layout": "both_tones_both_beams",
+      "tone_powers_low": [
+        1.0,
+        1.0
+      ],
+      "tone_powers_high": [
+        1.0,
+        1.0
+      ],
+      "lattice_phase_deg": 0.0,
+      "beam_beat_phase_deg": 0.0,
+      "extra_coherence_decay_rate_s": 0.0,
+      "differential_light_shift_hz": 0.0,
+      "scattering_rate_s": 0.0,
+      "scattering_model": "spin_preserving",
+      "max_sideband_order": 3
+    },
+    "spin_pump": {
+      "enabled": true,
+      "intensity_mode": "power_waist",
+      "peak_intensity_w_m2": 0.1,
+      "power_mw": 5e-05,
+      "waist_um": 200.0,
+      "detuning_mhz": 0.0,
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.01,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.0
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "repump": {
+      "enabled": true,
+      "intensity_mode": "power_waist",
+      "peak_intensity_w_m2": 0.1,
+      "power_mw": 5e-05,
+      "waist_um": 200.0,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "geometry",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 90.0,
+        "beam_azimuth_deg": 90.0,
+        "ellipticity_deg": 0.0,
+        "orientation_deg": 90.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "optical": {
+      "zeeman_model": "diagonalized",
+      "excited_manifold": "all_D2",
+      "path_model": "kramers_heisenberg",
+      "emission_pattern": "dipole",
+      "excited_state_shift_hz": 0.0,
+      "weak_excitation_warning": 0.02,
+      "weak_excitation_invalid": 0.1
+    },
+    "timing": {
+      "protocol": "custom",
+      "total_duration_ms": 5.0,
+      "prep_duration_ms": 1.0,
+      "prep_pump_scale": 1.0,
+      "prep_repump_scale": 1.0,
+      "cooling_pump_scale": 1.0,
+      "cooling_repump_scale": 1.0,
+      "cooling_raman_amplitude": 1.0,
+      "raman_pulse_ms": 0.3,
+      "reset_pulse_ms": 0.1,
+      "reset_pump_scale": 1.0,
+      "reset_repump_scale": 1.0,
+      "repetitions": 0,
+      "pulsed_first": "reset",
+      "custom_segments": [
+        {
+          "duration_ms": 1,
+          "raman": 0.0,
+          "pump": 1.0,
+          "repump": 1.0,
+          "label": "only OP"
+        }
+      ],
+      "n_samples": 201
+    },
+    "numerics": {
+      "solver": "coherent",
+      "method": "DOP853",
+      "rtol": 1e-07,
+      "atol": 1e-10,
+      "recoil_quadrature_points": 24,
+      "boundary_tolerance": 0.0001,
+      "conservation_tolerance": 1e-06,
+      "positivity_tolerance": 1e-08,
+      "rate_validity_epsilon": 0.2,
+      "seed": 0
+    },
+    "analysis": {
+      "spin_threshold": 0.9,
+      "joint_threshold": 0.5,
+      "derivative_window": 11
+    },
+    "ensemble": {
+      "enabled": true,
+      "recoil_model": "cartesian_marginals",
+      "samples": 1,
+      "workers": 8,
+      "cloud_radius_um": 150.0,
+      "lattice_waist_um": 200.0,
+      "transverse_wavelength_nm": 1188.0,
+      "transverse_depth_uk": 15.0,
+      "transverse_temperature_k": 1e-05,
+      "transverse_reference_direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "transverse_frequency_offset_hz": 160000000.0,
+      "lattice_linear_polarizations": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "phase_offset_deg": 0.0,
+      "time_step_us": 2.0,
+      "calibration_samples": 128
+    }
+  },
+  "final": {
+    "P_up": 0.9406857147481282,
+    "P_n0": 0.44323582086808455,
+    "P_target": 0.41541518004802547,
+    "P_n0_given_up": 0.44160889607987114,
+    "P_trapped": 0.41388359752401005,
+    "P_up_absolute": 0.3893343877594,
+    "P_n0_absolute": 0.18344803609239052,
+    "P_target_absolute": 0.17193352918436114,
+    "nbar": 0.9041076053631736,
+    "mean_excitation_energy_J": 2.181736494117344e-29,
+    "mean_excitation_energy_hz": 32926.55291488793,
+    "fractional_energy_reduction": 0.16609247187097753,
+    "raman_axis": "z",
+    "nbar_initial": 1.1052118960474655,
+    "mean_excitation_energy_initial_J": 2.616281086959782e-29,
+    "P_up_times_P_n0": 0.41694560495526745,
+    "T_equiv_K": 3.285509047811051e-06,
+    "T_equiv_axes_K": {
+      "x": 4.380897099389797e-06,
+      "y": 6.378334402006044e-06,
+      "z": 3.285509047811051e-06
+    },
+    "T_equiv_axes_initial_K": {
+      "x": 1.0000000000000211e-05,
+      "y": 1.0000000000000069e-05,
+      "z": 4.999999999999999e-06
+    },
+    "nbar_axes": {
+      "x": 1.8940261214742093,
+      "y": 2.314256230221721,
+      "z": 0.9041076053631737
+    },
+    "P_n0_axes": {
+      "x": 0.26330169908052387,
+      "y": 0.22900878907923622,
+      "z": 0.4432358208680845
+    },
+    "mean_excitation_energy_axes_hz": {
+      "x": 53911.26343973072,
+      "y": 77616.36205268126,
+      "z": 32926.55291488793
+    },
+    "T_equiv_note": "Energy-matched mixture of local bound canonical distributions, weighted by surviving spatial populations; proxy only. None means no finite positive-temperature match.",
+    "final_pn_TVD_from_thermal": null,
+    "energy_observable_note": "Actual local excitation energies per survivor, including loss selection; n_z=0 is not the 3D ground state.",
+    "photons": {
+      "spin_pump": 2.670781105741054,
+      "repump": 1.5728736286827651,
+      "raman_scatter": 0.0,
+      "lattice_scatter": 0.001088447537860873
+    },
+    "photons_total": 4.24474318196168,
+    "net_quanta_removed": 0.20110429068429192,
+    "net_quanta_removed_per_photon": null,
+    "mean_cooling_rate_quanta_per_s": 201.10429068429193,
+    "target_state_scattering_rate_per_s": 830.6301832118972,
+    "target_state_scattering_by_beam_per_s": {},
+    "time_to_spin_threshold_s": 0.0005027591599502826,
+    "time_to_joint_threshold_s": "not reached",
+    "spin_threshold": 0.9,
+    "joint_threshold": 0.5,
+    "spin_populations_initial": {
+      "|2,-2>": 0.0,
+      "|2,-1>": 0.0,
+      "|2,+0>": 0.0,
+      "|2,+1>": 0.0,
+      "|2,+2>": 0.0,
+      "|3,-3>": 0.14285714285714288,
+      "|3,-2>": 0.14285714285714288,
+      "|3,-1>": 0.14285714285714288,
+      "|3,+0>": 0.14285714285714288,
+      "|3,+1>": 0.14285714285714288,
+      "|3,+2>": 0.14285714285714288,
+      "|3,+3>": 0.14285714285714288
+    },
+    "spin_populations_final": {
+      "|2,-2>": 0.0007622005538555476,
+      "|2,-1>": 0.0012234393117751604,
+      "|2,+0>": 0.001671381060487666,
+      "|2,+1>": 0.012272921497132864,
+      "|2,+2>": 0.03183003250228275,
+      "|3,-3>": 9.796100208016341e-05,
+      "|3,-2>": 0.0001820685247177609,
+      "|3,-1>": 0.0005682647405536689,
+      "|3,+0>": 0.0005426224296501328,
+      "|3,+1>": 0.003406359934715075,
+      "|3,+2>": 0.006757033694621089,
+      "|3,+3>": 0.9406857147481282
+    },
+    "spin_populations_absolute_final": {
+      "|2,-2>": 0.000315462307264527,
+      "|2,-1>": 0.0005063614637098023,
+      "|2,+0>": 0.0006917572061481302,
+      "|2,+1>": 0.0050795609013631095,
+      "|2,+2>": 0.013173928361350954,
+      "|3,-3>": 4.054445195799506e-05,
+      "|3,-2>": 7.535517600607602e-05,
+      "|3,-1>": 0.00023519545516640075,
+      "|3,+0>": 0.00022458252328081603,
+      "|3,+1>": 0.0014098365042415275,
+      "|3,+2>": 0.0027966254141207295,
+      "|3,+3>": 0.3893343877594
+    },
+    "max_conservation_error": 8.43769498715119e-15,
+    "min_eigenvalue": 0.0,
+    "max_boundary_population": null,
+    "final_overflow": 0.5861164024759984,
+    "lattice_loss": 0.5861164024759984,
+    "well_loss_fraction_no_recapture": 0.5861164024759984,
+    "loss_label": "Well escape assuming no recapture",
+    "initial_tail_discarded": 0.0,
+    "initial_unbound_fraction": null,
+    "solver": "coherent_3d_split_ensemble",
+    "wall_time_s": 1.0343532001134008,
+    "rhs_evaluations": 0,
+    "magnetic_validity": {
+      "B_gauss": 3.0000000000000004,
+      "breit_rabi_source": "analytic Breit-Rabi using cached ARC hyperfine splitting and g factors",
+      "ground_energy_model": "Breit-Rabi",
+      "raman_quadratic_zeeman_error_hz": 3228.9545645713806,
+      "excited_zeeman_over_min_hfs": 0.19071653433508737,
+      "excited_quadratic_zeeman_hz": 1068341.7778811986,
+      "excited_quadratic_over_gamma": 0.17612261355645034,
+      "optical_zeeman_model": "diagonalized",
+      "max_included_excited_correction_hz": 1092969.9367334992,
+      "fine_structure_mixing_shift_over_gamma_estimate": 1.632196394103526e-06,
+      "status": "ok",
+      "notes": [
+        "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+      ]
+    },
+    "min_ground_secular_ratio": 87.02839394354969,
+    "max_excited_fraction": 0.002646220184271498,
+    "max_motional_secular_ratio": 1.188634747020261,
+    "P_3d_ground_absolute": 0.011319158083813088,
+    "P_target_3d_absolute": 0.010510168597037082,
+    "calibration_compatible": null,
+    "carrier_decay_mode": "not_applied",
+    "raman_active": false,
+    "node_solver_time_sum_s": 0.854134599911049
+  },
+  "validity_status": "invalid",
+  "validity": [
+    {
+      "category": "magnetic field",
+      "status": "ok",
+      "message": "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted."
+    },
+    {
+      "category": "ground coherences",
+      "status": "ok",
+      "message": "adjacent-mF Zeeman angular splitting / maximum photon rate across nodes = 87 (needs >>1)"
+    },
+    {
+      "category": "conservation",
+      "status": "ok",
+      "message": "max |survival + well loss - 1| = 8.44e-15"
+    },
+    {
+      "category": "positivity",
+      "status": "ok",
+      "message": "minimum density eigenvalue / population = 0"
+    },
+    {
+      "category": "weak excitation",
+      "status": "ok",
+      "message": "maximum eliminated excited fraction across nodes and spin states = 0.002646"
+    },
+    {
+      "category": "motional secular",
+      "status": "invalid",
+      "message": "max optical rate / smallest local motional angular spacing across all axes = 1.19"
+    },
+    {
+      "category": "carrier calibration",
+      "status": "ok",
+      "message": "Raman light is off throughout the schedule; no carrier calibration is applied."
+    },
+    {
+      "category": "three-dimensional recoil",
+      "status": "warning",
+      "message": "Joint spin/nx/ny/nz populations retained, but emission uses resolved spherical dipole channels with factorized Cartesian marginals. Interference between emitted spherical channels and correlations of one photon's Cartesian recoil components are neglected."
+    },
+    {
+      "category": "recoil coherence",
+      "status": "warning",
+      "message": "Population-resolving scattering erases motional coherence and treats elastic spin amplitudes as distinguishable; this is an additional approximation beyond secular averaging."
+    },
+    {
+      "category": "lattice",
+      "status": "warning",
+      "message": "Separable isolated wells with Gaussian local depths; no tunnelling, coherent Raman continuum excitation, envelope transport or recapture. Scalar trap basis with diagonal differential shifts; trap shape changes from spin-dependent shifts neglected."
+    },
+    {
+      "category": "Stark shift approximation",
+      "status": "warning",
+      "message": "Raman/trap Stark operators use diagonal matrix elements; static off-diagonal motional dressing and trap-basis changes are omitted. Excited-state lattice shifts of the pumping transitions remain the configured common optical shift."
+    },
+    {
+      "category": "spatial ensemble",
+      "status": "warning",
+      "message": "1 frozen Gaussian position / uniform registration samples. Refine samples and time_step_us for convergence; samples are numerical quadrature, not experimental error bars."
+    },
+    {
+      "category": "temperature",
+      "status": "warning",
+      "message": "Axis temperatures are energy-matched bound-state mixture proxies; survivor cooling of undriven axes may result from preferential loss."
+    }
+  ],
+  "model_summary": {
+    "N_motional": 4,
+    "eta_R": 0.4712058475250595,
+    "nu_10_hz": 64972.65649977669,
+    "nu_beat_hz": 3042801672.9742565,
+    "raman_state_up": [
+      3,
+      3
+    ],
+    "raman_state_down": [
+      2,
+      2
+    ],
+    "raman_state_indices": [
+      11,
+      4
+    ],
+    "nu_ud_zeeman_hz": 3042741700.3177567,
+    "raman_axis": "z",
+    "raman_direction_lab": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "lattice_axes_lab": {
+      "x": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "z": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "lattice_parameters": {
+      "x": {
+        "confinement": "depth",
+        "wavelength_nm": 1188.0,
+        "frequency_hz": 45622.31109258914,
+        "waist_um": 200.0,
+        "depth_uk": 15.0
+      },
+      "y": {
+        "confinement": "depth",
+        "wavelength_nm": 1188.0,
+        "frequency_hz": 45622.31109258914,
+        "waist_um": 200.0,
+        "depth_uk": 15.0
+      },
+      "z": {
+        "confinement": "depth",
+        "wavelength_nm": 785.0,
+        "frequency_hz": 69043.70137324317,
+        "waist_um": 200.0,
+        "depth_uk": 15.0
+      }
+    },
+    "trap_potential": "lattice",
+    "central_bottom_frequencies_hz": {
+      "x": 45622.31109258914,
+      "y": 45622.31109258914,
+      "z": 69043.70137324317
+    },
+    "central_bound_levels": {
+      "x": 9,
+      "y": 9,
+      "z": 6
+    },
+    "calibration": {
+      "status": "skipped",
+      "reason": "Raman light is off throughout the schedule; no carrier calibration is applied.",
+      "intensity_per_unit_tone_w_m2": 0.0,
+      "residual_coherence_decay_rate_s": 0.0,
+      "calibration_compatible": null,
+      "carrier_decay_mode": "not_applied"
+    },
+    "lattice_optical_estimates": [
+      {
+        "axis": "x",
+        "direction_lab": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "peak_intensity_w_m2": 121818145.18611561,
+        "mean_scalar_shift_per_intensity_hz": -0.0025657038725421084,
+        "polarization_lab": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "axis": "y",
+        "direction_lab": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "peak_intensity_w_m2": 121818025.22276327,
+        "mean_scalar_shift_per_intensity_hz": -0.002565706399183277,
+        "polarization_lab": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "axis": "z",
+        "direction_lab": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "peak_intensity_w_m2": 5206658.196228874,
+        "mean_scalar_shift_per_intensity_hz": -0.06002876990778647,
+        "polarization_lab": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      }
+    ],
+    "optical_zeeman_model": "diagonalized",
+    "recoil_model": "cartesian_marginals",
+    "emission_quadrature": {
+      "polar": 24,
+      "azimuth": null
+    },
+    "selected_lattice_linear_polarizations": [
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "node_results": [
+      {
+        "position_um": [
+          77.92107666624156,
+          111.45315624784845,
+          -26.340312885120575
+        ],
+        "phase_deg": 131.2380576878786,
+        "depths_uk": [
+          7.785548782369001,
+          10.694984438596208,
+          5.949904623591229
+        ],
+        "survival": 0.41388359752401005,
+        "target_absolute": 0.17193352918436114
+      }
+    ]
+  },
+  "polarization": {
+    "spin_pump": {
+      "config": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.01,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.0
+      },
+      "effective_fractions": {
+        "0": 0.0,
+        "-1": 0.01,
+        "1": 0.99
+      },
+      "direction_used": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "source": "spherical (realizable by a transverse wave along the configured direction)"
+    },
+    "repump": {
+      "config": {
+        "mode": "geometry",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 90.0,
+        "beam_azimuth_deg": 90.0,
+        "ellipticity_deg": 0.0,
+        "orientation_deg": 90.0,
+        "linked_pi_share": 0.5
+      },
+      "effective_fractions": {
+        "1": 0.5,
+        "0": 3.749399456654645e-33,
+        "-1": 0.5
+      },
+      "direction_used": [
+        6.123233995736766e-17,
+        6.123233995736766e-17,
+        1.0
+      ],
+      "source": "geometry (derived from transverse Jones vector)"
+    }
+  },
+  "schedule": [
+    {
+      "t0": 0.0,
+      "t1": 0.001,
+      "raman": 0.0,
+      "pump": 1.0,
+      "repump": 1.0,
+      "label": "only OP"
+    }
+  ],
+  "cooling_rate_method": "Savitzky-Golay derivative of survivor mean local z energy / level index",
+  "assumptions": [
+    "Initially loaded Gaussian cloud, conditional on local bound states; axial preparation mode thermal_temperature, configured axial temperature 5e-06 K, transverse temperature 1e-05 K. Loading survival unspecified.",
+    "Uniform static Raman/lattice registration, not rapid temporal phase noise.",
+    "x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected |3,+3><->|2,+2> Raman pair is coherent along z; other axes are population resolved.",
+    "Emission Cartesian components use independent dipole marginals; recoil coherence transfer omitted.",
+    "ARC D1+D2 scattering includes fine/hyperfine interference and coherent same-tone beam absorption.",
+    "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted.",
+    "D-line diagonal trap shifts are estimates; higher excited states and hyperfine-mediated trap polarizability omitted.",
+    "Fixed beat shared by all spatial samples; Gaussian local depths and pump/Raman intensities.",
+    "Loss on leaving any local bound manifold; no recapture. Temperature is a survivor-conditioned proxy."
+  ],
+  "ensemble_details": {
+    "assumptions": [
+      "Initially loaded Gaussian cloud, conditional on local bound states; axial preparation mode thermal_temperature, configured axial temperature 5e-06 K, transverse temperature 1e-05 K. Loading survival unspecified.",
+      "Uniform static Raman/lattice registration, not rapid temporal phase noise.",
+      "x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected |3,+3><->|2,+2> Raman pair is coherent along z; other axes are population resolved.",
+      "Emission Cartesian components use independent dipole marginals; recoil coherence transfer omitted.",
+      "ARC D1+D2 scattering includes fine/hyperfine interference and coherent same-tone beam absorption.",
+      "Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted.",
+      "D-line diagonal trap shifts are estimates; higher excited states and hyperfine-mediated trap polarizability omitted.",
+      "Fixed beat shared by all spatial samples; Gaussian local depths and pump/Raman intensities.",
+      "Loss on leaving any local bound manifold; no recapture. Temperature is a survivor-conditioned proxy."
+    ],
+    "calibration": {
+      "status": "skipped",
+      "reason": "Raman light is off throughout the schedule; no carrier calibration is applied.",
+      "intensity_per_unit_tone_w_m2": 0.0,
+      "residual_coherence_decay_rate_s": 0.0,
+      "calibration_compatible": null,
+      "carrier_decay_mode": "not_applied"
+    }
+  },
+  "atomic_data_metadata": {
+    "source": "ARC-Alkali-Rydberg-Calculator, arc.Rubidium85()",
+    "arc_version": "3.10.2",
+    "functions": [
+      "getHFSCoefficients",
+      "getHFSEnergyShift",
+      "getDipoleMatrixElementHFS",
+      "getBranchingRatio",
+      "getStateLifetime",
+      "getTransitionFrequency",
+      "getLandegfExact"
+    ],
+    "dipole_units": "e*a0, <F',m'| e r_q |F,m> with q=m'-m (absorption)",
+    "generated_utc": "2026-09-29T22:50:42.195201+00:00",
+    "cache_format_version": 2,
+    "arc_reduced_dipole_symmetric_au": 5.9783
+  },
+  "constants_SI": {
+    "H": 6.62607015e-34,
+    "HBAR": 1.0545718176461565e-34,
+    "C_LIGHT": 299792458.0,
+    "EPS0": 8.8541878128e-12,
+    "E_CHARGE": 1.602176634e-19,
+    "A0": 5.29177210903e-11,
+    "MU_B": 9.2740100783e-24,
+    "K_B": 1.380649e-23
+  },
+  "versions": {
+    "python": "3.13.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.3.5",
+    "scipy": "1.18.1",
+    "matplotlib": "3.10.7",
+    "qutip": "5.3.1",
+    "PyQt6": "6.9.1",
+    "ARC-Alkali-Rydberg-Calculator": "3.10.2",
+    "threadpoolctl": "3.5.0"
+  },
+  "seed": 0,
+  "solver_notes": [
+    "3D recoil: cartesian_marginals; absorbing local bound manifolds; Strang splitting"
+  ],
+  "rate_validity": []
+}

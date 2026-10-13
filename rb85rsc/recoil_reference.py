@@ -124,6 +124,7 @@ def _site_model(cfg, axis, position_um):
         raise ValueError("reference requires 2 to 16 bound levels; adjust the local well depth")
     c = cfg.copy()
     c.ensemble.enabled = False
+    c.ensemble.recoil_model = 'cartesian_marginals'  # one-axis reference has no Cartesian correlation choice
     c.raman.calibration = 'pathway'
     c.raman.enabled = False
     if ia != 2:

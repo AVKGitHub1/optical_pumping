@@ -87,7 +87,7 @@ def test_ensemble_worker_override_keeps_sample_order_and_config(monkeypatch, ove
             future.set_result(function(*args))
             return future
 
-    def local(point, response, calibration, position, phase, beat=None):
+    def local(point, response, calibration, position, phase, beat=None, stop=None):
         return SimpleNamespace(cfg=point, position=position)
 
     def analyze(point, central, components, calibration, beat):

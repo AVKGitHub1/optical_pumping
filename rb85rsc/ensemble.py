@@ -3,10 +3,9 @@
 The x,y,z labels refer to local lattice axes, with z along trap.axis.
 Each local atom has joint populations P[spin,nx,ny,nz] and a density matrix for
 the Raman pair along the driven lattice at fixed occupations of the other two
-axes. Recoil uses the existing
-population-resolving approximation. Emission projections on the three axes
-are sampled independently from their correct dipole marginals: correlations
-between Cartesian components of ONE emitted photon are neglected. Spin/motion
+axes. Recoil uses the population-resolving approximation. The default uses
+independent Cartesian emission marginals; the optional correlated model
+integrates one shared photon direction across all three axes. Spin/motion
 and transverse/axial population correlations produced by cooling and loss ARE
 retained. Loss is absorbing on departure from ANY local bound manifold.
 
@@ -28,6 +27,7 @@ from .dynamics import RunResult, SimulationStopped, _single_thread
 from .far_detuned import DLineResponse, calibrate_carrier, envelope, raman_fields, spatial_samples
 from .model import Model, Validity
 from .protocols import raman_is_active
+from .correlated_recoil import CorrelatedRecoil, joint_apply, recoil_description
 
 
 # Populations use local lattice axes: [spin, nx, ny, nz], z along trap.axis.
@@ -51,18 +51,22 @@ def axis_apply(K, P, axis):
 @dataclass
 class RecoilTerm:
     W: np.ndarray                 # initial spin, final spin
-    kernels: tuple                # K_axis[n',n], possibly a coherent cross term
+    kernels: tuple                # K_axis[n',n]; empty when joint_kernel is used
     total: np.ndarray             # total event hazard [spin,nx,ny,nz]
     counter: int                  # pump, repump, Raman, lattice
     scale_name: str               # pump, repump, raman, always
+    joint_kernel: np.ndarray | None = None  # correlated K[motion', motion]
 
     def gain(self, p):
-        q = p
+        q = joint_apply(self.joint_kernel, p) if self.joint_kernel is not None else p
         for axis, k in enumerate(self.kernels, 1):
             q = axis_apply(k, q, axis)
         return (self.W.T @ q.reshape(12, -1)).reshape(p.shape).real
 
     def retained_hazard(self):
+        if self.joint_kernel is not None:
+            retained = self.joint_kernel.sum(axis=0).reshape(self.total.shape[1:])
+            return (self.W.sum(axis=1)[:, None, None, None]*retained).real
         k = [x.sum(axis=0) for x in self.kernels]
         return np.einsum('s,i,j,k->sijk', self.W.sum(axis=1), *k).real
 
@@ -70,7 +74,8 @@ class RecoilTerm:
 class _RecoilGain:
     """Reuse identical contraction prefixes without regrouping the term sum.
 
-    Every path still applies x, y, z, then spin, then the segment scale. Exact
+    Cartesian paths apply x, y, z, then spin, then the segment scale;
+    correlated paths apply a joint motional kernel before spin. Exact
     array keys (including layout) preserve distinct interference kernels and
     floating-point evaluation order; no extra rounding or pruning is used.
     """
@@ -81,7 +86,9 @@ class _RecoilGain:
         prefixes = {}
         for term, scale in active:
             parent = 0  # the input population tensor
-            for axis, kernel in enumerate(term.kernels, 1):
+            operations = ([(None, term.joint_kernel)] if term.joint_kernel is not None
+                          else enumerate(term.kernels, 1))
+            for axis, kernel in operations:
                 key = (parent, axis, kernel.dtype.str, kernel.shape,
                        kernel.strides, kernel.tobytes())
                 if key not in prefixes:
@@ -93,7 +100,8 @@ class _RecoilGain:
     def __call__(self, P):
         values = [P]
         for parent, axis, kernel in self.transforms:
-            values.append(axis_apply(kernel, values[parent], axis))
+            values.append(joint_apply(kernel, values[parent]) if axis is None
+                          else axis_apply(kernel, values[parent], axis))
         gain = np.zeros_like(P)
         for leaf, spin, scale in self.terms:
             contribution = scale * (spin @ values[leaf].reshape(12, -1)).reshape(P.shape).real
@@ -122,9 +130,13 @@ def cross_kernel(site, kabs1, kabs2, kemit, bprojection, pattern, nq):
     return np.real_if_close(K, tol=1000), np.real_if_close(total, tol=1000)
 
 
-def _term(sites, W, ka, kb, kemit, bdir, pattern, nq, counter, scale_name, axes_lab):
+def _term(sites, W, ka, kb, kemit, bdir, pattern, nq, counter, scale_name, axes_lab, joint=None):
     # All input vectors are lab vectors; recoil acts along the lattice axes.
     ka, kb, bdir = (axes_lab @ v for v in (ka, kb, bdir))
+    if joint is not None:
+        totals = [np.diag(s.displacement((ka[i]-kb[i])*s.x0)) for i, s in enumerate(sites)]
+        hazard = np.einsum('s,i,j,k->sijk', W.sum(axis=1), *totals).real
+        return RecoilTerm(W, (), hazard, counter, scale_name, joint.kernel(ka, kb, kemit, pattern))
     kernels, totals = zip(*(cross_kernel(site, ka[i], kb[i], kemit, bdir[i], pattern, nq)
                            for i, site in enumerate(sites)))
     hazard = np.einsum('s,i,j,k->sijk', W.sum(axis=1), *totals).real
@@ -132,7 +144,7 @@ def _term(sites, W, ka, kb, kemit, bdir, pattern, nq, counter, scale_name, axes_
 
 
 class LocalExperiment:
-    def __init__(self, cfg, response, calibration, position, phase, beat_hz=None):
+    def __init__(self, cfg, response, calibration, position, phase, beat_hz=None, stop=None):
         if response.zeeman_model != cfg.optical.zeeman_model:
             raise ValueError("local optical response and config must use the same zeeman_model")
         self.position, self.phase = np.asarray(position), phase
@@ -190,13 +202,15 @@ class LocalExperiment:
         self.terms = []
         nq = cfg.numerics.recoil_quadrature_points
         bdir = pol.unit(cfg.magnetic.direction)
+        joint = (CorrelatedRecoil(sites, axes @ bdir, nq, lambda: _check_stop(stop))
+                 if ec.recoil_model == 'correlated' else None)
         for bi, name in enumerate(("spin_pump", "repump")):
             kvec = m.k_d2 * m.beams[name].direction
             for ci, pattern in enumerate(("sigma", "pi")):
                 pat = pattern if cfg.optical.emission_pattern == "dipole" else "isotropic"
                 W = m.rates[name].W[:, :, ci]
                 self.terms.append(_term(sites, W, kvec, kvec, m.k_d2, bdir, pat, nq, bi,
-                                        "pump" if bi == 0 else "repump", axes))
+                                        "pump" if bi == 0 else "repump", axes, joint))
         # Elastic scattering also resolves n in this retained approximation.
         # Raman same-frequency beams interfere in absorption; different tones
         # do not interfere in the spontaneous rate (GHz beat is averaged).
@@ -206,7 +220,7 @@ class LocalExperiment:
             W = (np.eye(12) if rc.scattering_model == "spin_preserving" else np.ones((12, 12)) / 12) * rc.scattering_rate_s / 2
             k = 2 * np.pi / (rc.wavelength_nm * 1e-9)
             for direction in dirs:
-                self.terms.append(_term(sites, W, k * direction, k * direction, k, bdir, "isotropic", nq, 2, "raman", axes))
+                self.terms.append(_term(sites, W, k * direction, k * direction, k, bdir, "isotropic", nq, 2, "raman", axes, joint))
         raman_tones = (
             (low, rc.tone_powers_low, [phase / 2, -phase / 2]),
             (high, rc.tone_powers_high, [phase / 2, -phase / 2 + np.deg2rad(rc.beam_beat_phase_deg)]),
@@ -214,7 +228,7 @@ class LocalExperiment:
         for freq, powers, phases in raman_tones:
             amplitudes = [response.scattering_amplitudes(freq, e) * np.sqrt(intensity * p) * np.exp(1j * ph)
                           for e, p, ph in zip(eps, powers, phases)]
-            self._add_coherent_light(amplitudes, dirs, freq, bdir, nq, 2, "raman")
+            self._add_coherent_light(amplitudes, dirs, freq, bdir, nq, 2, "raman", joint)
             # AC shifts: diagonal expectation of the same-tone interference.
             # All input fields for the clarified geometry have equal lab eps.
             for i in range(2):
@@ -242,7 +256,7 @@ class LocalExperiment:
             peak = -depth * 1e-6 * at.K_B / at.H / scalar
             ds = [axes[axis], -axes[axis]]
             amps = [response.scattering_amplitudes(freq, ep) * np.sqrt(peak / 4)] * 2
-            self._add_coherent_light(amps, ds, freq, bdir, nq, 3, "always")
+            self._add_coherent_light(amps, ds, freq, bdir, nq, 3, "always", joint)
             cosine = (1 + np.diag(sites[axis].displacement(4 * np.pi * freq / at.C_LIGHT * sites[axis].x0)).real) / 2
             # Common scalar potential is already in the site Hamiltonian.
             differential = (sh - scalar) * peak
@@ -258,7 +272,7 @@ class LocalExperiment:
         """View a canonical (...,nx,ny,nz) tensor with the driven axis last."""
         return array if self.raman_axis == 2 else np.moveaxis(array, array.ndim - 3 + self.raman_axis, -1)
 
-    def _add_coherent_light(self, amps, dirs, freq, bdir, nq, counter, scale):
+    def _add_coherent_light(self, amps, dirs, freq, bdir, nq, counter, scale, joint=None):
         k = 2 * np.pi * freq / at.C_LIGHT
         for i in range(2):
             for j in range(2):
@@ -267,7 +281,7 @@ class LocalExperiment:
                     if np.max(np.abs(W)) < 1e-14:
                         continue
                     self.terms.append(_term(self.sites, W, k * dirs[i], k * dirs[j], k, bdir,
-                                            "pi" if q == 0 else "sigma", nq, counter, scale, self.axes_lab))
+                                            "pi" if q == 0 else "sigma", nq, counter, scale, self.axes_lab, joint))
 
     @staticmethod
     def _combine_terms(terms):
@@ -275,13 +289,14 @@ class LocalExperiment:
         merged = {}
         for t in terms:
             parts = []
-            for k in t.kernels:
+            kernels = (t.joint_kernel,) if t.joint_kernel is not None else t.kernels
+            for k in kernels:
                 rounded = np.round(k, 12)
                 rounded.real[rounded.real == 0] = 0.
                 if np.iscomplexobj(rounded):
                     rounded.imag[rounded.imag == 0] = 0.
                 parts.append(rounded.tobytes())
-            key = (t.counter, t.scale_name, *parts)
+            key = (t.counter, t.scale_name, t.joint_kernel is not None, *parts)
             if key in merged:
                 prev = merged[key]
                 prev.W = prev.W + t.W
@@ -289,7 +304,8 @@ class LocalExperiment:
             else:
                 merged[key] = t
         for t in merged.values():
-            if all(not np.iscomplexobj(k) for k in t.kernels):
+            kernels = (t.joint_kernel,) if t.joint_kernel is not None else t.kernels
+            if all(not np.iscomplexobj(k) for k in kernels):
                 t.W = t.W.real
         return [t for t in merged.values() if np.any(t.W != 0)]
 
@@ -637,7 +653,7 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
             intensity_per_unit_tone_w_m2=0., residual_coherence_decay_rate_s=0.,
             calibration_compatible=None, carrier_decay_mode="not_applied")
         _check_stop(stop)
-        central = LocalExperiment(cfg, response, calibration, [0, 0, 0], 0.)
+        central = LocalExperiment(cfg, response, calibration, [0, 0, 0], 0., stop=stop)
         # One fixed experimental beat, resonant with the central n=1->0 red
         # sideband including phase-AVERAGED Raman and lattice differential shift.
         if not active_raman:
@@ -665,7 +681,7 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
                 _check_stop(stop)
                 if progress:
                     progress(i / len(xyz), f"ensemble atom {i + 1}/{len(xyz)}")
-                local = LocalExperiment(cfg, response, calibration, p, ph, beat)
+                local = LocalExperiment(cfg, response, calibration, p, ph, beat, stop=stop)
                 result = solve_local(local, cfg, stop)
                 components.append((local, result))
         _check_stop(stop)
@@ -683,7 +699,7 @@ def _solve_node(data, calibration, position, phase, beat):
     cfg = SimConfig.from_dict(data)
     with _single_thread():
         response = DLineResponse(at.load_atomic_data(), cfg.magnetic.magnitude_gauss, cfg.magnetic.direction, cfg.optical.zeeman_model)
-        local = LocalExperiment(cfg, response, calibration, position, phase, beat)
+        local = LocalExperiment(cfg, response, calibration, position, phase, beat, stop=_WORKER_STOP)
         _check_stop(_WORKER_STOP)
         return local, solve_local(local, cfg, _WORKER_STOP)
 
@@ -817,7 +833,10 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
         validity.add("carrier calibration", "ok", f"Modeled spatial/thermal decay; RMS carrier frequency = {calibration['modeled_rms_carrier_hz']:.6g} Hz fixes initial curvature. No fitted homogeneous damping; reported decay is not a calibration constraint or an experimental validation.")
     else:
         validity.add("carrier calibration", "warning" if not calibration["calibration_compatible"] else "ok", f"Synthetic measured-envelope fit RMS = {calibration['synthetic_trace_rmse']:.3g}; residual gamma = {calibration['residual_coherence_decay_rate_s']:.3g}/s. A poor fit is an unresolved calibration-model mismatch, not a validated intensity estimate.")
-    validity.add("three-dimensional recoil", "warning", "Joint spin/nx/ny/nz populations retained, but emission uses resolved spherical dipole channels with factorized Cartesian marginals. Interference between emitted spherical channels and correlations of one photon's Cartesian recoil components are neglected.")
+    recoil_note = ("Joint spin/nx/ny/nz populations and a shared 3D emission direction retained. Interference between emitted spherical dipole channels remains neglected."
+                   if cfg.ensemble.recoil_model == 'correlated' else
+                   "Joint spin/nx/ny/nz populations retained, but emission uses resolved spherical dipole channels with factorized Cartesian marginals. Interference between emitted spherical channels and correlations of one photon's Cartesian recoil components are neglected.")
+    validity.add("three-dimensional recoil", "warning", recoil_note)
     validity.add("recoil coherence", "warning", "Population-resolving scattering erases motional coherence and treats elastic spin amplitudes as distinguishable; this is an additional approximation beyond secular averaging.")
     validity.add("lattice", "warning", "Separable isolated wells with Gaussian local depths; no tunnelling, coherent Raman continuum excitation, envelope transport or recapture. Scalar trap basis with diagonal differential shifts; trap shape changes from spin-dependent shifts neglected.")
     validity.add("Stark shift approximation", "warning", "Raman/trap Stark operators use diagonal matrix elements; static off-diagonal motional dressing and trap-basis changes are omitted. Excited-state lattice shifts of the pumping transitions remain the configured common optical shift.")
@@ -840,11 +859,14 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                    central_bound_levels={a: s.N for a, s in zip("xyz", central.sites)},
                    calibration=calibration, lattice_optical_estimates=central.lattice_estimates,
                    optical_zeeman_model=cfg.optical.zeeman_model,
+                   recoil_model=cfg.ensemble.recoil_model,
+                   emission_quadrature=dict(polar=cfg.numerics.recoil_quadrature_points,
+                       azimuth=2*cfg.numerics.recoil_quadrature_points if cfg.ensemble.recoil_model == 'correlated' else None),
                    selected_lattice_linear_polarizations=cfg.ensemble.lattice_linear_polarizations,
                    node_results=[dict(position_um=l.position.tolist(), phase_deg=float(np.rad2deg(l.phase) % 360),
                                       depths_uk=l.depths.tolist(), survival=float(r["P"][-1].sum()), target_absolute=float(r["P"][-1, up, 0])) for l, r in components])
     result = RunResult(ts, P, loss, count, mins, coh, final["solver"], center_model.schedule, final["wall_time_s"],
-                       notes=["3D recoil with Cartesian marginal approximation; absorbing local bound manifolds; Strang splitting"], rho_final=None)
+                       notes=[f"3D recoil: {cfg.ensemble.recoil_model}; absorbing local bound manifolds; Strang splitting"], rho_final=None)
     return dict(series=series, final=final, validity=validity, pn=pn, pn_axes=pn_axes, pn_axes_absolute=pn_axes_absolute,
                 P_final=normalized[-1], segments=center_model.schedule,
                 cooling_rate_method=f"Savitzky-Golay derivative of survivor mean local {'xyz'[ra]} energy / level index",
@@ -852,7 +874,7 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                 ensemble_details=dict(assumptions=[f"Initially loaded Gaussian cloud, conditional on local bound states; axial preparation mode {cfg.initial.motion_mode}, configured axial temperature {cfg.initial.temperature_k:g} K, transverse temperature {cfg.ensemble.transverse_temperature_k:g} K. Loading survival unspecified.",
                     "Uniform static Raman/lattice registration, not rapid temporal phase noise.",
                     f"x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected {at.ground_label(up)}<->{at.ground_label(down)} Raman pair is coherent along {'xyz'[ra]}; other axes are population resolved.",
-                    "Emission Cartesian components use independent dipole marginals; recoil coherence transfer omitted.",
+                    recoil_description(cfg.ensemble.recoil_model),
                     "ARC D1+D2 scattering includes fine/hyperfine interference and coherent same-tone beam absorption.",
                     at.zeeman_model_description(cfg.optical.zeeman_model),
                     "D-line diagonal trap shifts are estimates; higher excited states and hyperfine-mediated trap polarizability omitted.",

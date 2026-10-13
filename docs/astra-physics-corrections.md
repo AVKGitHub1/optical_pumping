@@ -1,6 +1,6 @@
 # RSC physics corrections and current results
 
-Reviewed 2026-10-12. All execution and checks use the **`scripts` conda environment**. The active configuration is [examples/experiment.json](../examples/experiment.json), with **modeled carrier decay**. Its saved 5 ms results below retain the default weak-field optical model; the finite-field comparison is reported separately. The [historical audit](astra-physics-history.md) preserves the original 1D audit, intermediate results, convergence studies and resolved questions.
+Reviewed 2026-10-13. All execution and checks use the **`scripts` conda environment**. The active configuration is [examples/experiment.json](../examples/experiment.json), with **modeled carrier decay**. Its saved 5 ms results below retain the default weak-field optical model and Cartesian recoil marginals; the finite-field and correlated-recoil comparisons are reported separately. The [historical audit](astra-physics-history.md) preserves the original 1D audit, intermediate results, convergence studies and resolved questions.
 
 ## Current result
 
@@ -91,7 +91,7 @@ Atomic conventions follow [ARC's hyperfine dipole documentation](https://arc-alk
 
 1. **Calibration:** the RMS/initial-curvature convention is an assumption without a raw carrier trace. It does not validate frequency and the reported decay simultaneously.
 2. **Spatial inputs:** microscopic registration is uniformly averaged and fixed during each sequence. Separate lasers do not specify a phase-diffusion rate. Experimental uncertainties in cloud size, temperature, depth and their correlations are unspecified.
-3. **Recoil coherence:** population-resolving jumps discard coherence transfer, including indistinguishable elastic channels. Resolved spherical emission channels omit mutual interference; Cartesian emission marginals omit correlations within one photon's momentum. Passing numerical tests does not bound these physical errors. See [Ozeri et al.](https://arxiv.org/abs/quant-ph/0502063) and [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
+3. **Recoil coherence:** population-resolving jumps discard coherence transfer, including indistinguishable elastic channels. Resolved spherical emission channels omit mutual interference. The default Cartesian emission marginals also omit correlations within one photon's momentum; the optional correlated model below includes those Cartesian correlations. Passing numerical tests does not bound the remaining physical errors. See [Ozeri et al.](https://arxiv.org/abs/quant-ph/0502063) and [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
 4. **Trap and Stark model:** isolated separable scalar wells, diagonal shifts, no off-diagonal static dressing or changes of motional basis. Additional Raman standing-wave depth can reach about 6.6% of the central axial depth. Excited-state lattice shifts remain a configurable common shift; state-resolved excited polarizability is absent. D-line estimates omit higher excited states and hyperfine-mediated polarizability corrections.
 5. **Loss:** no recapture, tunnelling, intersite transport, coherent Raman escape to the continuum or collisions. Crossing one site barrier is not necessarily apparatus-level escape. The selected absorbing model estimates well loss; cooling-assisted recapture has not been calculated.
 6. **Optical reduction:** the motional-secular ratio of 0.480 is marginal. Stronger pumping requires a more complete optical master equation. The finite earlier search does not establish a global optimum.
@@ -162,6 +162,76 @@ Run `scripts/check_finite_field.py` as shown in the README. Full outputs and
 the matched comparison are in
 [results/onlyOP_finite_field](../results/onlyOP_finite_field/), including
 [comparison.json](../results/onlyOP_finite_field/comparison.json).
+
+## Correlated photon recoil (2026-10-13)
+
+`ensemble.recoil_model = "correlated"` integrates each photon's emission direction
+once for all three local lattice axes. This replaces the product of three
+independently averaged kernels with the angular average of their product.
+Pumping, Raman scattering, and lattice scattering all use this construction,
+including interference between equal-frequency absorption paths. The original
+`"cartesian_marginals"` mode remains the default.
+
+The emitted vector has unit norm; its Cartesian components are not independent.
+For example, isotropic emission has `<ux^2 uy^2> = 1/15`, whereas multiplying
+independent marginals gives `1/9`. The new quadrature reproduces this joint
+moment and the analytic pi/sigma dipole covariance tensors. The optical-state
+model is independent of this recoil choice. The new
+[onlyOP_correlated.json](../examples/onlyOP_correlated.json) uses both
+diagonalized atomic states and correlated recoil.
+
+Matched 64-site, 1 ms runs with diagonalized atomic states give:
+
+| Observable | Cartesian marginals | Correlated recoil |
+| --- | ---: | ---: |
+| Joint spin target and nz=0 / initially loaded | 19.95359% | 19.93560% |
+| Well survival / initially loaded | 48.01592% | 47.97203% |
+
+These are changes of **-0.01799 percentage points** in target yield and
+**-0.04389 percentage points** in survival. This full-sequence comparison
+supersedes extrapolating the earlier single-photon difference into a yield
+correction. It retains all other model approximations. In particular, the
+motional-secular limit is still exceeded and both runs remain **INVALID**.
+
+Angular integration uses 24 polar nodes and 48 azimuth points; the repeat uses
+48 and 96. The largest checked difference across every site's saved population
+trajectory is **5.22e-15**, and photon-count differences are below **2.49e-14**.
+Cloud averages agree at similarly small levels. These are quadrature checks,
+not physical error bars or a test of continuous spatial convergence.
+
+Dense kernels scale quadratically in the product of bound-level counts. The
+current implementation supports up to 1024 joint motional states per site,
+with no silent truncation. The example's central site has 9 x 9 x 6 = 486.
+With eight workers, the measured full-cloud runtimes were 17.18 s for marginals,
+59.53 s for correlated recoil, and 83.55 s for the refined angular grid.
+Runtime depends on the machine and workload. Construction checks the Stop
+signal between bounded batches; both GUI and CLI use the same model option.
+
+Independent tests cover angular moments, bulk lattice overlaps, direct
+Kronecker photon jumps, coherent absorption amplitudes, an augmented Markov
+exponential with loss and photon counters, rigid apparatus rotations,
+serial/parallel equality, active Raman/lattice scattering, cancellation, and
+per-site convergence failures that cancel in the cloud average.
+
+The committed baseline passed 227 tests before this change. The final expanded
+suite passes **244 tests in 208.51 s**, including 17 new checks. The existing
+scheduling mock was updated to accept the Stop argument now forwarded into
+recoil construction; its ordering and configuration assertions are unchanged.
+
+The marginal-mode run reproduces the preceding finite-field comparison's
+population, photon-count, and loss arrays exactly. A separate calibrated
+Raman-on check (one site, 20 us) halves the timestep from 2 us to 1 us: saved
+population entries change by at most 6.14e-9, photon counts by 1.04e-8, and
+loss by 4.36e-9. Probability is conserved within 7.78e-16 and sampled density
+matrices remain positive. This short check does not establish timestep
+convergence for a complete cooling sequence. Exact settings and checks are in
+the [validation record](../results/onlyOP_correlated_recoil/validation.json).
+
+Reproduce with `scripts/check_correlated_recoil.py` using the README command.
+The [comparison](../results/onlyOP_correlated_recoil/comparison.json) and full
+outputs record both models and the refined run. The command returns nonzero
+if probability or photon-count convergence fails. Motional coherence transfer,
+interference between emitted spherical channels, and recapture remain omitted.
 
 ## Validation and cleanup
 

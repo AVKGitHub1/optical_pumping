@@ -1,0 +1,44 @@
+{
+  "baseline_suite": {
+    "passed": 227,
+    "failed": 0,
+    "duration_s": 189.82
+  },
+  "new_tests": 17,
+  "final_full_suite": {
+    "passed": 244,
+    "failed": 0,
+    "duration_s": 208.51
+  },
+  "first_full_suite": {
+    "passed": 241,
+    "failed": 3,
+    "duration_s": 200.38,
+    "failure": "Three scheduling cases used a mock LocalExperiment constructor that did not accept the new stop argument. The mock signature was updated; production numerics and test assertions were unchanged."
+  },
+  "scheduling_tests_after_mock_update": {
+    "passed": 11,
+    "failed": 0,
+    "duration_s": 0.75
+  },
+  "legacy_array_max_absolute_differences": {
+    "P": 0.0,
+    "counts": 0.0,
+    "overflow": 0.0
+  },
+  "active_raman_smoke": {
+    "duration_ms": 0.02,
+    "sites": 1,
+    "calibration_samples": 8,
+    "timestep_2us_to_1us_max_absolute_differences": {
+      "P": 6.1361241847184e-09,
+      "counts": 1.0305948318486621e-08,
+      "overflow": 4.35016875126315e-09
+    },
+    "max_conservation_error": 7.771561172376096e-16,
+    "min_eigenvalue": 0.0,
+    "max_coherence": 0.008262688962007797,
+    "note": "A short active-Raman splitting check, not convergence of a full cooling sequence."
+  },
+  "physical_limitation": "The full onlyOP comparison remains invalid under the motional-secular approximation. Photon Cartesian correlations are included; recoil coherence transfer, spherical-channel interference, and recapture remain omitted."
+}
