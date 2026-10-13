@@ -1,0 +1,1634 @@
+{
+  "note": "Single-photon check of the Cartesian-marginal approximation in local wells.\n\nThis diagnoses one recoil event on the configured initial state. It does not bound\nthe cumulative error of a cooling sequence or the resolved-dipole approximation.\n",
+  "config": {
+    "name": "default",
+    "trap": {
+      "lattice_x": {
+        "confinement": "depth",
+        "wavelength_nm": 1188.0,
+        "frequency_hz": 45622.31109,
+        "waist_um": 200.0,
+        "depth_uk": 15.0
+      },
+      "lattice_y": {
+        "confinement": "depth",
+        "wavelength_nm": null,
+        "frequency_hz": null,
+        "waist_um": null,
+        "depth_uk": null
+      },
+      "lattice_z": {
+        "confinement": "depth",
+        "wavelength_nm": null,
+        "frequency_hz": null,
+        "waist_um": null,
+        "depth_uk": null
+      },
+      "wavelength_nm": 785.0,
+      "frequency_hz": 69043.70137,
+      "potential": "lattice",
+      "n_max": 16,
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "heating_rate_quanta_per_s": 0.0,
+      "depth_uk": 15.0
+    },
+    "initial": {
+      "spin_preset": "uniform_F3",
+      "f3_fraction": 1.0,
+      "custom_spin_populations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.14285714285714285
+      ],
+      "motion_mode": "thermal_temperature",
+      "nbar": 3.0,
+      "temperature_k": 5e-06,
+      "fock_n": 1,
+      "custom_pn": []
+    },
+    "magnetic": {
+      "magnitude_gauss": 3.0,
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "raman": {
+      "state_up": [
+        3,
+        3
+      ],
+      "state_down": [
+        2,
+        2
+      ],
+      "calibration": "measured_carrier",
+      "carrier_decay_mode": "modeled",
+      "beam_helicities": [
+        1,
+        -1
+      ],
+      "polarization_mode": "helicity",
+      "beam_low_ellipticity_deg": 45.0,
+      "beam_high_ellipticity_deg": -45.0,
+      "beam_low_orientation_deg": 0.0,
+      "beam_high_orientation_deg": 0.0,
+      "waist_um": 200.0,
+      "flop_contrast": 0.9,
+      "flop_decay_periods": 3.5,
+      "enabled": true,
+      "carrier_rabi_hz": 5000.0,
+      "frequency_mode": "sideband_offset",
+      "red_sideband_offset_hz": -5000.0,
+      "beat_frequency_hz": 3035802400.0,
+      "wavelength_nm": 783.0,
+      "beam_low_direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "beam_high_direction": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "tone_layout": "both_tones_both_beams",
+      "tone_powers_low": [
+        1.0,
+        1.0
+      ],
+      "tone_powers_high": [
+        1.0,
+        1.0
+      ],
+      "lattice_phase_deg": 0.0,
+      "beam_beat_phase_deg": 0.0,
+      "extra_coherence_decay_rate_s": 0.0,
+      "differential_light_shift_hz": 0.0,
+      "scattering_rate_s": 0.0,
+      "scattering_model": "spin_preserving",
+      "max_sideband_order": 3
+    },
+    "spin_pump": {
+      "enabled": true,
+      "intensity_mode": "power_waist",
+      "peak_intensity_w_m2": 0.1,
+      "power_mw": 5e-05,
+      "waist_um": 200.0,
+      "detuning_mhz": 0.0,
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "polarization": {
+        "mode": "spherical",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.01,
+        "beam_angle_deg": 0.0,
+        "beam_azimuth_deg": 0.0,
+        "ellipticity_deg": 45.0,
+        "orientation_deg": 0.0,
+        "linked_pi_share": 0.0
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "repump": {
+      "enabled": true,
+      "intensity_mode": "power_waist",
+      "peak_intensity_w_m2": 0.1,
+      "power_mw": 5e-05,
+      "waist_um": 200.0,
+      "detuning_mhz": 0.0,
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "polarization": {
+        "mode": "geometry",
+        "pi_fraction": 0.0,
+        "sigma_minus_fraction": 0.0,
+        "beam_angle_deg": 90.0,
+        "beam_azimuth_deg": 90.0,
+        "ellipticity_deg": 0.0,
+        "orientation_deg": 90.0,
+        "linked_pi_share": 0.5
+      },
+      "light_shift_override_up_hz": null,
+      "light_shift_override_down_hz": null
+    },
+    "optical": {
+      "excited_manifold": "all_D2",
+      "path_model": "kramers_heisenberg",
+      "emission_pattern": "dipole",
+      "excited_state_shift_hz": 0.0,
+      "weak_excitation_warning": 0.02,
+      "weak_excitation_invalid": 0.1
+    },
+    "timing": {
+      "protocol": "custom",
+      "total_duration_ms": 5.0,
+      "prep_duration_ms": 1.0,
+      "prep_pump_scale": 1.0,
+      "prep_repump_scale": 1.0,
+      "cooling_pump_scale": 1.0,
+      "cooling_repump_scale": 1.0,
+      "cooling_raman_amplitude": 1.0,
+      "raman_pulse_ms": 0.3,
+      "reset_pulse_ms": 0.1,
+      "reset_pump_scale": 1.0,
+      "reset_repump_scale": 1.0,
+      "repetitions": 0,
+      "pulsed_first": "reset",
+      "custom_segments": [
+        {
+          "duration_ms": 1,
+          "raman": 0.0,
+          "pump": 1.0,
+          "repump": 1.0,
+          "label": "only OP"
+        }
+      ],
+      "n_samples": 201
+    },
+    "numerics": {
+      "solver": "coherent",
+      "method": "DOP853",
+      "rtol": 1e-07,
+      "atol": 1e-10,
+      "recoil_quadrature_points": 24,
+      "boundary_tolerance": 0.0001,
+      "conservation_tolerance": 1e-06,
+      "positivity_tolerance": 1e-08,
+      "rate_validity_epsilon": 0.2,
+      "seed": 0
+    },
+    "analysis": {
+      "spin_threshold": 0.9,
+      "joint_threshold": 0.5,
+      "derivative_window": 11
+    },
+    "ensemble": {
+      "enabled": true,
+      "samples": 64,
+      "workers": 8,
+      "cloud_radius_um": 150.0,
+      "lattice_waist_um": 200.0,
+      "transverse_wavelength_nm": 1188.0,
+      "transverse_depth_uk": 15.0,
+      "transverse_temperature_k": 1e-05,
+      "transverse_reference_direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "transverse_frequency_offset_hz": 160000000.0,
+      "lattice_linear_polarizations": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "phase_offset_deg": 0.0,
+      "time_step_us": 2.0,
+      "calibration_samples": 128
+    }
+  },
+  "sites": [
+    {
+      "site_id": "reference",
+      "status": "complete",
+      "position_um": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "depths_uk": [
+        15.0,
+        15.0,
+        15.0
+      ],
+      "wavelengths_nm": [
+        1188.0,
+        1188.0,
+        785.0
+      ],
+      "lattice_axes_lab": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "bound_levels": [
+        9,
+        9,
+        6
+      ],
+      "initial_motional_populations": [
+        [
+          0.21155081128617967,
+          0.1713754188505226,
+          0.1400578274461888,
+          0.11555389502693796,
+          0.0963309693790537,
+          0.0812440833263857,
+          0.06945476015847334,
+          0.0604070178180729,
+          0.054025216708185296
+        ],
+        [
+          0.21155081128617967,
+          0.1713754188505226,
+          0.1400578274461888,
+          0.11555389502693796,
+          0.0963309693790537,
+          0.0812440833263857,
+          0.06945476015847334,
+          0.0604070178180729,
+          0.054025216708185296
+        ],
+        [
+          0.45489058813130967,
+          0.24381696029610384,
+          0.13641153450545018,
+          0.08019520590438134,
+          0.05015193058442051,
+          0.03453378057833447
+        ]
+      ],
+      "cases": [
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9200542377481177,
+          "marginal_product_survival": 0.9200958416420104,
+          "difference": 4.1603893892738775e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9120645719338016,
+          "marginal_product_survival": 0.9121520134906657,
+          "difference": 8.744155686402078e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9145749197706423,
+          "marginal_product_survival": 0.9146301869270593,
+          "difference": 5.526715641701596e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9230232078887525,
+          "marginal_product_survival": 0.9230558763336013,
+          "difference": 3.266844484883791e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9266486926835495,
+          "marginal_product_survival": 0.9267900438907339,
+          "difference": 0.00014135120718439254
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9320136321238875,
+          "marginal_product_survival": 0.932087828771937,
+          "difference": 7.419664804941828e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.920054237748118,
+          "marginal_product_survival": 0.9200958416420099,
+          "difference": 4.1603893891850596e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9120645719338002,
+          "marginal_product_survival": 0.912152013490665,
+          "difference": 8.744155686479793e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9145749197706428,
+          "marginal_product_survival": 0.9146301869270587,
+          "difference": 5.526715641590574e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.923023207888751,
+          "marginal_product_survival": 0.923055876333601,
+          "difference": 3.266844484994813e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9266486926835502,
+          "marginal_product_survival": 0.9267900438907335,
+          "difference": 0.0001413512071832823
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9320136321238861,
+          "marginal_product_survival": 0.9320878287719366,
+          "difference": 7.41966480505285e-05
+        }
+      ]
+    },
+    {
+      "site_id": "cloud_0",
+      "status": "complete",
+      "position_um": [
+        77.92107666624156,
+        111.45315624784845,
+        -26.340312885120575
+      ],
+      "depths_uk": [
+        7.785548782369001,
+        10.694984438596208,
+        5.949904623591229
+      ],
+      "wavelengths_nm": [
+        1188.0,
+        1188.0,
+        785.0
+      ],
+      "lattice_axes_lab": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "bound_levels": [
+        7,
+        8,
+        4
+      ],
+      "initial_motional_populations": [
+        [
+          0.20501137387940083,
+          0.17658540135991344,
+          0.15350860434769345,
+          0.13484498702232287,
+          0.11992954103807235,
+          0.1084633522168162,
+          0.1016567401357809
+        ],
+        [
+          0.2033216269056006,
+          0.1704281715740561,
+          0.14414612377900493,
+          0.12312790428068876,
+          0.10635575487638241,
+          0.09309609892332114,
+          0.08294702475420317,
+          0.07657729490674282
+        ],
+        [
+          0.38923516236401684,
+          0.2671441494565432,
+          0.1927943179473975,
+          0.15082637023204243
+        ]
+      ],
+      "cases": [
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.7693096980972096,
+          "marginal_product_survival": 0.7692163157491957,
+          "difference": -9.33823480139262e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7465924537141028,
+          "marginal_product_survival": 0.7471282315077331,
+          "difference": 0.0005357777936303432
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.7703797919309439,
+          "marginal_product_survival": 0.7708288085342979,
+          "difference": 0.0004490166033540577
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7818855202806092,
+          "marginal_product_survival": 0.7820294007261546,
+          "difference": 0.0001438804455453635
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.7572932946192621,
+          "marginal_product_survival": 0.7575511511842881,
+          "difference": 0.0002578565650259712
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.772033242602052,
+          "marginal_product_survival": 0.7721030327478826,
+          "difference": 6.979014583063936e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.7693096980199474,
+          "marginal_product_survival": 0.7692163156727365,
+          "difference": -9.338234721090188e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7465924541186297,
+          "marginal_product_survival": 0.7471282319596794,
+          "difference": 0.0005357778410496339
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.7703797916690414,
+          "marginal_product_survival": 0.7708288082535566,
+          "difference": 0.0004490165845152383
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7818855222752863,
+          "marginal_product_survival": 0.7820294028869151,
+          "difference": 0.0001438806116288438
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.7572932943553814,
+          "marginal_product_survival": 0.7575511509163547,
+          "difference": 0.0002578565609733241
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7720332445960091,
+          "marginal_product_survival": 0.7721030348781378,
+          "difference": 6.979028212872329e-05
+        }
+      ]
+    },
+    {
+      "site_id": "cloud_1",
+      "status": "complete",
+      "position_um": [
+        -10.942057642129946,
+        -2.0899655363610887,
+        26.088791957081767
+      ],
+      "depths_uk": [
+        14.494953436951924,
+        14.411586722444182,
+        14.907215716950143
+      ],
+      "wavelengths_nm": [
+        1188.0,
+        1188.0,
+        785.0
+      ],
+      "lattice_axes_lab": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "bound_levels": [
+        9,
+        9,
+        6
+      ],
+      "initial_motional_populations": [
+        [
+          0.20916930445467272,
+          0.17007825261989426,
+          0.13951846221966183,
+          0.1155441613293296,
+          0.09669346173505065,
+          0.08187380257021451,
+          0.07028944850270492,
+          0.06143400118178909,
+          0.05539910538668232
+        ],
+        [
+          0.2087704191590172,
+          0.16985933269251613,
+          0.13942579545784356,
+          0.11554013333274234,
+          0.0967520819036551,
+          0.0819777451690537,
+          0.07042857636003066,
+          0.06160697805214225,
+          0.05563893787299904
+        ],
+        [
+          0.453784961734061,
+          0.24372626336920059,
+          0.1366459039643874,
+          0.08050688019617212,
+          0.050466811464468984,
+          0.034869179271709745
+        ]
+      ],
+      "cases": [
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9086088571310016,
+          "marginal_product_survival": 0.9086505479867066,
+          "difference": 4.169085570504549e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9000521749212986,
+          "marginal_product_survival": 0.9001512218659279,
+          "difference": 9.904694462925523e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9023011121305936,
+          "marginal_product_survival": 0.9023585961161593,
+          "difference": 5.748398556570944e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9115356119962462,
+          "marginal_product_survival": 0.9115666436850429,
+          "difference": 3.103168879670104e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9163655338811365,
+          "marginal_product_survival": 0.9165259435288017,
+          "difference": 0.00016040964766517174
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9220867592259102,
+          "marginal_product_survival": 0.9221699164908757,
+          "difference": 8.315726496543885e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9086088571310025,
+          "marginal_product_survival": 0.9086505479867066,
+          "difference": 4.1690855704157315e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9000521749212975,
+          "marginal_product_survival": 0.9001512218659274,
+          "difference": 9.904694462992136e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.9023011121305939,
+          "marginal_product_survival": 0.9023585961161592,
+          "difference": 5.748398556526535e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.911535611996245,
+          "marginal_product_survival": 0.9115666436850426,
+          "difference": 3.103168879758922e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.916365533881137,
+          "marginal_product_survival": 0.9165259435288013,
+          "difference": 0.00016040964766439458
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.9220867592259088,
+          "marginal_product_survival": 0.9221699164908749,
+          "difference": 8.315726496610498e-05
+        }
+      ]
+    },
+    {
+      "site_id": "cloud_2",
+      "status": "complete",
+      "position_um": [
+        -181.92325924322446,
+        7.396490963522868,
+        -76.4638940595783
+      ],
+      "depths_uk": [
+        11.167172441834534,
+        2.140223437608032,
+        2.859112278421026
+      ],
+      "wavelengths_nm": [
+        1188.0,
+        1188.0,
+        785.0
+      ],
+      "lattice_axes_lab": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "bound_levels": [
+        8,
+        4,
+        3
+      ],
+      "initial_motional_populations": [
+        [
+          0.20578888005279528,
+          0.1717997365413913,
+          0.14471566785980014,
+          0.12310478239208675,
+          0.10588428816220363,
+          0.09226395158520527,
+          0.08176548304685688,
+          0.07467721035966075
+        ],
+        [
+          0.27456592845692124,
+          0.2550795952578909,
+          0.23975667370739392,
+          0.23059780257779386
+        ],
+        [
+          0.4097364594084629,
+          0.3206895624621834,
+          0.2695739781293537
+        ]
+      ],
+      "cases": [
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.6607633748585366,
+          "marginal_product_survival": 0.6625359179953427,
+          "difference": 0.0017725431368060818
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.618886541998994,
+          "marginal_product_survival": 0.6227609464781336,
+          "difference": 0.0038744044791396703
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.5831567483576039,
+          "marginal_product_survival": 0.5828585303117766,
+          "difference": -0.00029821804582730316
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.5835349319985335,
+          "marginal_product_survival": 0.582124776149819,
+          "difference": -0.0014101558487145116
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.604529867466211,
+          "marginal_product_survival": 0.604581829818319,
+          "difference": 5.196235210802591e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.6012867924139697,
+          "marginal_product_survival": 0.6005900253144036,
+          "difference": -0.0006967670995660091
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.6607633750937821,
+          "marginal_product_survival": 0.6625359198642726,
+          "difference": 0.0017725447704904918
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.618886541284769,
+          "marginal_product_survival": 0.6227609459452772,
+          "difference": 0.003874404660508146
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.5831567484069277,
+          "marginal_product_survival": 0.5828585306620098,
+          "difference": -0.00029821774491789466
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.5835349318576645,
+          "marginal_product_survival": 0.5821247759862583,
+          "difference": -0.001410155871406138
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.6045298675795696,
+          "marginal_product_survival": 0.6045818315237667,
+          "difference": 5.196394419704209e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.6012867917908433,
+          "marginal_product_survival": 0.6005900248005203,
+          "difference": -0.0006967669903230611
+        }
+      ]
+    },
+    {
+      "site_id": "cloud_3",
+      "status": "complete",
+      "position_um": [
+        31.305485535593398,
+        -96.65237104156685,
+        77.46185431316796
+      ],
+      "depths_uk": [
+        6.965359464504182,
+        10.580699993409592,
+        8.952783490619886
+      ],
+      "wavelengths_nm": [
+        1188.0,
+        1188.0,
+        785.0
+      ],
+      "lattice_axes_lab": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "bound_levels": [
+        6,
+        8,
+        5
+      ],
+      "initial_motional_populations": [
+        [
+          0.22387079629012432,
+          0.19448967944289672,
+          0.17054463268462855,
+          0.1511504713603597,
+          0.13572249200353778,
+          0.12422192821845311
+        ],
+        [
+          0.20270784790863408,
+          0.17008245054756613,
+          0.14399754774792337,
+          0.12312583279031804,
+          0.10646532162916864,
+          0.09329651723671716,
+          0.0832379806216538,
+          0.07708650151801882
+        ],
+        [
+          0.39511245728061095,
+          0.24644505244620557,
+          0.1609400675398983,
+          0.11152213000852176,
+          0.08598029272476347
+        ]
+      ],
+      "cases": [
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.8122228989227314,
+          "marginal_product_survival": 0.812408770267921,
+          "difference": 0.00018587134518965875
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7950731745940015,
+          "marginal_product_survival": 0.7954879490706129,
+          "difference": 0.00041477447661142364
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.8104750059722741,
+          "marginal_product_survival": 0.8107605546509128,
+          "difference": 0.00028554867863872513
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.8243747472803382,
+          "marginal_product_survival": 0.824363246959631,
+          "difference": -1.1500320707180656e-05
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.8174455075001279,
+          "marginal_product_survival": 0.8177475313460801,
+          "difference": 0.0003020238459522373
+        },
+        {
+          "polar_quadrature": 16,
+          "azimuth_points": 32,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.8314785684741395,
+          "marginal_product_survival": 0.8315357800838885,
+          "difference": 5.72116097490305e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.8122228989309781,
+          "marginal_product_survival": 0.8124087703638375,
+          "difference": 0.0001858714328594191
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "x",
+          "absorption_direction_lab": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.7950731745561037,
+          "marginal_product_survival": 0.795487949039846,
+          "difference": 0.0004147744837422751
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.8104750059739508,
+          "marginal_product_survival": 0.8107605546707278,
+          "difference": 0.0002855486967769938
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "y",
+          "absorption_direction_lab": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.8243747472722471,
+          "marginal_product_survival": 0.8243632469517475,
+          "difference": -1.1500320499679972e-05
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "sigma",
+          "correlated_3d_survival": 0.81744550750575,
+          "marginal_product_survival": 0.8177475314426265,
+          "difference": 0.0003020239368765054
+        },
+        {
+          "polar_quadrature": 32,
+          "azimuth_points": 64,
+          "absorbed_along": "z",
+          "absorption_direction_lab": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "emitted_dipole_class": "pi",
+          "correlated_3d_survival": 0.8314785684361976,
+          "marginal_product_survival": 0.8315357800517269,
+          "difference": 5.7211615529295656e-05
+        }
+      ]
+    }
+  ],
+  "expected_sites": 5,
+  "completed_sites": 5,
+  "cases": [
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "x",
+      "absorption_direction_lab": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9200542377481177,
+      "marginal_product_survival": 0.9200958416420104,
+      "difference": 4.1603893892738775e-05
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "x",
+      "absorption_direction_lab": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9120645719338016,
+      "marginal_product_survival": 0.9121520134906657,
+      "difference": 8.744155686402078e-05
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "y",
+      "absorption_direction_lab": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9145749197706423,
+      "marginal_product_survival": 0.9146301869270593,
+      "difference": 5.526715641701596e-05
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "y",
+      "absorption_direction_lab": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9230232078887525,
+      "marginal_product_survival": 0.9230558763336013,
+      "difference": 3.266844484883791e-05
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "z",
+      "absorption_direction_lab": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9266486926835495,
+      "marginal_product_survival": 0.9267900438907339,
+      "difference": 0.00014135120718439254
+    },
+    {
+      "polar_quadrature": 16,
+      "azimuth_points": 32,
+      "absorbed_along": "z",
+      "absorption_direction_lab": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9320136321238875,
+      "marginal_product_survival": 0.932087828771937,
+      "difference": 7.419664804941828e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "x",
+      "absorption_direction_lab": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.920054237748118,
+      "marginal_product_survival": 0.9200958416420099,
+      "difference": 4.1603893891850596e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "x",
+      "absorption_direction_lab": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9120645719338002,
+      "marginal_product_survival": 0.912152013490665,
+      "difference": 8.744155686479793e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "y",
+      "absorption_direction_lab": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9145749197706428,
+      "marginal_product_survival": 0.9146301869270587,
+      "difference": 5.526715641590574e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "y",
+      "absorption_direction_lab": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.923023207888751,
+      "marginal_product_survival": 0.923055876333601,
+      "difference": 3.266844484994813e-05
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "z",
+      "absorption_direction_lab": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emitted_dipole_class": "sigma",
+      "correlated_3d_survival": 0.9266486926835502,
+      "marginal_product_survival": 0.9267900438907335,
+      "difference": 0.0001413512071832823
+    },
+    {
+      "polar_quadrature": 32,
+      "azimuth_points": 64,
+      "absorbed_along": "z",
+      "absorption_direction_lab": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "emitted_dipole_class": "pi",
+      "correlated_3d_survival": 0.9320136321238861,
+      "marginal_product_survival": 0.9320878287719366,
+      "difference": 7.41966480505285e-05
+    }
+  ]
+}

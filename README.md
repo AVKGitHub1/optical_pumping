@@ -66,7 +66,21 @@ conda run --no-capture-output -n scripts python scripts/check_coherent_recoil.py
 
 The script writes `comparison.json`, exact configs, and time-series/density-matrix arrays in NPZ files. Power scales multiply both pumping beams; the schedule duration stays fixed. Use `--position-um X Y Z` for a different local site and `--axis x`, `y`, or `z` for its motional axis.
 
-This benchmark requires Raman off, zero background heating, and 2–16 retained bound levels covering the full local bound spectrum. It isolates **motional coherence**: spin coherences, transverse recoil and escape, lattice scattering, excited-state mixing, and recapture are absent. A small difference in this benchmark is not a validation of the full 3D experiment. The production ensemble solver is unchanged in its treatment of recoil. Effective-jump theory follows [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
+To check all three axes at the center plus reproducible cloud positions, and repeat each case with twice the angular quadrature:
+
+```powershell
+conda run --no-capture-output -n scripts python scripts/check_coherent_recoil.py --config examples/onlyOP.json --axes x y z --cloud-samples 4 --power-scales 0.03 0.1 1 --check-quadrature --output results/onlyOP_recoil_cloud
+```
+
+This runs 45 local comparisons and 45 quadrature repeats at the full configured duration. `survey.json` records coverage and the largest sampled differences in survival, spin/ground-state fractions, joint target yield, and survivor energy. `comparison.json` retains every case's physical-validity diagnostics, actual well parameters, numerical checks, and signed observable differences. The reference position is additional to the production Sobol cloud prefix, which uses `numerics.seed`. Failed or unsupported sites are recorded and cause a nonzero exit code. Numerical success does not remove shared physical approximations; local-axis yields are not combined into a 3D prediction. Maxima are over saved output times, not continuous-time error bounds.
+
+The separate single-photon Cartesian-factorization check supports the same cloud sampling, per-axis lattice overrides, rotated apparatus, and configured initial motional state:
+
+```powershell
+conda run --no-capture-output -n scripts python scripts/check_recoil_factorization.py --config examples/onlyOP.json --cloud-samples 4 --output results/onlyOP_recoil_cloud/one_photon_recoil_check.json
+```
+
+The coherent benchmark requires Raman off, zero background heating, and 2–16 retained bound levels covering the full local bound spectrum. It isolates **motional coherence**: spin coherences, transverse recoil and escape, lattice scattering, excited-state mixing, and recapture are absent. A small difference in this benchmark is not a validation of the full 3D experiment. The production ensemble solver is unchanged in its treatment of recoil. Effective-jump theory follows [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
 
 ## Documentation
 

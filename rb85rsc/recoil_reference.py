@@ -22,7 +22,7 @@ from scipy.sparse.linalg import expm_multiply
 
 from . import atomic as at, motion as mo, polarization as pol
 from .dynamics import _single_thread
-from .far_detuned import envelope
+from .far_detuned import envelope, spatial_samples
 from .model import Model
 from .optical import beam_spec
 from .protocols import raman_is_active
@@ -33,6 +33,24 @@ class RecoilChannel:
     rates: np.ndarray  # initial spin, final spin; s^-1
     kicks: np.ndarray  # direction, final n, initial n; contractions on bound space
     weights: np.ndarray  # normalized directional probability
+
+
+def validation_positions(cfg, cloud_samples=0, position_um=(0., 0., 0.)):
+    """An explicit reference position plus the production Sobol cloud prefix.
+
+    Positions are independent local checks, not weights for a 3D prediction.
+    The reference is kept separately even if a zero-radius cloud duplicates it.
+    """
+    position = np.asarray(position_um, float)
+    if position.shape != (3,) or not np.all(np.isfinite(position)):
+        raise ValueError("position_um must be a finite lab 3-vector")
+    if not isinstance(cloud_samples, (int, np.integer)) or cloud_samples < 0:
+        raise ValueError("cloud_samples must be a nonnegative integer")
+    positions = [dict(site_id='reference', position_um=position.tolist())]
+    if cloud_samples:
+        xyz, _ = spatial_samples(cfg, cloud_samples)
+        positions.extend(dict(site_id=f'cloud_{i}', position_um=p.tolist()) for i, p in enumerate(xyz))
+    return positions
 
 
 def generators(energies_hz, channels):
@@ -184,7 +202,9 @@ def _compare_recoil(cfg, axis, position_um):
         return dict(P_absolute=P, survival=survival, well_escape_no_recapture=extra[:, 0].real,
                     photons_spin_pump=extra[:, 1].real, photons_repump=extra[:, 2].real,
                     P_up_absolute=P[:, m.up].sum(axis=1), P_target_absolute=P[:, m.up, 0],
+                    P_n0_absolute=P[:, :, 0].sum(axis=1),
                     mean_excitation_hz=(P.sum(axis=1) @ energies)/denominator,
+                    mean_excitation_uk=(P.sum(axis=1) @ energies)/denominator*at.H/at.K_B*1e6,
                     nbar=(P.sum(axis=1) @ np.arange(n))/denominator,
                     max_conservation_error=float(np.max(np.abs(survival+extra[:, 0].real-1))))
 
@@ -192,6 +212,7 @@ def _compare_recoil(cfg, axis, position_um):
     population = observables(populations[:, :-3].real.reshape(len(ts), spins, n), populations[:, -3:])
     coherent['motional_coherence_l1'] = np.abs(offdiagonal).sum(axis=(1, 2, 3))
     coherent['min_eigenvalue'] = float(np.linalg.eigvalsh(densities).min())
+    population['min_population'] = float(population['P_absolute'].min())
     coherent['rho_final'] = densities[-1]
     validity = [dict(category=c, status=s, message=msg,
                      applies_to='population' if c == 'motional secular' else 'both')
@@ -203,9 +224,22 @@ def _compare_recoil(cfg, axis, position_um):
               'warning' if peak_exc >= cfg.optical.weak_excitation_warning else 'ok')
     validity.append(dict(category='weak excitation', status=status, applies_to='both',
                          message=f'maximum eliminated excited fraction = {peak_exc:.6g}'))
+    differences = {}
+    for key in ('survival', 'P_up_absolute', 'P_n0_absolute', 'P_target_absolute',
+                'mean_excitation_uk', 'photons_spin_pump', 'photons_repump'):
+        delta = coherent[key] - population[key]
+        differences[key] = dict(final_signed=float(delta[-1]), max_absolute=float(np.max(np.abs(delta))))
+    tv = .5*(np.abs(diagonal-population['P_absolute']).sum(axis=(1, 2))
+             + np.abs(coherent['well_escape_no_recapture']-population['well_escape_no_recapture']))
     return dict(t_s=ts, axis=axis, position_um=list(position_um), bound_levels=n,
                 energies_hz=m.motion.energies_hz, coherent=coherent, population=population,
+                local_well=dict(direction_lab=m.u.tolist(), depth_uk=m.motion.depth_hz*at.H/at.K_B*1e6,
+                                wavelength_nm=m.motion.wavelength_m*1e9, bottom_frequency_hz=m.nu_t,
+                                minimum_spacing_hz=float(np.min(np.diff(m.motion.energies_hz))),
+                                initial_discarded_weight=float(m.initial_tail),
+                                pump_intensities_w_m2={key: beam.intensity_w_m2 for key, beam in m.beams.items()}),
                 max_population_difference=float(np.max(np.abs(diagonal-population['P_absolute']))),
+                max_total_variation_with_escape=float(tv.max()), differences=differences,
                 pumping_validity=validity,
                 scope='One local axis; optical pump and repump only. Same spin-resolved rates in both solvers. '
                       'Coherent version retains motional coherences in every spin block; population version discards them. '

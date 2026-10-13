@@ -127,6 +127,57 @@ After the final performance edits, the complete suite passed **125 tests in 140.
 
 The GUI now honors `ensemble.workers`, including eight workers, with cancellation between integration steps and cleanup before restarting or closing. Tests with eight real spawned workers reproduce sequential results exactly and cover Stop, restart, window close, sparse output times, and worker failures. The expanded suite passed **130 tests in 122.59 s** in `scripts`. Select **3D spatial ensemble → workers → 8** in the GUI; the config's default remains four.
 
+## Optical-pumping recoil checks (2026-10-12)
+
+The `onlyOP.json` reference check now covers each local x/y/z axis at the cloud
+center and the first four production Sobol positions (seed 0), with both pumping
+beams scaled by 0.03, 0.1, and 1. Each run retains the full 1 ms schedule and 201
+output times. All 45 cases and their 45 angular-quadrature repeats completed.
+Doubling the emission quadrature from 24 to 48 changed checked probabilities by
+at most 1.7e-14.
+
+The table gives the largest absolute coherent-minus-population difference over
+these five positions and saved times at **full pump power**, in percentage points:
+
+| Independently modeled local axis | Well survival | Spin target and n=0 / initially loaded |
+| --- | ---: | ---: |
+| x | 0.99872 | 0.13669 |
+| y | 0.03600 | 0.00752 |
+| z | 0.05673 | 0.03128 |
+
+The largest survivor-energy difference is 0.01541 uK. The original central
+z-only check therefore understates the largest discrepancy found by looking at
+other axes and positions. These are independent one-axis pumping calculations,
+not a correction to the production 3D yield. They omit lattice scattering,
+transverse escape, spin coherences, finite-field excited-state mixing, and
+recapture. The magnetic-field and other shared validity warnings still apply.
+The population model's motional-secular warning remains separate from numerical
+convergence; a small measured difference does not justify removing it.
+
+The single-photon factorization check now honors per-axis lattice parameters,
+Gaussian attenuation, rotated lattice directions, and nonthermal initial axial
+states. At the same five sites, its largest Cartesian-marginal versus correlated
+3D survival difference was **0.38744 percentage points** (cloud_2, absorption
+along local x, pi emission). Refining its polar/azimuth quadrature from 16/32 to
+32/64 changed survival by at most 2.2e-9. This is a one-event diagnostic, not a
+bound on accumulated sequence error.
+
+Reproduction commands are in the [README](../README.md#check-the-motional-population-approximation).
+The [survey](../results/onlyOP_recoil_cloud/survey.json) records exact inputs,
+positions, and worst cases; [case comparisons](../results/onlyOP_recoil_cloud/comparison.json)
+retain physical and numerical diagnostics. The
+[single-photon report](../results/onlyOP_recoil_cloud/one_photon_recoil_check.json)
+contains both angular resolutions. Failed or unsupported cases remain visible
+and cause the validation commands to return a nonzero exit status. No local-axis
+results are averaged or multiplied into a 3D prediction, and these sampled
+maxima are not experimental uncertainty intervals or continuous-time bounds.
+
+The expanded suite passes **203 tests**. New checks compare each axis's
+population reference with the production 1D solver, verify whole-apparatus
+rotation invariance and cloud sampling, and exercise missing-case and failed
+quadrature reporting. The corrected single-photon checker reproduces the
+archived central default-geometry results within 2.3e-16.
+
 ## Outputs and reproduction
 
 - [Current metadata and all 12 absolute/conditional spin populations](../results/astra_modeled_decay/final/run_metadata.json), [time series](../results/astra_modeled_decay/final/run_timeseries.csv), [3D populations and local spectra](../results/astra_modeled_decay/final/run_ensemble.npz), and [exact run config](../results/astra_modeled_decay/final/run_config.json).

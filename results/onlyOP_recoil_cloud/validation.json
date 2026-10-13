@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-12",
+  "environment": {
+    "python": "3.13.10",
+    "numpy": "2.3.5",
+    "scipy": "1.18.1",
+    "conda": "scripts"
+  },
+  "baseline_suite": {
+    "passed": 194,
+    "failed": 0,
+    "duration_s": 180.69
+  },
+  "final_suite": {
+    "passed": 203,
+    "failed": 0,
+    "duration_s": 220.25
+  },
+  "recoil_survey": {
+    "cases": 45,
+    "quadrature_repeats": 45,
+    "status": "complete",
+    "max_conservation_error": 1.6431300764452317e-14,
+    "min_coherent_eigenvalue": 0.0,
+    "max_quadrature_probability_drift": 1.63202784619898e-14
+  },
+  "single_photon": {
+    "sites": 5,
+    "max_quadrature_survival_drift": 2.160760570468767e-09,
+    "historical_center_max_difference": 2.220446049250313e-16
+  },
+  "interpretation": "Independent local-axis pumping benchmarks and a separate one-photon check; not a full-3D error bound. Production 3D propagation is unchanged."
+}
