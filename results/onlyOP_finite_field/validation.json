@@ -1,0 +1,51 @@
+{
+  "baseline_suite": {
+    "passed": 203,
+    "failed": 0,
+    "duration_s": 177.75
+  },
+  "atomic_tests": {
+    "passed": 24,
+    "failed": 0
+  },
+  "first_full_suite": {
+    "passed": 226,
+    "failed": 1,
+    "duration_s": 169.66,
+    "failure": "GUI worker bitwise comparison of per-node arrays differed by at most 4.33680869e-19; reported trajectories matched exactly."
+  },
+  "isolated_gui_rerun": {
+    "passed": 1,
+    "failed": 0,
+    "duration_s": 7.76
+  },
+  "repeated_full_suite_before_test_context_fix": {
+    "passed": 226,
+    "failed": 1,
+    "duration_s": 167.98,
+    "failure": "Same GUI bitwise mismatch as the first full suite."
+  },
+  "test_context_fix": "The new direct calibration test warmed shared motional matrix caches outside run_ensemble's single-thread BLAS context. Running calibration in the same context as production resolves the order dependence without changing equality assertions or production numerics.",
+  "ordered_atomic_and_gui_tests_after_fix": {
+    "passed": 25,
+    "failed": 0,
+    "duration_s": 8.40
+  },
+  "final_full_suite": {
+    "passed": 227,
+    "failed": 0,
+    "duration_s": 173.36
+  },
+  "legacy_array_max_absolute_differences": {
+    "P": 0.0,
+    "counts": 0.0,
+    "overflow": 0.0
+  },
+  "timestep_2us_to_1us_max_absolute_differences": {
+    "P": 0.0,
+    "counts": 0.0,
+    "overflow": 0.0
+  },
+  "active_raman_smoke": "active_raman_smoke.json",
+  "physical_limitation": "The corrected onlyOP run remains invalid under the motional-secular approximation."
+}

@@ -87,7 +87,7 @@ class InitialStateConfig:
 
 @dataclass
 class FieldConfig:
-    magnitude_gauss: float = P(0.5, "G", "Bias field magnitude (ILLUSTRATIVE). Breit-Rabi ground energies; excited shifts and dipoles use the weak-field basis, with validity checked.", min=0.0, illustrative=True)
+    magnitude_gauss: float = P(0.5, "G", "Bias field magnitude (ILLUSTRATIVE). Breit-Rabi ground energies; select weak-field or diagonalized optical states under Optical model.", min=0.0, illustrative=True)
     direction: list = P([0.0, 0.0, 1.0], "lab unit vector", "Bias-field / quantization axis.")
 
 
@@ -224,6 +224,11 @@ class PumpConfig:
 
 @dataclass
 class OpticalConfig:
+    zeeman_model: str = P(
+        "weak_field", "",
+        "weak_field: legacy linear excited energies and zero-field dipoles. diagonalized: hyperfine + Zeeman eigenstates and mixed dipoles for ground, D1 and D2; F labels follow B=0 branches.",
+        choices=["weak_field", "diagonalized"],
+    )
     excited_manifold: str = P(
         "all_D2",
         "",

@@ -116,7 +116,7 @@ def _reject_weak_excitation(cfg):
     atom = load_atomic_data()
     rates = {name: beam_rates(atom, beam_spec(name, getattr(cfg, name), atom, cfg.magnetic.direction),
                               cfg.magnetic.magnitude_gauss * 1e-4, cfg.optical.excited_state_shift_hz,
-                              cfg.optical.excited_manifold, cfg.optical.path_model)
+                              cfg.optical.excited_manifold, cfg.optical.path_model, cfg.optical.zeeman_model)
              for name in ("spin_pump", "repump")}
     peak = max(float((s.pump * rates["spin_pump"].p_exc + s.repump * rates["repump"].p_exc).max())
                for s in build_schedule(cfg.timing))

@@ -37,6 +37,7 @@ from .atomic import (
     H,
     N_EXCITED,
     N_GROUND,
+    EA0,
     AtomicData,
 )
 
@@ -104,6 +105,7 @@ def beam_rates(
     excited_shift_hz: float = 0.0,
     excited_manifold: str = "all_D2",
     path_model: str = "independent",
+    zeeman_model: str = "weak_field",
 ) -> BeamRates:
     gam = atom.gamma
     e0 = np.sqrt(2.0 * beam.intensity_w_m2 / (C_LIGHT * EPS0))
@@ -112,6 +114,15 @@ def beam_rates(
     ee = np.array(
         [atom.d2_centroid_hz + atom.excited_hfs_hz[f] + atom.g_excited[f] * m * MU_B * b_tesla / H for f, m in EXCITED_STATES]
     ) + excited_shift_hz
+    dipole_au, br = atom.dipole_au, atom.branching
+    if zeeman_model == "diagonalized":
+        from .finite_field import d2_dipoles, d2_eigensystem
+        dipole_au = d2_dipoles(atom, b_tesla)
+        d = dipole_au * EA0
+        ee = atom.d2_centroid_hz + d2_eigensystem(atom, b_tesla)[0] + excited_shift_hz
+        br = dipole_au**2 / atom.emission_norm()
+    elif zeeman_model != "weak_field":
+        raise ValueError(f"unknown zeeman_model {zeeman_model!r}")
     mg = np.array([m for _, m in GROUND_STATES])
     me = np.array([m for _, m in EXCITED_STATES])
     fe = np.array([f for f, _ in EXCITED_STATES])
@@ -129,7 +140,6 @@ def beam_rates(
     p_exc = pe.sum(axis=0)
     light_shift = np.sum(omega**2 * delta / (gam**2 + 4 * delta**2), axis=0)
     W = np.zeros((N_GROUND, N_GROUND, 2))
-    br = atom.branching
     D2 = atom.emission_norm()
     if path_model == "independent":
         for ig in range(N_GROUND):
@@ -139,7 +149,7 @@ def beam_rates(
                     if abs(qe) <= 1 and br[ie, jg] > 0:
                         W[ig, jg, 0 if abs(qe) == 1 else 1] += gam * pe[ie, ig] * br[ie, jg]
     elif path_model == "kramers_heisenberg":
-        M = atom.dipole_au
+        M = dipole_au
         for ig in range(N_GROUND):
             for qa in (-1, 0, 1):
                 m_e = mg[ig] + qa
@@ -161,6 +171,7 @@ def beam_rates(
         "fractions": {str(k): float(v) for k, v in beam.fractions.items()},
         "laser_hz": float(beam.laser_hz),
         "fraction_source": beam.fraction_source,
+        "zeeman_model": zeeman_model,
     }
     return BeamRates(W, gamma_out, p_exc, light_shift, float(np.max(np.abs(omega))), detail)
 

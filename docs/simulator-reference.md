@@ -112,7 +112,10 @@ R_ge  = Γ |c_ge|² = Γ Ω_ge² / (Γ² + 4 Δ_ge²)          (isolated weak-ex
 
 * **All** D2 levels `F'=1,2,3,4` and every sublevel are included for **both** beams. This covers cross-excitation, such as the
   spin pump acting on F=2 3 GHz away, and off-resonant F'=4 scattering of `|3,3>`. Ground energies use analytic Breit-Rabi;
-  excited shifts and all dipoles retain the weak-field basis. `optical.excited_state_shift_hz` shifts every optical transition, for example to represent a differential
+  `optical.zeeman_model = weak_field` retains linear excited shifts and zero-field dipoles.
+  The optional `diagonalized` model includes hyperfine + Zeeman mixing in ground, D1, and D2 states,
+  rotating both absorption and emission dipoles consistently. Labels follow the B=0 branches;
+  fine-structure mixing and diamagnetism remain omitted. `optical.excited_state_shift_hz` shifts every optical transition, for example to represent a differential
   trap shift. Detunings are defined relative to the named *zero-field* hyperfine lines, and sublevel shifts are added per
   transition.
 * Each absorption is routed through the actual decay probabilities. The default `path_model = "independent"`

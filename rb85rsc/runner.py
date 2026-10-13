@@ -120,7 +120,9 @@ def metadata(a: dict) -> dict:
         },
         "schedule": [s.__dict__ for s in a["segments"]],
         "cooling_rate_method": a["cooling_rate_method"],
-        "assumptions": a.get("ensemble_details", {}).get("assumptions", ASSUMPTIONS),
+        "assumptions": a.get("ensemble_details", {}).get("assumptions", [
+            atomic.zeeman_model_description(m.cfg.optical.zeeman_model)
+            if item.startswith("Ground energies use analytic Breit-Rabi") else item for item in ASSUMPTIONS]),
         "ensemble_details": a.get("ensemble_details"),
         "atomic_data_metadata": m.atom.metadata,
         "constants_SI": constants(),

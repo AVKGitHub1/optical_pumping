@@ -133,6 +133,8 @@ def _term(sites, W, ka, kb, kemit, bdir, pattern, nq, counter, scale_name, axes_
 
 class LocalExperiment:
     def __init__(self, cfg, response, calibration, position, phase, beat_hz=None):
+        if response.zeeman_model != cfg.optical.zeeman_model:
+            raise ValueError("local optical response and config must use the same zeeman_model")
         self.position, self.phase = np.asarray(position), phase
         self.response = response
         self.calibration = calibration
@@ -628,7 +630,7 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
     _check_stop(stop)
     with _single_thread():
         atom = at.load_atomic_data()
-        response = DLineResponse(atom, cfg.magnetic.magnitude_gauss, cfg.magnetic.direction)
+        response = DLineResponse(atom, cfg.magnetic.magnitude_gauss, cfg.magnetic.direction, cfg.optical.zeeman_model)
         active_raman = raman_is_active(cfg)
         calibration = calibrate_carrier(cfg, response) if active_raman else dict(
             status="skipped", reason="Raman light is off throughout the schedule; no carrier calibration is applied.",
@@ -680,7 +682,7 @@ def _solve_node(data, calibration, position, phase, beat):
     _check_stop(_WORKER_STOP)
     cfg = SimConfig.from_dict(data)
     with _single_thread():
-        response = DLineResponse(at.load_atomic_data(), cfg.magnetic.magnitude_gauss, cfg.magnetic.direction)
+        response = DLineResponse(at.load_atomic_data(), cfg.magnetic.magnitude_gauss, cfg.magnetic.direction, cfg.optical.zeeman_model)
         local = LocalExperiment(cfg, response, calibration, position, phase, beat)
         _check_stop(_WORKER_STOP)
         return local, solve_local(local, cfg, _WORKER_STOP)
@@ -755,7 +757,7 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                  initial_unbound_fraction=None, solver="coherent_3d_split_ensemble",
                  wall_time_s=sum(r["wall_time_s"] for _, r in components), rhs_evaluations=0)
     validity = Validity()
-    magnetic = at.zeeman_validity(central.model.atom, central.model.B, central.model.nu_t, up, down)
+    magnetic = at.zeeman_validity(central.model.atom, central.model.B, central.model.nu_t, up, down, cfg.optical.zeeman_model)
     validity.add("magnetic field", magnetic["status"], "; ".join(magnetic["notes"]) or
                  "Breit-Rabi ground energies; weak-field excited energies and dipoles.")
     final["magnetic_validity"] = magnetic
@@ -765,6 +767,8 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                    for local, _ in components for seg in local.model.schedule)
     zeeman_spacing = (min(abs(central.model.atom.g_ground[f]) for f in (2, 3))
                       * at.MU_B * abs(central.model.B) / at.H * 2 * np.pi)
+    if cfg.optical.zeeman_model == "diagonalized":
+        zeeman_spacing = at.minimum_ground_zeeman_spacing_hz(central.model.atom, central.model.B)*2*np.pi
     ratio = zeeman_spacing / max_rate if max_rate > 0 else np.inf
     final["min_ground_secular_ratio"] = float(ratio) if np.isfinite(ratio) else None
     validity.add("ground coherences", "ok" if ratio > 10 else ("warning" if ratio > 1 else "invalid"),
@@ -835,6 +839,7 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                    trap_potential="lattice", central_bottom_frequencies_hz={a: float(s.trap_hz) for a, s in zip("xyz", central.sites)},
                    central_bound_levels={a: s.N for a, s in zip("xyz", central.sites)},
                    calibration=calibration, lattice_optical_estimates=central.lattice_estimates,
+                   optical_zeeman_model=cfg.optical.zeeman_model,
                    selected_lattice_linear_polarizations=cfg.ensemble.lattice_linear_polarizations,
                    node_results=[dict(position_um=l.position.tolist(), phase_deg=float(np.rad2deg(l.phase) % 360),
                                       depths_uk=l.depths.tolist(), survival=float(r["P"][-1].sum()), target_absolute=float(r["P"][-1, up, 0])) for l, r in components])
@@ -849,6 +854,7 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                     f"x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected {at.ground_label(up)}<->{at.ground_label(down)} Raman pair is coherent along {'xyz'[ra]}; other axes are population resolved.",
                     "Emission Cartesian components use independent dipole marginals; recoil coherence transfer omitted.",
                     "ARC D1+D2 scattering includes fine/hyperfine interference and coherent same-tone beam absorption.",
+                    at.zeeman_model_description(cfg.optical.zeeman_model),
                     "D-line diagonal trap shifts are estimates; higher excited states and hyperfine-mediated trap polarizability omitted.",
                     "Fixed beat shared by all spatial samples; Gaussian local depths and pump/Raman intensities.",
                     "Loss on leaving any local bound manifold; no recapture. Temperature is a survivor-conditioned proxy."],

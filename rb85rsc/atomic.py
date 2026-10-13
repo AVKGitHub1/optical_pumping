@@ -118,8 +118,8 @@ class AtomicData:
         """Ground energies from Breit-Rabi, with labels adiabatic from B=0.
 
         Infer g_I and g_J from the cached weak-field g_F values, so no ARC
-        database access is needed at runtime. Dipoles still use the weak-field
-        basis; the magnetic validity check bounds that approximation.
+        database access is needed at runtime. The optical model separately
+        chooses weak-field or hyperfine + Zeeman mixed-state dipoles.
         """
         e0 = np.array([self.ground_hfs_hz[f] for f, _ in GROUND_STATES])
         gi = 0.5 * (self.g_ground[3] + self.g_ground[2])
@@ -270,11 +270,28 @@ def load_atomic_data(cache_path: str | None = None, regenerate: bool = False) ->
 # ---------------------------------------------------------------------------
 # Magnetic-field validity
 # ---------------------------------------------------------------------------
-def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float, up: int = UP, down: int = DOWN) -> dict:
-    """Report the included Breit-Rabi correction and weak-field dipole validity.
+def zeeman_model_description(model):
+    if model == "diagonalized":
+        return ("Ground, D1, and D2 hyperfine + Zeeman eigenstates and mixed optical dipoles; "
+                "F,m labels follow the B=0 branches adiabatically. Fine-structure mixing and diamagnetism omitted.")
+    return ("Ground energies use analytic Breit-Rabi. Excited energies are linear in B and "
+            "optical dipoles use the weak-field basis; excited-state mixing is diagnosed.")
+
+
+def minimum_ground_zeeman_spacing_hz(ad, b_tesla):
+    """Smallest adjacent-m spacing within either adiabatic ground F branch."""
+    energies = ad.ground_energy_hz(b_tesla)
+    return min(float(np.min(np.abs(np.diff(energies[[i for i, (f, _) in enumerate(GROUND_STATES) if f == branch]]))))
+               for branch in (2, 3))
+
+
+def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float, up: int = UP, down: int = DOWN,
+                    zeeman_model: str = "weak_field") -> dict:
+    """Report included magnetic corrections and the selected model's limits.
 
     The legacy quadratic-error key is the correction relative to linear ground
-    energies, now included in the dynamics. Excited energies remain linear.
+    energies, now included in the dynamics. The diagonalized model also
+    includes excited hyperfine mixing; its remaining check is inter-J mixing.
     """
     out = {"B_gauss": b_tesla * 1e4}
     lin = ad.ground_energy_linear_hz(b_tesla)
@@ -293,6 +310,28 @@ def zeeman_validity(ad: AtomicData, b_tesla: float, trap_hz: float, up: int = UP
     quad_exc = ez**2 / spacing
     out["excited_quadratic_zeeman_hz"] = quad_exc
     out["excited_quadratic_over_gamma"] = quad_exc / (ad.gamma / (2 * np.pi))
+    out["optical_zeeman_model"] = zeeman_model
+    if zeeman_model == "diagonalized":
+        from .finite_field import d2_eigensystem
+        from .far_detuned import dline_data
+        energies, _ = d2_eigensystem(ad, b_tesla)
+        linear = np.array([ad.excited_hfs_hz[f] for f, _ in EXCITED_STATES]) + ad.excited_zeeman_hz(b_tesla)
+        out["max_included_excited_correction_hz"] = float(np.max(np.abs(energies-linear)))
+        rows = dline_data()['rows']
+        gap = abs(np.mean([r['energy_hz'] for r in rows if r['j'] == 1.5])
+                  - np.mean([r['energy_hz'] for r in rows if r['j'] == .5]))
+        # Conservative scale for the still-omitted inter-J coupling, replacing
+        # the hyperfine-mixing warning that no longer applies to this model.
+        electronic_zeeman = 2*MU_B*abs(b_tesla)/H
+        ratio = electronic_zeeman**2/gap/(ad.gamma/(2*np.pi))
+        out['fine_structure_mixing_shift_over_gamma_estimate'] = float(ratio)
+        out['status'] = 'invalid' if ratio > .3 else 'warning' if ratio > .05 else 'ok'
+        out['notes'] = [zeeman_model_description(zeeman_model)]
+        if out['status'] != 'ok':
+            out['notes'].append('neglected inter-J magnetic mixing is no longer small against the optical linewidth')
+        return out
+    if zeeman_model != "weak_field":
+        raise ValueError(f"unknown zeeman_model {zeeman_model!r}")
     status = "ok"
     notes = []
     if out["excited_quadratic_over_gamma"] > 0.3 or out["excited_zeeman_over_min_hfs"] > 0.3:

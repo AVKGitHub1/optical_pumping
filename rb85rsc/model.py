@@ -63,6 +63,7 @@ from .atomic import (
     ground_label,
     load_atomic_data,
     zeeman_validity,
+    minimum_ground_zeeman_spacing_hz,
 )
 from .config import ConfigError, SimConfig, illustrative_parameters
 from .optical import BeamRates, beam_rates, beam_spec
@@ -145,7 +146,8 @@ class Model:
         # ---- optical pumping beams ----------------------------------------
         self.beams = {b: beam_spec(b, getattr(cfg, b), at, self.b_dir) for b in BEAMS}
         self.rates: dict[str, BeamRates] = {
-            b: beam_rates(at, self.beams[b], self.B, cfg.optical.excited_state_shift_hz, cfg.optical.excited_manifold, cfg.optical.path_model)
+            b: beam_rates(at, self.beams[b], self.B, cfg.optical.excited_state_shift_hz, cfg.optical.excited_manifold,
+                          cfg.optical.path_model, cfg.optical.zeeman_model)
             for b in BEAMS
         }
         self.T, self.out, self.ovf = {}, {}, {}
@@ -354,13 +356,15 @@ class Model:
     def static_validity(self) -> Validity:
         cfg = self.cfg
         v = Validity()
-        z = zeeman_validity(self.atom, self.B, self.nu_t, self.up, self.down)
+        z = zeeman_validity(self.atom, self.B, self.nu_t, self.up, self.down, cfg.optical.zeeman_model)
         self.zeeman = z
         v.add("magnetic field", z["status"], "; ".join(z["notes"]) or
               f"Breit-Rabi ground energies (correction to linear nu_ud {z['raman_quadratic_zeeman_error_hz']:.3g} Hz included; "
               f"excited quadratic shift {z['excited_quadratic_over_gamma']:.2g} Gamma)")
         # ground-state secular approximation (no Zeeman coherences from pumping)
-        zs = min(abs(self.atom.g_ground[f]) for f in (2, 3)) * MU_B * self.B / H * 2 * np.pi
+        zs = (minimum_ground_zeeman_spacing_hz(self.atom, self.B)*2*np.pi
+              if cfg.optical.zeeman_model == "diagonalized" else
+              min(abs(self.atom.g_ground[f]) for f in (2, 3)) * MU_B * self.B / H * 2 * np.pi)
         max_rate = 0.0
         for seg in self.schedule:
             o = self.ops(seg)
@@ -445,7 +449,8 @@ class Model:
             "raman_D10_red_sideband": float(abs(self.D[1, 0])),
             "raman_D00_carrier": float(abs(self.D[0, 0])),
             "nu_ud_zeeman_hz": self.nu_ud_zeeman,
-            "ground_energy_model": "Breit-Rabi (weak-field dipoles)",
+            "ground_energy_model": "Breit-Rabi",
+            "optical_zeeman_model": self.cfg.optical.zeeman_model,
             "raman_isolation": self.raman_isolation(),
             "nu_ud_ref_hz": self.nu_ud_ref,
             "nu_beat_hz": self.nu_beat,

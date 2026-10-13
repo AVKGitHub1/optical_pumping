@@ -56,6 +56,18 @@ Check the **model validity** banner before interpreting a result. Ensemble diagn
 
 For a **custom schedule**, its segment durations determine the run length; `total_duration_ms` is inactive. The GUI displays that length and disables unused duration and carrier-calibration inputs. If Raman light is off in every segment, carrier calibration is skipped and no carrier figure is exported. State A and the selected motional axis still define the reported target. Existing CSV observable names are retained for compatibility.
 
+## Include magnetic mixing of optical states
+
+Set **Optical model → zeeman_model → diagonalized** to include hyperfine + Zeeman mixing in the ground, D1, and D2 states. This updates optical pumping, branching probabilities, Raman calibration, and lattice light shifts consistently. State labels `F,mF` follow their zero-field branches adiabatically. The default `weak_field` retains the earlier approximation for reproducibility.
+
+[examples/onlyOP_diagonalized.json](examples/onlyOP_diagonalized.json) is ready to run. To compare both atomic models with all other inputs fixed:
+
+```powershell
+conda run --no-capture-output -n scripts python scripts/check_finite_field.py --config examples/onlyOP.json --workers 8 --output results/onlyOP_finite_field
+```
+
+For the 3 G `onlyOP` example, the corrected 64-site run predicts **19.95% absolute target yield** and **48.02% well survival**, versus 19.31% and 46.59% with weak-field optical states. The run remains outside the motional-secular approximation; correcting magnetic mixing does not validate the entire model. See the [physics report](docs/astra-physics-corrections.md#finite-field-optical-states-2026-10-12).
+
 ## Check the motional population approximation
 
 The separate [one-well reference solver](rb85rsc/recoil_reference.py) retains the motional density matrix in every ground spin state during optical pumping. It compares coherent recoil jumps with population-resolving jumps using the same optical rates, local spectrum, and absorbing escape boundary:
@@ -80,7 +92,7 @@ The separate single-photon Cartesian-factorization check supports the same cloud
 conda run --no-capture-output -n scripts python scripts/check_recoil_factorization.py --config examples/onlyOP.json --cloud-samples 4 --output results/onlyOP_recoil_cloud/one_photon_recoil_check.json
 ```
 
-The coherent benchmark requires Raman off, zero background heating, and 2–16 retained bound levels covering the full local bound spectrum. It isolates **motional coherence**: spin coherences, transverse recoil and escape, lattice scattering, excited-state mixing, and recapture are absent. A small difference in this benchmark is not a validation of the full 3D experiment. The production ensemble solver is unchanged in its treatment of recoil. Effective-jump theory follows [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
+The coherent benchmark requires Raman off, zero background heating, and 2–16 retained bound levels covering the full local bound spectrum. It isolates **motional coherence**: spin coherences, transverse recoil and escape, lattice scattering, and recapture are absent. Both solvers use the selected `optical.zeeman_model`. A small difference in this benchmark is not a validation of the full 3D experiment. The production ensemble solver is unchanged in its treatment of recoil. Effective-jump theory follows [Reiter and Sorensen](https://arxiv.org/abs/1112.2806).
 
 ## Documentation
 

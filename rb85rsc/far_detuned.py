@@ -85,7 +85,7 @@ def spherical_amplitudes(eps, bdir):
 
 
 class DLineResponse:
-    def __init__(self, atom, b_gauss, bdir):
+    def __init__(self, atom, b_gauss, bdir, zeeman_model="weak_field"):
         self.atom = atom
         self.bdir = bdir
         data = dline_data()
@@ -96,6 +96,29 @@ class DLineResponse:
         self.mg = np.asarray([m for _, m in at.GROUND_STATES])
         self.ee = np.asarray([r["energy_hz"] + r["g"] * r["m"] * at.MU_B * b_gauss * 1e-4 / at.H for r in rows])
         self.eg = atom.ground_energy_hz(b_gauss * 1e-4)
+        self.zeeman_model = zeeman_model
+        if zeeman_model == "diagonalized":
+            from .finite_field import ground_eigensystem, d2_eigensystem, eigensystem, electronic_g
+            _, ground = ground_eigensystem(atom, b_gauss*1e-4)
+            g_i = (atom.g_ground[3]+atom.g_ground[2])/2
+            for j in (.5, 1.5):
+                indices = [i for i, r in enumerate(rows) if r['j'] == j]
+                sub = [rows[i] for i in indices]
+                if j == 1.5:
+                    energies, excited = d2_eigensystem(atom, b_gauss*1e-4)
+                    self.ee[indices] = atom.d2_centroid_hz + energies
+                else:
+                    centroid = float(np.mean([r['energy_hz'] for r in sub]))
+                    energies, excited = eigensystem(atom.nuclear_spin, j,
+                        tuple((r['f'], r['m']) for r in sub),
+                        tuple(r['energy_hz']-centroid for r in sub),
+                        electronic_g(atom.nuclear_spin, j, sub[0]['f'], sub[0]['g'], g_i), g_i, b_gauss*1e-4)
+                    self.ee[indices] = centroid + energies
+                self.d[indices] = excited.T @ self.d[indices] @ ground
+            self.source = dict(self.source, zeeman_model=zeeman_model, field_basis_format=1,
+                               approximation="D-line sum; hyperfine + Zeeman eigenstates within each J; no inter-J mixing or higher P levels")
+        elif zeeman_model != "weak_field":
+            raise ValueError(f"unknown zeeman_model {zeeman_model!r}")
         self.eunit = np.sqrt(2 / (at.C_LIGHT * at.EPS0))  # electric field at 1 W/m²
         self._response_cache = OrderedDict()
 
@@ -214,6 +237,8 @@ def calibrate_carrier(cfg, response):
     the reported decay never sets intensity or adds homogeneous damping.
     Contrast is visibility only and never scales initial atom populations.
     """
+    if response.zeeman_model != cfg.optical.zeeman_model:
+        raise ValueError("carrier response and config must use the same optical zeeman_model")
     rc, ec = cfg.raman, cfg.ensemble
     up, down = rc.state_indices()
     axes = pol.lattice_frame(cfg.trap.axis, ec.transverse_reference_direction)

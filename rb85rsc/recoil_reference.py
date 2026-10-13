@@ -9,7 +9,8 @@ using only D^dagger D in this term would incorrectly prevent well escape.
 This isolates the motional-population approximation. Spin coherences remain
 secularized, pump beams are incoherent, and emitted spherical channels remain
 resolved as in optical.py. No Raman, lattice scattering, transverse recoil,
-recapture, or excited-state mixing is included. It is not a 3D replacement.
+or recapture is included. Magnetic states follow optical.zeeman_model.
+It is not a 3D replacement.
 Effective-jump framework: https://arxiv.org/abs/1112.2806.
 """
 from __future__ import annotations

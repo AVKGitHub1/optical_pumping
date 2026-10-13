@@ -1,6 +1,6 @@
 # RSC physics corrections and current results
 
-Reviewed 2026-10-01. All execution and checks use the **`scripts` conda environment**. The active configuration is [examples/experiment.json](../examples/experiment.json), with **modeled carrier decay**. The [historical audit](astra-physics-history.md) preserves the original 1D audit, intermediate results, convergence studies and resolved questions.
+Reviewed 2026-10-12. All execution and checks use the **`scripts` conda environment**. The active configuration is [examples/experiment.json](../examples/experiment.json), with **modeled carrier decay**. Its saved 5 ms results below retain the default weak-field optical model; the finite-field comparison is reported separately. The [historical audit](astra-physics-history.md) preserves the original 1D audit, intermediate results, convergence studies and resolved questions.
 
 ## Current result
 
@@ -76,7 +76,7 @@ For older configs, `measured_envelope` remains available and is the default when
 The ensemble backend is in [ensemble.py](../rb85rsc/ensemble.py), with cached optical estimates in [far_detuned.py](../rb85rsc/far_detuned.py). The legacy 1D backend remains available. Measured-carrier configs cannot silently reinterpret 5 kHz as a single-path Rabi frequency.
 
 - **Energy and temperature:** actual anharmonic excitation energies and survivor-weighted mixtures of finite local spectra replace harmonic energy assignments. `nbar` is a mean level index in a lattice.
-- **Magnetic energies:** analytic Breit-Rabi ground energies replace the linear approximation and a failed ARC check that previously reported zero error. Weak-field dipoles and excited energies remain approximate.
+- **Magnetic energies:** analytic Breit-Rabi ground energies replace the linear approximation and a failed ARC check that previously reported zero error. The legacy default retains weak-field optical states; the optional finite-field model below includes their magnetic mixing.
 - **Raman momentum and phases:** the lowering operator uses absorption minus emission momentum; the raising block is its adjoint. All four pathways retain their complex relative phases.
 - **Three-axis motion:** joint `P(spin,nx,ny,nz)` and a coherent axial Raman-pair block at each transverse occupation. Recoil acts in all axes. Every spatial sample shares one fixed beat, with its local depths and diagonal light shifts.
 - **Loss and conditioning:** departure from any local bound manifold is absorbing. Absolute yields and survivor fractions are distinct. Initial discarded basis weight is separate from unknown loading survival; custom motional inputs now report discarded weight correctly.
@@ -97,6 +97,71 @@ Atomic conventions follow [ARC's hyperfine dipole documentation](https://arc-alk
 6. **Optical reduction:** the motional-secular ratio of 0.480 is marginal. Stronger pumping requires a more complete optical master equation. The finite earlier search does not establish a global optimum.
 
 Transverse confinement therefore matters even for axial Raman momentum: pumping/recoil heating, lattice optical effects and loss act in x/y. Lower survivor temperature alone is not evidence of transverse Raman cooling.
+
+## Finite-field optical states (2026-10-12)
+
+`optical.zeeman_model = "diagonalized"` now includes hyperfine + Zeeman mixing
+within the ground, D1, and D2 fine-structure manifolds. The existing
+`"weak_field"` default remains available for reproducing saved results.
+[onlyOP_diagonalized.json](../examples/onlyOP_diagonalized.json) selects the new
+model with the same physical inputs as `onlyOP.json`.
+
+The calculation diagonalizes
+`H/h = E_hfs/h + (mu_B B/h)[g_I F_z + (g_J - g_I) J_z]` separately in each
+fixed-m block, using cached ARC hyperfine energies and g factors. Both sides of
+each optical dipole are transformed into the resulting basis. This includes
+ground-state mixing as well as excited-state mixing and changes absorption,
+branching, optical light shifts, and the D1+D2 Raman/trap response consistently.
+The construction follows [Steck's atomic conventions](https://steck.us/alkalidata/rubidium85numbers.pdf)
+and [ARC's Zeeman Hamiltonian](https://arc-alkali-rydberg-calculator.readthedocs.io/en/latest/generated/arc.alkali_atom_functions.AlkaliAtom.breitRabi.html).
+
+Labels `F,mF` identify branches followed adiabatically from zero field; F is not
+an exact quantum number at finite B. Laser detunings remain referenced to the
+named zero-field transitions. The magnetic model enters the carrier-cache
+identity, so calibrations from the two models cannot be reused interchangeably.
+Weak-field caches and previous numerical predictions are retained.
+
+At 3 G, the largest included D2 excited-energy correction relative to the linear
+model is **1.093 MHz**. Matched 64-site, 1 ms `onlyOP` simulations give:
+
+| Observable | Weak-field optical states | Diagonalized optical states |
+| --- | ---: | ---: |
+| Joint spin target and nz=0 / initially loaded | 19.31162% | 19.95359% |
+| Well survival / initially loaded | 46.59315% | 48.01592% |
+| Spin target / survivors | 93.84729% | 94.11094% |
+| Photons / initially loaded atom | 5.54955 | 5.31617 |
+| Maximum motional-secular ratio | 3.03675 | 2.83691 |
+
+Absolute target yield changes by **+0.64197 percentage points** and survival by
+**+1.42277 percentage points**. The corrected run still exceeds the
+motional-secular limit and is marked **INVALID**. Spin coherences, correlated
+photon recoil, recapture, and trap-basis changes are not added by this correction.
+Mixing between different J manifolds and diamagnetism remain omitted; the
+magnetic diagnostic now estimates the residual inter-J scale instead of
+warning about the included hyperfine mixing.
+
+Validation covers independent uncoupled-spin Hamiltonians from 0 to 100 G,
+Clebsch-Gordan phase conventions, D1 Breit-Rabi energies, branching and optical
+rate sum rules, the exact zero-field limit, cache separation, scan rejection,
+and ensemble propagation. The matched weak-field run reproduces the earlier
+population and photon-count arrays exactly. Halving the corrected run's step
+from 2 us to 1 us leaves final target yield, survival, and photon count unchanged
+at the saved precision. The Raman-off problem has a time-independent population
+generator, so this is a consistency check, not a Raman splitting-error bound.
+A separate short Raman-on run checks calibrated coherent propagation with the
+new atomic model.
+
+The complete suite passes **227 tests in 173.36 s**, including 24 new atomic
+and integration tests. The new calibration test uses the production
+single-thread BLAS context when warming shared motional caches; the GUI's
+serial-versus-eight-worker comparisons retain exact equality assertions.
+The [validation record](../results/onlyOP_finite_field/validation.json) includes
+the earlier test-order mismatch and its resolution.
+
+Run `scripts/check_finite_field.py` as shown in the README. Full outputs and
+the matched comparison are in
+[results/onlyOP_finite_field](../results/onlyOP_finite_field/), including
+[comparison.json](../results/onlyOP_finite_field/comparison.json).
 
 ## Validation and cleanup
 

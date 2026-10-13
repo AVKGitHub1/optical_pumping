@@ -89,7 +89,7 @@ def main():
         # Construct geometry once per repump polarization. Linearity of optical
         # rates allows exact static rejection throughout the coarse power grid.
         rejects, tasks = [], []
-        response = DLineResponse(load_atomic_data(), c.magnetic.magnitude_gauss, c.magnetic.direction)
+        response = DLineResponse(load_atomic_data(), c.magnetic.magnitude_gauss, c.magnetic.direction, c.optical.zeeman_model)
         calibration = calibrate_carrier(c, response)
         xyz, phases = spatial_samples(c)
         with _single_thread():
@@ -143,7 +143,7 @@ def main():
         winner = json.loads((out / 'selected.json').read_text())
         c = SimConfig.from_dict(winner['config'])
         c.ensemble.samples = 64
-        response = DLineResponse(load_atomic_data(), c.magnetic.magnitude_gauss, c.magnetic.direction)
+        response = DLineResponse(load_atomic_data(), c.magnetic.magnitude_gauss, c.magnetic.direction, c.optical.zeeman_model)
         calibration = calibrate_carrier(c, response)
         xyz, phases = spatial_samples(c)
         with _single_thread():
@@ -199,7 +199,7 @@ def main():
         a = run(c, progress=lambda f, m: print(f'{f:.1%} {m}', flush=True))
         export(a, out / 'final', figures=True)
         from rb85rsc.ensemble import analyze_ensemble
-        response = DLineResponse(load_atomic_data(), c.magnetic.magnitude_gauss, c.magnetic.direction)
+        response = DLineResponse(load_atomic_data(), c.magnetic.magnitude_gauss, c.magnetic.direction, c.optical.zeeman_model)
         calibration = calibrate_carrier(c, response)
         central = LocalExperiment(c, response, calibration, [0,0,0], 0.)
         convergence = []
