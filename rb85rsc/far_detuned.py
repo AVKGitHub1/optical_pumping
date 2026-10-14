@@ -90,6 +90,8 @@ class DLineResponse:
         self.bdir = bdir
         data = dline_data()
         self.source = {k: v for k, v in data.items() if k != "rows"}
+        # Carrier caches include this provenance and must refresh stored shifts.
+        self.source["light_shift_model_version"] = 2
         rows = data["rows"]
         self.d = np.asarray([r["dipole_au"] for r in rows]) * at.EA0
         self.me = np.asarray([r["m"] for r in rows])
@@ -158,9 +160,13 @@ class DLineResponse:
 
     def _shift_hz_uncached(self, frequency_hz, eps):
         d = self.absorption(eps)
+        # The negative-frequency field conjugates the Jones vector, reversing
+        # helicity in the counter-rotating term for elliptical/circular light.
+        d_counter = self.absorption(np.conjugate(eps))
         nu = self.ee[:, None] - self.eg
-        denom = 1 / (2 * np.pi * (frequency_hz - nu)) - 1 / (2 * np.pi * (frequency_hz + nu))
-        return np.sum(np.abs(d * self.eunit / at.HBAR) ** 2 * denom, axis=0) / (8 * np.pi)
+        rotating = np.abs(d * self.eunit / at.HBAR) ** 2 / (2 * np.pi * (frequency_hz - nu))
+        counter = np.abs(d_counter * self.eunit / at.HBAR) ** 2 / (2 * np.pi * (frequency_hz + nu))
+        return np.sum(rotating - counter, axis=0) / (8 * np.pi)
 
     def raman_hz(self, low_hz, high_hz, eps_low, eps_high, up=at.UP, down=at.DOWN):
         """Complex up->down Rabi / 2pi per sqrt(I_low I_high)."""
