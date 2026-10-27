@@ -90,12 +90,15 @@ and `confinement` (`depth` or `frequency`). Unspecified per-axis values in old
 JSON files inherit the previous axial/transverse settings. The shared legacy
 controls are hidden in the ensemble GUI.
 
-Ensemble Raman beams can counterpropagate along any **one of the three lattice
-axes**. Set `raman.beam_low_direction` and `raman.beam_high_direction` to opposite
-vectors along the selected axis; either ordering and nonunit vectors work. The
-solver selects that well's actual wavelength, local depth, motional spectrum,
-beam envelope, and recoil projection. It does not rotate or overwrite the trap.
-Oblique beams coupling multiple lattice axes coherently are still unsupported.
+Ensemble Raman beams may point in **any lab direction**. Set
+`raman.beam_low_direction` and `raman.beam_high_direction` to the two propagation
+vectors; nonunit vectors are normalized. Counterpropagating, oblique, crossed,
+and copropagating geometries are accepted, with either
+`tone_layout = one_tone_per_beam` or `both_tones_both_beams`. The solver keeps
+coherent Raman coupling across every lattice axis onto which the wavevector
+difference projects, using each well's actual spectrum and displacement matrix.
+Beam envelopes and recoil use the configured lab directions. The trap is not
+rotated or overwritten.
 
 The ensemble's `x,y,z` labels describe a local lattice frame: `z` is `trap.axis`.
 `ensemble.transverse_reference_direction` (default lab +x) is projected
@@ -114,6 +117,9 @@ raman.beam_low_direction                 = [1, 0, 0]
 raman.beam_high_direction                = [-1, 0, 0]
 ```
 
+For counterpropagating beams tilted between the local x and z axes of this trap,
+use `[1,0,1]` and `[-1,0,-1]`; both wells then participate in coherent motion.
+
 Set the magnetic direction and pumping geometry to match the apparatus as well.
 In particular, the active example has the magnetic field along x: Raman beams
 parallel to that field cannot drive the default `|3,3> -> |2,2>` transition with
@@ -123,16 +129,25 @@ For an example with nonzero x-axis coupling, use a magnetic direction such as
 `[0,1,0]` and set the pumping directions/polarizations for that field.
 
 `initial` still describes preparation in the z lattice; x and y start at
-`ensemble.transverse_temperature_k`. Carrier calibration uses only the driven
-lattice, its waist and spectrum, and that axis's configured temperature. The
-supplied carrier measurement must correspond to this geometry and confinement.
+`ensemble.transverse_temperature_k`. Carrier calibration includes the thermal
+carrier overlaps of every coupled lattice and the envelopes of both beams.
+The supplied carrier measurement must correspond to this geometry and
+confinement. Coupling several lattice axes increases the coherent basis size
+and can substantially increase runtime and memory use. In this product basis,
+`raman.max_sideband_order` limits the total change
+`|nx-mx| + |ny-my| + |nz-mz|`; increase it to check sideband convergence.
 
 Saved metadata includes `model_summary.lattice_axes_lab`, and the ensemble NPZ
 includes `lattice_axes_lab` with rows in local x,y,z order. `raman_axis` identifies
-the driven lattice. `n`, `P_n0`, target yields, and the primary cooling metrics
-refer to this axis; three-axis temperatures and `P_final_spin_nx_ny_nz` retain
-the original lattice order. The model summary also records the resolved
-wavelength, frequency, depth, and waist for every lattice.
+the lattice with the largest absolute wavevector-difference projection; this
+is the reference for `sideband_offset` tuning and for the existing `n`, `P_n0`,
+target yields, and primary cooling metrics. Ties select x, then y, then z;
+copropagating beams select the largest projection of their propagation direction
+as the reporting reference. `raman_coupled_axes` records
+all coherently coupled axes. Three-axis temperatures and
+`P_final_spin_nx_ny_nz` retain the original lattice order. The model summary also
+records the beam directions and each lattice's resolved wavelength, frequency,
+depth, and waist.
 
 ## Numerical controls and calibration
 

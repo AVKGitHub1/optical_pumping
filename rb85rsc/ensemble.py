@@ -1,9 +1,9 @@
-"""Frozen spatial ensemble, coherent single-axis Raman, and joint 3D recoil kinetics.
+"""Frozen spatial ensemble, coherent Raman motion, and joint 3D recoil kinetics.
 
 The x,y,z labels refer to local lattice axes, with z along trap.axis.
 Each local atom has joint populations P[spin,nx,ny,nz] and a density matrix for
-the Raman pair along the driven lattice at fixed occupations of the other two
-axes. Recoil uses the population-resolving approximation. The default uses
+the Raman pair on the product of all coupled lattice axes, at fixed occupations
+of any remaining axes. Recoil uses the population-resolving approximation. The default uses
 independent Cartesian emission marginals; the optional correlated model
 integrates one shared photon direction across all three axes. Spin/motion
 and transverse/axial population correlations produced by cooling and loss ARE
@@ -25,7 +25,7 @@ from . import atomic as at, motion as mo, polarization as pol
 from .analysis import _derivative, _threshold_time
 from .dynamics import RunResult, SimulationStopped, _single_thread
 from .far_detuned import DLineResponse, calibrate_carrier, envelope, raman_fields, spatial_samples
-from .model import Model, Validity
+from .model import Model, Validity, raman_product_operator, raman_sideband_mask
 from .protocols import raman_is_active
 from .correlated_recoil import CorrelatedRecoil, joint_apply, recoil_description
 
@@ -156,7 +156,13 @@ class LocalExperiment:
         c = cfg.copy()
         ec, rc = cfg.ensemble, cfg.raman
         self.axes_lab = axes = pol.lattice_frame(cfg.trap.axis, ec.transverse_reference_direction)
-        self.raman_axis = ra = pol.lattice_axis_index(rc.beam_low_direction, axes)
+        self.raman_axis, self.raman_coupled_axes, self.raman_delta_local = pol.raman_geometry(
+            rc.beam_low_direction, rc.beam_high_direction, axes)
+        ra = self.raman_axis
+        # Raman-off runs need only the reference-axis block. Otherwise retain
+        # coherences between product states on every axis with nonzero recoil.
+        self.coherent_axes = (self.raman_coupled_axes or (ra,)) if raman_is_active(cfg) else (ra,)
+        self.spectator_axes = tuple(i for i in range(3) if i not in self.coherent_axes)
         self.lattices = lattices = [cfg.lattice_parameters(i, atom.mass_kg) for i in range(3)]
         depths = np.asarray([spec.depth_uk * envelope(position, k, spec.waist_um) for spec, k in zip(lattices, axes)])
         wavelengths = [spec.wavelength_nm for spec in lattices]
@@ -171,8 +177,11 @@ class LocalExperiment:
         self.depths = depths
         c.trap.depth_uk = float(depths[2])
         c.raman.lattice_phase_deg = np.rad2deg(phase)
-        intensity = calibration["intensity_per_unit_tone_w_m2"] * envelope(position, axes[ra], rc.waist_um)
-        self.intensity = intensity
+        intensity = calibration["intensity_per_unit_tone_w_m2"]
+        dirs = (pol.unit(rc.beam_low_direction), pol.unit(rc.beam_high_direction))
+        beam_envelopes = np.array([envelope(position, direction, rc.waist_um) for direction in dirs])
+        self.beam_intensities = intensity * beam_envelopes
+        self.intensity = self.beam_intensities[0]
         if intensity > 0:
             low, high, eps, paths = raman_fields(cfg, response)
         else:
@@ -194,9 +203,22 @@ class LocalExperiment:
             pc.power_mw *= attenuation
             pc.peak_intensity_w_m2 *= attenuation
         preparation = cfg.initial if ra == 2 else replace(cfg.initial, motion_mode="thermal_temperature", temperature_k=ec.transverse_temperature_k)
-        self.model = m = Model(c, atom, raman_path_coefficients=paths, motion_axis=axes[ra],
+        local_paths = paths * np.sqrt(np.outer(beam_envelopes, beam_envelopes))
+        self.model = m = Model(c, atom, raman_path_coefficients=local_paths, motion_axis=axes[ra],
                                motion_basis=sites[ra], initial_config=preparation)
         self.shape = (12,) + tuple(s.N for s in sites)
+        coherent_sites = [sites[i] for i in self.coherent_axes]
+        self.coherent_size = int(np.prod([s.N for s in coherent_sites]))
+        self.raman_D = (m.D if len(self.coherent_axes) == 1 else
+                        raman_product_operator(c.raman, coherent_sites, axes[list(self.coherent_axes)],
+                                               local_paths).conj().T)
+        self.raman_keep = raman_sideband_mask(coherent_sites, rc.max_sideband_order)
+        energies = np.zeros(tuple(s.N for s in coherent_sites))
+        for i, site in enumerate(coherent_sites):
+            shape = [1] * len(coherent_sites)
+            shape[i] = site.N
+            energies += (site.energies_hz - site.energies_hz[0]).reshape(shape)
+        self.coherent_energies = 2 * np.pi * energies.ravel()
         axial, self.initial_tail, _ = m._initial_state(motion=sites[2], initial=cfg.initial)
         self.P0 = np.einsum('sn,i,j->sijn', axial,
                            mo.boltzmann_pn(sites[0].energies_hz, ec.transverse_temperature_k),
@@ -216,23 +238,23 @@ class LocalExperiment:
         # Elastic scattering also resolves n in this retained approximation.
         # Raman same-frequency beams interfere in absorption; different tones
         # do not interfere in the spontaneous rate (GHz beat is averaged).
-        self.raman_shifts_hz = np.zeros((12, sites[ra].N))
-        dirs = (pol.unit(rc.beam_low_direction), pol.unit(rc.beam_high_direction))
+        self.raman_shifts_hz = np.zeros(self.shape)
         if population_recoil and rc.scattering_rate_s > 0:
             W = (np.eye(12) if rc.scattering_model == "spin_preserving" else np.ones((12, 12)) / 12) * rc.scattering_rate_s / 2
             k = 2 * np.pi / (rc.wavelength_nm * 1e-9)
             for direction in dirs:
                 self.terms.append(_term(sites, W, k * direction, k * direction, k, bdir, "isotropic", nq, 2, "raman", axes, joint))
+        pl, ph = rc.tone_powers()
         raman_tones = (
-            (low, rc.tone_powers_low, [phase / 2, -phase / 2]),
-            (high, rc.tone_powers_high, [phase / 2, -phase / 2 + np.deg2rad(rc.beam_beat_phase_deg)]),
+            (low, pl, [phase / 2, -phase / 2 - np.deg2rad(rc.beam_beat_phase_deg)]),
+            (high, ph, [phase / 2, -phase / 2]),
         ) if intensity > 0 else ()
         for freq, powers, phases in raman_tones:
-            amplitudes = [response.scattering_amplitudes(freq, e) * np.sqrt(intensity * p) * np.exp(1j * ph)
-                          for e, p, ph in zip(eps, powers, phases)]
+            amplitudes = [response.scattering_amplitudes(freq, e) * np.sqrt(beam_i * p) * np.exp(1j * ph)
+                          for e, p, ph, beam_i in zip(eps, powers, phases, self.beam_intensities)]
             self._add_coherent_light(amplitudes, dirs, freq, bdir, nq, 2, "raman", joint)
-            # AC shifts: diagonal expectation of the same-tone interference.
-            # All input fields for the clarified geometry have equal lab eps.
+            # AC shifts: diagonal expectation of the same-tone interference,
+            # including distinct beam polarizations and all three overlaps.
             for i in range(2):
                 for j in range(2):
                     # Polarization cross term by the polarization identity.
@@ -241,9 +263,12 @@ class LocalExperiment:
                     else:
                         sh = (response.shift_hz(freq, eps[i] + eps[j]) - response.shift_hz(freq, eps[i] - eps[j])
                               + 1j * (response.shift_hz(freq, eps[i] + 1j * eps[j]) - response.shift_hz(freq, eps[i] - 1j * eps[j]))) / 4
-                    phasefactor = np.sqrt(powers[i] * powers[j]) * np.exp(1j * (phases[i] - phases[j]))
-                    d = np.diag(sites[ra].displacement(2 * np.pi * freq / at.C_LIGHT * np.dot(dirs[i] - dirs[j], axes[ra]) * sites[ra].x0))
-                    self.raman_shifts_hz += intensity * (phasefactor * sh[:, None] * d).real
+                    phasefactor = np.sqrt(powers[i] * powers[j] * self.beam_intensities[i] * self.beam_intensities[j]) * np.exp(1j * (phases[i] - phases[j]))
+                    delta = axes @ (dirs[i] - dirs[j])
+                    diagonals = [np.diag(site.displacement(2 * np.pi * freq / at.C_LIGHT * delta[a] * site.x0))
+                                 for a, site in enumerate(sites)]
+                    d = np.einsum('i,j,k->ijk', *diagonals)
+                    self.raman_shifts_hz += (phasefactor * sh[:, None, None, None] * d).real
         self.lattice_shifts_hz = np.zeros(self.shape)
         self.lattice_estimates = []
         for axis, (lam, depth, ep) in enumerate(zip(wavelengths, depths, ec.lattice_linear_polarizations)):
@@ -271,8 +296,30 @@ class LocalExperiment:
         self.terms = self._combine_terms(self.terms)
 
     def raman_view(self, array):
-        """View a canonical (...,nx,ny,nz) tensor with the driven axis last."""
+        """View a canonical (...,nx,ny,nz) tensor with the reference axis last."""
         return array if self.raman_axis == 2 else np.moveaxis(array, array.ndim - 3 + self.raman_axis, -1)
+
+    def coherent_view(self, array):
+        """Group coupled axes into one product index; this may return a copy."""
+        if len(self.coherent_axes) == 1:
+            return self.raman_view(array)
+        leading = array.ndim - 3
+        order = self.spectator_axes + self.coherent_axes
+        moved = array.transpose(tuple(range(leading)) + tuple(leading + i for i in order))
+        return moved.reshape(array.shape[:leading] + tuple(self.shape[i + 1] for i in self.spectator_axes)
+                             + (self.coherent_size,))
+
+    def store_pair_diagonal(self, P, diagonal):
+        """Write product-basis populations back in canonical x,y,z order."""
+        if len(self.coherent_axes) == 1:
+            view = self.raman_view(P)
+            view[self.model.up], view[self.model.down] = np.split(diagonal, 2, axis=-1)
+            return
+        order = self.spectator_axes + self.coherent_axes
+        shape = tuple(self.shape[i + 1] for i in order)
+        inverse = np.argsort(order)
+        for spin, values in zip((self.model.up, self.model.down), np.split(diagonal, 2, axis=-1)):
+            P[spin] = values.reshape(shape).transpose(inverse)
 
     def _add_coherent_light(self, amps, dirs, freq, bdir, nq, counter, scale, joint=None):
         if not self.population_recoil:
@@ -324,23 +371,23 @@ class LocalExperiment:
         gout = np.maximum(gout, 0)
         hazard = np.maximum(hazard, 0)
         counts = np.asarray([sum((scale * t.total for t, scale in active if t.counter == i), np.zeros(self.shape)) for i in range(4)])
-        m, nz = self.model, self.model.N
+        m, nz = self.model, self.coherent_size
         hu, hd = m.light_shifts(seg)
-        eps = m.eps
+        eps = self.coherent_energies
         # Fixed lab beat for every atom, with local anharmonic spacings and
         # local Stark shifts. Never retune the beat separately for each node.
         up = eps + 2 * np.pi * (m.nu_ud_zeeman - m.nu_beat) + hu
         down = eps + hd
-        up = up + 2 * np.pi * scales["raman"] * (self.raman_shifts_hz[m.up] + m.cfg.raman.differential_light_shift_hz)
-        down = down + 2 * np.pi * scales["raman"] * self.raman_shifts_hz[m.down]
-        H = np.zeros(self.raman_view(self.P0).shape[1:3] + (2 * nz, 2 * nz), complex)
+        raman_shifts = self.coherent_view(self.raman_shifts_hz)
+        up = up + 2 * np.pi * scales["raman"] * (raman_shifts[m.up] + m.cfg.raman.differential_light_shift_hz)
+        down = down + 2 * np.pi * scales["raman"] * raman_shifts[m.down]
+        H = np.zeros(self.coherent_view(self.P0).shape[1:-1] + (2 * nz, 2 * nz), complex)
         di = np.arange(2 * nz)
-        local_shifts = self.raman_view(self.lattice_shifts_hz)
+        local_shifts = self.coherent_view(self.lattice_shifts_hz)
         shifts = np.concatenate([local_shifts[m.up], local_shifts[m.down]], axis=-1)
-        H[..., di, di] = np.concatenate([up, down]) + 2 * np.pi * shifts
-        V = .5 * m.omega_c * m.D * scales["raman"]
-        n = np.arange(nz)
-        V = np.where(np.abs(n[:, None] - n) <= m.cfg.raman.max_sideband_order, V, 0)
+        H[..., di, di] = np.concatenate([up, down], axis=-1) + 2 * np.pi * shifts
+        V = .5 * m.omega_c * self.raman_D * scales["raman"]
+        V = np.where(self.raman_keep, V, 0)
         H[..., :nz, nz:] = V
         H[..., nz:, :nz] = V.conj().T
         return active, gout, hazard, counts, H
@@ -416,11 +463,11 @@ def uniform_step(P, active, gout, hazard, count_rates, dt):
 def solve_local(local, cfg, stop=None, progress=None):
     start = time.perf_counter()
     m = local.model
-    nz = m.N
+    nz = local.coherent_size
     ts = np.linspace(0, m.schedule[-1].t1, cfg.timing.n_samples)
     P = local.P0.copy()
-    Pc = local.raman_view(P)
-    rho = np.zeros(Pc.shape[1:3] + (2 * nz, 2 * nz), complex)
+    Pc = local.coherent_view(P)
+    rho = np.zeros(Pc.shape[1:-1] + (2 * nz, 2 * nz), complex)
     di = np.arange(2 * nz)
     rho[..., di, di] = np.concatenate([Pc[m.up], Pc[m.down]], axis=-1)
     cn, loss = np.zeros(4), 0.
@@ -430,7 +477,7 @@ def solve_local(local, cfg, stop=None, progress=None):
     current_hazard = local.operators(m.schedule[0])[2]
 
     def sample():
-        histories.append(Pc.sum(axis=(1, 2)))
+        histories.append(local.raman_view(P).sum(axis=(1, 2)))
         axial.append(P.sum(axis=(0, 1, 2)))
         transverse.append([P.sum(axis=(0, 2, 3)), P.sum(axis=(0, 1, 3))])
         paxis = [transverse[-1][0], transverse[-1][1], axial[-1]]
@@ -452,7 +499,7 @@ def solve_local(local, cfg, stop=None, progress=None):
         current_hazard = hazard
         gamma = m.cfg.raman.extra_coherence_decay_rate_s
         # Phenomenological extra gamma acts only on the Raman spin coherence.
-        goutc = local.raman_view(gout)
+        goutc = local.coherent_view(gout)
         pair_out = np.concatenate([goutc[m.up], goutc[m.down]], axis=-1)
         damp = (pair_out[..., :, None] + pair_out[..., None, :]) / 2
         damp[..., :nz, nz:] += gamma
@@ -479,16 +526,16 @@ def solve_local(local, cfg, stop=None, progress=None):
                     raise SimulationStopped()
                 rho = U @ rho @ Uh
                 pd = rho[..., di, di].real
-                Pc[m.up], Pc[m.down] = pd[..., :nz], pd[..., nz:]
+                local.store_pair_diagonal(P, pd)
                 P, lf, dc = scattering.step(P, dt)
-                Pc = local.raman_view(P)
+                Pc = local.coherent_view(P)
                 loss += lf.sum()
                 cn += dc
                 rho *= decay
                 rho[..., di, di] = np.concatenate([Pc[m.up], Pc[m.down]], axis=-1)
                 rho = U @ rho @ Uh
                 pd = rho[..., di, di].real
-                Pc[m.up], Pc[m.down] = pd[..., :nz], pd[..., nz:]
+                local.store_pair_diagonal(P, pd)
                 steps += 1
             now = target
             if sample_index < len(ts) and abs(now - ts[sample_index]) < 1e-13:
@@ -502,7 +549,8 @@ def solve_local(local, cfg, stop=None, progress=None):
                   min_eig=np.asarray(mins), coherence=np.asarray(coherences),
                   loss_flux=np.asarray(loss_fluxes), loss_energy_flux_hz=np.asarray(loss_energy_fluxes),
                   P_final_3d=P.copy(),
-                  wall_time_s=time.perf_counter() - start, steps=steps, rho_final=rho.sum(axis=(0, 1)))
+                  wall_time_s=time.perf_counter() - start, steps=steps,
+                  rho_final=rho.sum(axis=tuple(range(rho.ndim - 2))))
     return result
 
 
@@ -662,7 +710,10 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
             intensity_per_unit_tone_w_m2=0., residual_coherence_decay_rate_s=0.,
             calibration_compatible=None, carrier_decay_mode="not_applied")
         _check_stop(stop)
-        central = LocalExperiment(cfg, response, calibration, [0, 0, 0], 0., stop=stop)
+        _, coupled, _ = pol.raman_geometry(cfg.raman.beam_low_direction, cfg.raman.beam_high_direction,
+                                           pol.lattice_frame(cfg.trap.axis, cfg.ensemble.transverse_reference_direction))
+        central_phase = 0. if coupled else np.deg2rad(cfg.ensemble.phase_offset_deg)
+        central = LocalExperiment(cfg, response, calibration, [0, 0, 0], central_phase, stop=stop)
         # One fixed experimental beat, resonant with the central n=1->0 red
         # sideband including phase-AVERAGED Raman and lattice differential shift.
         if not active_raman:
@@ -672,9 +723,13 @@ def run_ensemble(cfg, stop=None, progress=None, estimate_cb=None, *, workers=Non
         else:
             low, high, eps, _ = raman_fields(cfg, response)
             shift = np.zeros(12)
-            for freq, powers in ((low, cfg.raman.tone_powers_low), (high, cfg.raman.tone_powers_high)):
+            for freq, powers in zip((low, high), cfg.raman.tone_powers()):
                 for ep, power in zip(eps, powers):
                     shift += response.shift_hz(freq, ep) * power * calibration["intensity_per_unit_tone_w_m2"]
+            if not coupled:
+                # Co-propagating beams have a fixed registration, so their
+                # same-tone interference must not be averaged away in tuning.
+                shift = central.raman_shifts_hz[:, 0, 0, 0]
             excited = [0, 0, 0]
             excited[central.raman_axis] = min(1, central.model.N - 1)
             lattice_delta = central.lattice_shifts_hz[(up, *excited)] - central.lattice_shifts_hz[down, 0, 0, 0]
@@ -756,7 +811,9 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
         series[f"P{at.ground_label(i)}"] = spin[:, i]
     final = {k: float(v[-1]) for k, v in series.items() if k in ("P_up", "P_n0", "P_target", "P_n0_given_up", "P_trapped", "P_up_absolute", "P_n0_absolute", "P_target_absolute", "nbar", "mean_excitation_energy_J", "mean_excitation_energy_hz", "fractional_energy_reduction")}
     finite = lambda x: float(x) if np.isfinite(x) else None
-    final.update(raman_axis="xyz"[ra], nbar_initial=float(nbar[0]), mean_excitation_energy_initial_J=float(at.H * energy[0, ra]),
+    coupled_labels = ["xyz"[i] for i in central.raman_coupled_axes]
+    final.update(raman_axis="xyz"[ra], raman_coupled_axes=coupled_labels,
+                 nbar_initial=float(nbar[0]), mean_excitation_energy_initial_J=float(at.H * energy[0, ra]),
                  P_up_times_P_n0=final["P_up"] * final["P_n0"], T_equiv_K=finite(temperatures[ra]),
                  T_equiv_axes_K={a: finite(t) for a, t in zip("xyz", temperatures)},
                  T_equiv_axes_initial_K={a: finite(series[f"T_equiv_{a}_K"][0]) for a in "xyz"},
@@ -849,7 +906,8 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     validity.add("recoil coherence", "warning", "Population-resolving scattering erases motional coherence and treats elastic spin amplitudes as distinguishable; this is an additional approximation beyond secular averaging.")
     validity.add("lattice", "warning", "Separable isolated wells with Gaussian local depths; no tunnelling, coherent Raman continuum excitation, envelope transport or recapture. Scalar trap basis with diagonal differential shifts; trap shape changes from spin-dependent shifts neglected.")
     validity.add("Stark shift approximation", "warning", "Raman/trap Stark operators use diagonal matrix elements; static off-diagonal motional dressing and trap-basis changes are omitted. Excited-state lattice shifts of the pumping transitions remain the configured common optical shift.")
-    validity.add("spatial ensemble", "warning", f"{n} frozen Gaussian position / uniform registration samples. Refine samples and time_step_us for convergence; samples are numerical quadrature, not experimental error bars.")
+    registration = "uniform registration" if coupled_labels else "fixed co-propagating phase"
+    validity.add("spatial ensemble", "warning", f"{n} frozen Gaussian position / {registration} samples. Refine samples and time_step_us for convergence; samples are numerical quadrature, not experimental error bars.")
     validity.add("temperature", "warning", "Axis temperatures are energy-matched bound-state mixture proxies; survivor cooling of undriven axes may result from preferential loss.")
     final["calibration_compatible"] = calibration["calibration_compatible"]
     final["carrier_decay_mode"] = calibration.get("carrier_decay_mode", "measured_envelope")
@@ -861,7 +919,15 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
     summary = dict(N_motional=nz, eta_R=center_model.eta_R, nu_10_hz=center_model.nu_ref, nu_beat_hz=beat,
                    raman_state_up=list(cfg.raman.state_up), raman_state_down=list(cfg.raman.state_down),
                    raman_state_indices=[up, down], nu_ud_zeeman_hz=center_model.nu_ud_zeeman,
-                   raman_axis="xyz"[ra], raman_direction_lab=central.axes_lab[ra].tolist(),
+                   raman_axis="xyz"[ra], raman_coupled_axes=coupled_labels,
+                   raman_reference_direction_lab=central.axes_lab[ra].tolist(),
+                   raman_direction_lab=(pol.unit(cfg.raman.beam_low_direction) if not coupled_labels else
+                                        pol.unit(pol.unit(cfg.raman.beam_low_direction) - pol.unit(cfg.raman.beam_high_direction))).tolist(),
+                   raman_beam_directions_lab=[pol.unit(v).tolist() for v in
+                                              (cfg.raman.beam_low_direction, cfg.raman.beam_high_direction)],
+                   raman_delta_k_local_per_m=(2 * np.pi / (cfg.raman.wavelength_nm * 1e-9) * central.raman_delta_local).tolist(),
+                   raman_reference_axis_note="Largest absolute Raman wavevector-difference projection (x,y,z tie order); used for target, marginal observables and sideband-offset tuning. All coupled axes evolve coherently.",
+                   N_coherent_motional=central.coherent_size,
                    lattice_axes_lab={a: v.tolist() for a, v in zip("xyz", central.axes_lab)},
                    lattice_parameters={a: spec.__dict__ for a, spec in zip("xyz", central.lattices)},
                    trap_potential="lattice", central_bottom_frequencies_hz={a: float(s.trap_hz) for a, s in zip("xyz", central.sites)},
@@ -881,8 +947,9 @@ def analyze_ensemble(cfg, central, components, calibration, beat):
                 cooling_rate_method=f"Savitzky-Golay derivative of survivor mean local {'xyz'[ra]} energy / level index",
                 model=center_model, model_summary=summary, result=result, ensemble_nodes=components,
                 ensemble_details=dict(assumptions=[f"Initially loaded Gaussian cloud, conditional on local bound states; axial preparation mode {cfg.initial.motion_mode}, configured axial temperature {cfg.initial.temperature_k:g} K, transverse temperature {cfg.ensemble.transverse_temperature_k:g} K. Loading survival unspecified.",
-                    "Uniform static Raman/lattice registration, not rapid temporal phase noise.",
-                    f"x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected {at.ground_label(up)}<->{at.ground_label(down)} Raman pair is coherent along {'xyz'[ra]}; other axes are population resolved.",
+                    ("Uniform static Raman/lattice registration, not rapid temporal phase noise." if coupled_labels else
+                     "Fixed Raman phase for co-propagating beams with zero wavevector difference."),
+                    f"x,y,z label local lattice axes (lab directions in model_summary.lattice_axes_lab); z is trap.axis. The selected {at.ground_label(up)}<->{at.ground_label(down)} Raman pair retains joint coherence on coupled axes {','.join(coupled_labels) or 'none (carrier only)'}. Reference axis {'xyz'[ra]} sets the reported target and sideband-offset tuning.",
                     recoil_description(cfg.ensemble.recoil_model),
                     "ARC D1+D2 scattering includes fine/hyperfine interference and coherent same-tone beam absorption.",
                     at.zeeman_model_description(cfg.optical.zeeman_model),

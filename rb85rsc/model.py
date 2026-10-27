@@ -73,6 +73,70 @@ BEAMS = ("spin_pump", "repump")
 COUNTERS = ("spin_pump", "repump", "raman_scatter")
 
 
+def raman_product_operator(rc, sites, axes_lab, path_coefficients=None, *,
+                           phase_rad=None, beam_intensities=None, diagonal=False,
+                           extents_m=None):
+    """Downward Raman amplitude on a product of lattice motional bases.
+
+    Rows and columns use C-order product states in the supplied axis order.
+    Each crossed pathway transfers ``k * (beam_low - beam_high)`` or its
+    negative, so its displacement factors across every retained axis. The
+    same-beam pathways have zero momentum transfer, as in the legacy model
+    (the optical-frequency difference in their wavevectors is neglected).
+
+    ``path_coefficients`` contains microscopic complex Rabi amplitudes per
+    unit intensity. ``beam_intensities`` supplies the two relative intensity
+    envelopes; the overall intensity/Rabi scale is applied by the caller.
+    ``diagonal`` computes just carrier overlaps without forming a square
+    product-space matrix. ``extents_m`` is only needed for bases without x0.
+    """
+    sites = tuple(sites)
+    axes = np.asarray(axes_lab, float)
+    if axes.shape != (len(sites), 3) or not sites:
+        raise ValueError("one lab direction is required for each motional basis")
+    extents = np.asarray([site.x0 for site in sites] if extents_m is None else extents_m, float)
+    if extents.shape != (len(sites),):
+        raise ValueError("one oscillator extent is required for each motional basis")
+    pl, ph = rc.tone_powers()
+    a = np.sqrt(np.outer(pl, ph))
+    if path_coefficients is not None:
+        a = a * np.asarray(path_coefficients, complex)
+    if beam_intensities is not None:
+        intensity = np.asarray(beam_intensities, float)
+        if intensity.shape != (2,) or np.any(~np.isfinite(intensity)) or np.any(intensity < 0):
+            raise ValueError("Raman beam intensities must be two finite nonnegative values")
+        a = a * np.sqrt(np.outer(intensity, intensity))
+    if rc.tone_layout == "both_tones_both_beams":
+        th = np.deg2rad(rc.lattice_phase_deg) if phase_rad is None else phase_rad
+        chi = np.deg2rad(rc.beam_beat_phase_deg)
+    else:
+        # A single pathway's global phase has no effect on populations.
+        th = chi = 0.0
+    dk = 2 * np.pi / (rc.wavelength_nm * 1e-9) * (
+        pol.unit(rc.beam_low_direction) - pol.unit(rc.beam_high_direction))
+    eta = (axes @ dk) * extents
+    forward = reverse = np.ones(1, complex) if diagonal else np.ones((1, 1), complex)
+    for site, displacement in zip(sites, eta):
+        d = site.displacement(float(displacement))
+        # Projected exp(i k.x) has adjoint exp(-i k.x), including finite wells.
+        forward = np.kron(forward, np.diag(d) if diagonal else d)
+        reverse = np.kron(reverse, np.diag(d).conj() if diagonal else d.conj().T)
+    identity = np.ones(forward.shape, complex) if diagonal else np.eye(forward.shape[0])
+    return (a[0, 1] * np.exp(1j * th) * forward
+            + a[1, 0] * np.exp(-1j * (chi + th)) * reverse
+            + (a[0, 0] + a[1, 1] * np.exp(-1j * chi)) * identity)
+
+
+def raman_sideband_mask(sites, order):
+    """Keep transitions changing at most ``order`` total motional quanta."""
+    shape = tuple(site.N for site in sites)
+    levels = np.indices(shape).reshape(len(shape), -1)
+    change = np.zeros((levels.shape[1], levels.shape[1]), dtype=int)
+    for n in levels:
+        change += np.abs(n[:, None] - n[None, :])
+    return change <= order
+
+
 @dataclass
 class SegmentOps:
     seg: Segment
@@ -164,11 +228,7 @@ class Model:
         self.eta_R_signed = float(np.dot(self.dk, self.u) * self.x0)
         self.eta_R = abs(self.eta_R_signed)
         # pathway amplitudes a[i, j]: low tone from beam i, high tone from beam j (same beat frequency -> coherent sum)
-        if rc.tone_layout == "both_tones_both_beams":
-            pl, ph = np.asarray(rc.tone_powers_low, float), np.asarray(rc.tone_powers_high, float)
-            th, chi = np.deg2rad(rc.lattice_phase_deg), np.deg2rad(rc.beam_beat_phase_deg)
-        else:
-            pl, ph, th, chi = np.array([1.0, 0.0]), np.array([0.0, 1.0]), 0.0, 0.0
+        pl, ph = rc.tone_powers()
         a = np.sqrt(np.outer(pl, ph))
         if raman_path_coefficients is not None:
             a = a * np.asarray(raman_path_coefficients, complex)
@@ -176,11 +236,8 @@ class Model:
         # This operator describes up -> down: absorb LOW, emit HIGH. Its
         # co-propagating beam-2 phase is -chi, because chi is HIGH-minus-LOW.
         # H's |up><down| block must contain its adjoint (the reverse process).
-        self.raman_downward_D = (
-            a[0, 1] * np.exp(1j * th) * self.motion.displacement(self.eta_R_signed)
-            + a[1, 0] * np.exp(-1j * (chi + th)) * self.motion.displacement(-self.eta_R_signed)
-            + (a[0, 0] + a[1, 1] * np.exp(-1j * chi)) * np.eye(N)
-        )
+        self.raman_downward_D = raman_product_operator(
+            rc, [self.motion], [self.u], raman_path_coefficients, extents_m=[self.x0])
         self.D = self.raman_downward_D.conj().T
         self.omega_c = 2 * np.pi * rc.carrier_rabi_hz if rc.enabled else 0.0
         order = rc.max_sideband_order

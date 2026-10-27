@@ -123,7 +123,7 @@ def analyze_observables(cfg, raw, stop=None):
     series = dict(t_s=t, **cloud['mean'])
     se = dict(cloud['standard_error'])
     axes = pol.lattice_frame(cfg.trap.axis, cfg.ensemble.transverse_reference_direction)
-    target_axis = pol.lattice_axis_index(cfg.raman.beam_low_direction, axes)
+    target_axis, _, _ = pol.raman_geometry(cfg.raman.beam_low_direction, cfg.raman.beam_high_direction, axes)
     up, down = cfg.raman.state_indices()
 
     def conditional(key):

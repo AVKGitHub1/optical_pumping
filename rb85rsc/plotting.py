@@ -236,7 +236,8 @@ def plot_pnt(ax, a, fig=None, axis=None):
 
 
 def _axis_label(a, axis):
-    return axis + (" (Raman)" if axis == a["final"].get("raman_axis") and a["final"].get("raman_active", True) else "")
+    coupled = a["final"].get("raman_coupled_axes", [a["final"].get("raman_axis")])
+    return axis + (" (Raman)" if axis in coupled and a["final"].get("raman_active", True) else "")
 
 
 def draw_motional_axes(fig, a):

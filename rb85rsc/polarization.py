@@ -52,8 +52,31 @@ def lattice_axis_index(direction, axes_lab) -> int:
     k = unit(direction)
     axis = int(np.argmax(np.abs(axes_lab @ k)))
     if np.linalg.norm(np.cross(k, axes_lab[axis])) > 1e-8:
-        raise ValueError("ensemble Raman beams must follow one lattice axis (local x, y, or z); simultaneous coherent coupling of multiple axes is unsupported")
+        raise ValueError("direction does not follow a single lattice axis")
     return axis
+
+
+def raman_geometry(low_direction, high_direction, axes_lab):
+    """Return the reference axis, coupled axes, and local Raman wavevector / k.
+
+    The reference axis defines sideband-offset tuning and the legacy marginal
+    observables. Every nonzero component of the momentum transfer is retained
+    by the coherent motional operator. Co-propagating beams transfer no momentum;
+    their propagation direction supplies the reporting reference only.
+    """
+    low, high = unit(low_direction), unit(high_direction)
+    projections = np.asarray(axes_lab) @ (low - high)
+    norm = np.linalg.norm(projections)
+    def strongest(values):
+        magnitude = np.abs(values)
+        # Equal projections select x before y before z even after a rigid
+        # rotation introduces machine-roundoff differences between components.
+        return int(np.flatnonzero(magnitude >= magnitude.max() * (1 - 1e-12))[0])
+    if norm < 1e-14:
+        return strongest(np.asarray(axes_lab) @ low), (), projections
+    reference = strongest(projections)
+    driven = tuple(int(i) for i in np.flatnonzero(np.abs(projections) > norm * 1e-8))
+    return reference, driven, projections
 
 
 def field_frame(b_dir) -> np.ndarray:

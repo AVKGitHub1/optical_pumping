@@ -213,6 +213,9 @@ def spatial_samples(cfg, count=None):
     # spherical; rotating the apparatus also rotates its finite quadrature.
     xyz = xyz @ pol.lattice_frame(cfg.trap.axis, cfg.ensemble.transverse_reference_direction)
     phase = 2 * np.pi * points[:, 3] + np.deg2rad(cfg.ensemble.phase_offset_deg)
+    if np.linalg.norm(pol.unit(cfg.raman.beam_low_direction) - pol.unit(cfg.raman.beam_high_direction)) < 1e-14:
+        # No spatial Raman interference phase exists at zero momentum transfer.
+        phase[:] = np.deg2rad(cfg.ensemble.phase_offset_deg)
     return xyz, phase
 
 
@@ -235,8 +238,8 @@ def raman_fields(cfg, response):
 def calibrate_carrier(cfg, response):
     """Infer intensity using the selected carrier-decay convention.
 
-    Only the Raman-driven lattice is present in the calibration model. Thermal
-    carrier overlaps and Gaussian intensity / random position are included
+    All Raman-coupled lattice axes enter the calibration model. Thermal
+    carrier overlaps and each beam's Gaussian intensity / random position are included
     before either predicting decay from those overlaps (modeled mode) or fitting
     NONNEGATIVE residual homogeneous dephasing (measured_envelope mode).
     Modeled mode fixes intensity by RMS carrier frequency / initial curvature;
@@ -248,41 +251,47 @@ def calibrate_carrier(cfg, response):
     rc, ec = cfg.raman, cfg.ensemble
     up, down = rc.state_indices()
     axes = pol.lattice_frame(cfg.trap.axis, ec.transverse_reference_direction)
-    ra = pol.lattice_axis_index(rc.beam_low_direction, axes)
-    lattice = cfg.lattice_parameters(ra, response.atom.mass_kg)
+    ra, driven_axes, delta_local = pol.raman_geometry(rc.beam_low_direction, rc.beam_high_direction, axes)
+    calibration_axes = driven_axes or (ra,)
+    lattices = [cfg.lattice_parameters(i, response.atom.mass_kg) for i in range(3)]
+    lattice = lattices[ra]
     temperature = cfg.initial.temperature_k if ra == 2 else ec.transverse_temperature_k
+    temperatures = [ec.transverse_temperature_k, ec.transverse_temperature_k, cfg.initial.temperature_k]
     ensemble_inputs = {k: getattr(ec, k) for k in ("cloud_radius_um", "lattice_waist_um", "phase_offset_deg", "calibration_samples", "transverse_reference_direction")}
-    raman_inputs = {k: getattr(rc, k) for k in ("carrier_rabi_hz", "wavelength_nm", "beam_low_direction", "beam_high_direction",
+    raman_inputs = {k: getattr(rc, k) for k in ("carrier_rabi_hz", "wavelength_nm", "beam_low_direction", "beam_high_direction", "tone_layout",
                     "tone_powers_low", "tone_powers_high", "beam_beat_phase_deg", "beam_helicities", "waist_um", "flop_contrast", "flop_decay_periods", "carrier_decay_mode",
                     "state_up", "state_down", "polarization_mode", "beam_low_ellipticity_deg", "beam_high_ellipticity_deg",
                     "beam_low_orientation_deg", "beam_high_orientation_deg")}
-    keydata = dict(format=9, atom=response.source, raman=raman_inputs, ensemble=ensemble_inputs,
+    keydata = dict(format=10, atom=response.source, raman=raman_inputs, ensemble=ensemble_inputs,
                    trap=cfg.to_dict()["trap"], lattice=lattice.__dict__, magnetic=cfg.magnetic.__dict__, temperature=temperature,
-                   seed=cfg.numerics.seed)
+                   temperatures=temperatures, seed=cfg.numerics.seed)
     key = hashlib.sha256(json.dumps(keydata, sort_keys=True).encode()).hexdigest()[:24]
     path = CACHE / f"carrier_{key}.json"
     if path.exists():
         return json.loads(path.read_text())
     low, high, eps, paths = raman_fields(cfg, response)
     xyz, phases = spatial_samples(cfg, ec.calibration_samples)
-    a = paths * np.sqrt(np.outer(rc.tone_powers_low, rc.tone_powers_high))
-    chi = np.deg2rad(rc.beam_beat_phase_deg)
+    from .model import raman_product_operator
+    powers_low, powers_high = rc.tone_powers()
     axis = axes[ra]
-    beam_axis = pol.unit(rc.beam_low_direction)
-    dk_axial = 2 * np.pi / (rc.wavelength_nm * 1e-9) * np.dot(beam_axis - pol.unit(rc.beam_high_direction), axis)
+    beam_directions = (rc.beam_low_direction, rc.beam_high_direction)
     cs, weights = [], []
     for p, th in zip(xyz, phases):
-        depth = lattice.depth_uk * envelope(p, axis, lattice.waist_um)
-        nu = mo.lattice_frequency_hz(response.atom.mass_kg, lattice.wavelength_nm, depth)
-        site = mo.lattice_site(response.atom.mass_kg, nu, depth * 1e-6 * at.K_B / at.H, cfg.trap.n_max + 1)
-        if site.N != site.n_bound:
-            raise ValueError("carrier calibration requires all bound axial levels; increase trap.n_max")
-        eta = dk_axial * site.x0
-        diag = np.diag(site.displacement(eta))
-        op = a[0, 1] * np.exp(1j * th) * diag + a[1, 0] * np.exp(-1j * (chi + th)) * diag.conj()
-        op += a[0, 0] + a[1, 1] * np.exp(-1j * chi)
-        cs.extend(np.abs(op) * envelope(p, beam_axis, rc.waist_um))
-        weights.extend(mo.boltzmann_pn(site.energies_hz, temperature) / len(xyz))
+        sites, thermal = [], np.ones(1)
+        for i in calibration_axes:
+            spec = lattices[i]
+            depth = spec.depth_uk * envelope(p, axes[i], spec.waist_um)
+            nu = mo.lattice_frequency_hz(response.atom.mass_kg, spec.wavelength_nm, depth)
+            site = mo.lattice_site(response.atom.mass_kg, nu, depth * 1e-6 * at.K_B / at.H, cfg.trap.n_max + 1)
+            if site.N != site.n_bound:
+                raise ValueError("carrier calibration requires all bound levels on each coupled lattice axis; increase trap.n_max")
+            sites.append(site)
+            thermal = np.kron(thermal, mo.boltzmann_pn(site.energies_hz, temperatures[i]))
+        beam_intensities = [envelope(p, direction, rc.waist_um) for direction in beam_directions]
+        op = raman_product_operator(rc, sites, axes[list(calibration_axes)], paths,
+                                    phase_rad=th, beam_intensities=beam_intensities, diagonal=True)
+        cs.extend(np.abs(op))
+        weights.extend(thermal / len(xyz))
     cs, weights = np.asarray(cs), np.asarray(weights)
     if weights @ cs**2 < 1e-24:
         message = (f"No carrier coupling for the selected Raman pair {at.ground_label(up)} -> {at.ground_label(down)} "
@@ -298,12 +307,15 @@ def calibrate_carrier(cfg, response):
     target = rc.flop_contrast * .5 * (1 - np.exp(-t / tau) * np.cos(2 * np.pi * rc.carrier_rabi_hz * t))
 
     def predicted(intensity, gamma):
-        om = 2 * np.pi * intensity * cs[:, None]
-        damped = np.sqrt(om**2 - gamma**2 / 4 + 0j)
-        arg = damped * t
-        # sin(wt)/w is regular at critical damping.
-        z = np.exp(-gamma * t / 2) * (np.cos(arg) + gamma * t / 2 * np.sinc(arg / np.pi))
-        return rc.flop_contrast * .5 * (1 - weights @ z.real)
+        mean_z = np.zeros_like(t)
+        for first in range(0, len(cs), 2048):
+            om = 2 * np.pi * intensity * cs[first:first + 2048, None]
+            damped = np.sqrt(om**2 - gamma**2 / 4 + 0j)
+            arg = damped * t
+            # sin(wt)/w is regular at critical damping.
+            z = np.exp(-gamma * t / 2) * (np.cos(arg) + gamma * t / 2 * np.sinc(arg / np.pi))
+            mean_z += weights[first:first + 2048] @ z.real
+        return rc.flop_contrast * .5 * (1 - mean_z)
 
     def residual(x):
         return predicted(curvature_intensity * x[0], x[1] / tau) - target
@@ -322,7 +334,11 @@ def calibrate_carrier(cfg, response):
     # frequencies. It need not be exponential or monotone; report FIRST 1/e
     # crossing rather than pretending it is a Markovian dephasing rate.
     envelope_t = np.linspace(0, 4 / rc.carrier_rabi_hz, 1601)
-    envelope_curve = np.abs(weights @ np.exp(2j * np.pi * intensity * cs[:, None] * envelope_t))
+    envelope_amplitude = np.zeros_like(envelope_t, dtype=complex)
+    for first in range(0, len(cs), 512):
+        envelope_amplitude += weights[first:first + 512] @ np.exp(
+            2j * np.pi * intensity * cs[first:first + 512, None] * envelope_t)
+    envelope_curve = np.abs(envelope_amplitude)
     crossings = np.flatnonzero(envelope_curve <= np.exp(-1))
     decay_time = None
     if len(crossings):
@@ -330,13 +346,17 @@ def calibrate_carrier(cfg, response):
         fraction = (envelope_curve[j-1] - np.exp(-1)) / (envelope_curve[j-1] - envelope_curve[j])
         decay_time = float(envelope_t[j-1] + fraction * (envelope_t[j] - envelope_t[j-1]))
     scattering, shifts = np.zeros(12), np.zeros(12)
-    for freq, powers in ((low, rc.tone_powers_low), (high, rc.tone_powers_high)):
+    for freq, powers in ((low, powers_low), (high, powers_high)):
         for ep, power in zip(eps, powers):
             scattering += intensity * power * (abs(response.scattering_amplitudes(freq, ep))**2).sum(axis=(1, 2))
             shifts += intensity * power * response.shift_hz(freq, ep)
-    result = dict(cache_key=key, calibration_model_version=9, carrier_decay_mode=rc.carrier_decay_mode,
+    result = dict(cache_key=key, calibration_model_version=10, carrier_decay_mode=rc.carrier_decay_mode,
                   raman_state_up=list(rc.state_up), raman_state_down=list(rc.state_down),
                   lattice_axis="xyz"[ra], lattice_direction_lab=axis.tolist(), lattice_parameters=lattice.__dict__,
+                  driven_lattice_axes=["xyz"[i] for i in driven_axes],
+                  delta_direction_lattice=delta_local.tolist(),
+                  coupled_lattice_parameters={"xyz"[i]: lattices[i].__dict__ for i in calibration_axes},
+                  coupled_temperatures_k={"xyz"[i]: temperatures[i] for i in calibration_axes},
                   temperature_k=temperature,
                   intensity_calibration="rms_carrier_initial_curvature" if modeled else "synthetic_measured_envelope_fit",
                   intensity_per_unit_tone_w_m2=float(intensity),

@@ -23,8 +23,9 @@ In the GUI, open **3D spatial ensemble**, set **workers** to **8**, and click **
 The GUI also opens this config by default and returns to it on Reset. For headless runs, pass `--config` explicitly: omitting it retains the legacy built-in defaults. `python -m rb85rsc` accepts the same options as `python rb85_rsc_sim.py`.
 
 The Trap tab provides separate X, Y, and Z lattice controls for wavelength,
-waist, depth, and bottom frequency. Raman beams may counterpropagate along any
-one of these lattice axes without rotating the trap. See
+waist, depth, and bottom frequency. Raman beams may point in any lab direction,
+including oblique and crossed configurations, without rotating the trap. Both
+one-tone-per-beam and both-tones-in-both-beams layouts are supported. See
 [Raman and lattice directions](docs/experiment-workflow.md#raman-and-lattice-directions)
 for axis and polarization settings.
 
@@ -50,7 +51,7 @@ Runs export configuration and metadata JSON, time-series CSV, population arrays,
 
 For a 3D ensemble, the GUI's **Thermal x/y/z** tab compares each lattice's temperature estimate, excitation energy, ground-state fraction, and cooling/heating rate. **p(n,t)** shows all three motional distributions, and **Overview** shows all three mean occupations. The thermal plots separate preferential-loss cooling from the remaining energy change; all of these curves describe surviving atoms. The same data and figures are included in exports.
 
-`P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches selected Raman state A with `n=0` along the Raman-driven lattice (`F=3,mF=3` and `z` in the active example). The full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
+`P_target_absolute` is the initially loaded fraction that remains bound in all three axes and reaches selected Raman state A with `n=0` along the reference lattice (`F=3,mF=3` and `z` in the active example). For oblique beams, the reference is the lattice with the largest Raman wavevector-difference projection. The full 3D ground-state fraction is reported separately. Temperatures are energy-matched proxies, and loss assumes no recapture after leaving a local well. See the [current physics report](docs/astra-physics-corrections.md) for saved predictions, assumptions, and remaining uncertainties.
 
 Check the **model validity** banner before interpreting a result. Ensemble diagnostics include magnetic-field and ground-coherence checks as well as the motional-secular criterion. A numerically converged run can still lie outside these approximations. The energy-change plots separate preferential loss from the remaining dynamics; a decreasing survivor temperature does not by itself demonstrate cooling of retained atoms. "Well escape assuming no recapture" is not a prediction of apparatus-level atom loss.
 

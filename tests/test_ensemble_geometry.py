@@ -56,14 +56,11 @@ def test_accepts_rotated_counterpropagating_beams(rotation, reverse):
 
 
 @pytest.mark.parametrize('low,high,message', [
-    ([0, 0, 1], [0, 0, 2], 'counterpropagating'),
-    ([0, 0, 1], [1, 0, -1], 'counterpropagating'),
-    ([1, 0, 1], [-1, 0, -1], 'one lattice axis'),
     ([0, 0, 0], [0, 0, -1], 'nonzero 3-vector'),
     ([0, 1], [0, 0, -1], 'nonzero 3-vector'),
     ([np.nan, 0, 1], [0, 0, -1], 'nonzero 3-vector'),
 ])
-def test_rejects_unsupported_or_invalid_directions(low, high, message):
+def test_rejects_invalid_directions(low, high, message):
     cfg = config()
     cfg.raman.beam_low_direction = low
     cfg.raman.beam_high_direction = high
@@ -150,9 +147,9 @@ def test_gui_invalid_geometry_shows_dialog(action, monkeypatch):
         window.load_config(valid)
         cfg = window.current_config()  # Also exercise GUI vector precision.
         np.testing.assert_allclose(cfg.trap.axis, valid.trap.axis, atol=1e-8)
-        window.fields['raman.beam_high_direction'].set(valid.raman.beam_low_direction)
+        window.fields['raman.beam_high_direction'].set([0., 0., 0.])
         getattr(window, action)()
-        assert len(warnings) == 1 and 'counterpropagating' in warnings[0]
+        assert len(warnings) == 1 and 'nonzero 3-vector' in warnings[0]
         assert window.thread is None
     finally:
         window.close()

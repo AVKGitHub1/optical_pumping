@@ -174,7 +174,7 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
         raman_state_indices=np.array([a["model"].up, a["model"].down]),
         raman_spin_labels=np.array([atomic.ground_label(i) for i in (a["model"].up, a["model"].down)]),
         rho_raman_block_final=res.rho_final if res.rho_final is not None else np.zeros(0),
-        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n along the Raman-driven lattice (model_summary.raman_axis; other axes marginalized in ensemble mode), "
+        description=np.array("P[t, s, n]: joint population of ground sublevel s (order F=2 m=-2..2, F=3 m=-3..3) and vibrational level n along the Raman reference lattice (model_summary.raman_axis; other axes marginalized in ensemble mode), "
                              "as fractions of all atoms (sum = 1 - overflow); divide by P[t].sum() for per-trapped-atom values"),
     )
     (outdir / f"{stem}_metadata.json").write_text(json.dumps(metadata(a), indent=2, default=_json_default))
@@ -182,7 +182,10 @@ def export(a: dict, outdir: str | Path, figures=True, stem="run") -> Path:
     if "ensemble_nodes" in a:
         arrays = {"t_s": res.t, "survival": a["series"]["P_trapped"],
                   "lattice_axes_lab": np.asarray([a["model_summary"]["lattice_axes_lab"][axis] for axis in "xyz"]),
-                  "raman_axis": np.asarray(a["model_summary"]["raman_axis"])}
+                  "raman_axis": np.asarray(a["model_summary"]["raman_axis"]),
+                  "raman_coupled_axes": np.asarray(a["model_summary"]["raman_coupled_axes"], dtype=str),
+                  "raman_beam_directions_lab": np.asarray(a["model_summary"]["raman_beam_directions_lab"]),
+                  "raman_delta_k_local_per_m": np.asarray(a["model_summary"]["raman_delta_k_local_per_m"])}
         for axis in a.get("pn_axes", {}):
             arrays[f"pn_{axis}"] = a["pn_axes"][axis]
             arrays[f"pn_{axis}_absolute"] = a["pn_axes_absolute"][axis]

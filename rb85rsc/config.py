@@ -55,7 +55,7 @@ class TrapConfig:
         choices=["harmonic", "lattice"],
     )
     n_max: int = P(40, "", "Highest vibrational level kept (basis n = 0..n_max). Lattice: cap on the bound levels kept.", min=2, max=250)
-    axis: list = P([1.0, 0.0, 0.0], "lab unit vector", "Direction of the local z lattice (and the 1D trap in legacy mode). Ensemble Raman beams may follow any of the three lattice axes.")
+    axis: list = P([1.0, 0.0, 0.0], "lab unit vector", "Direction of the local z lattice (and the 1D trap in legacy mode). Ensemble Raman beam directions are independent of the lattice axes.")
     heating_rate_quanta_per_s: float = P(0.0, "quanta/s", "Background motional heating dnbar/dt (infinite-temperature reservoir, a and a^+ jumps).", min=0.0)
     depth_uk: Optional[float] = P(None, "uK", "Trap depth (k_B x temperature units). Harmonic: optional, enables the harmonic-validity diagnostic. Lattice: required, V0.", min=0.0)
 
@@ -115,19 +115,21 @@ class RamanConfig:
     frequency_mode: str = P(
         "sideband_offset",
         "",
-        "sideband_offset: beat = nu_ud_ref + nu_t + offset; absolute_beat: beat frequency given directly.",
+        "sideband_offset: beat = nu_ud_ref + nu_t + offset; absolute_beat: beat frequency given directly. "
+        "In ensemble mode the reference lattice is the largest component of beam 1 minus beam 2 direction "
+        "(x before y before z for ties); all coupled lattice axes evolve coherently.",
         choices=["sideband_offset", "absolute_beat"],
     )
-    red_sideband_offset_hz: float = P(0.0, "Hz", "delta_beat - nu_10; 0 is the first red-sideband (n=1->0) resonance of the reference nu_ud (nu_10 = nu_t harmonic, exact level spacing lattice).")
+    red_sideband_offset_hz: float = P(0.0, "Hz", "delta_beat - nu_10; 0 is the first red-sideband (n=1->0) resonance of the reference nu_ud (nu_10 = nu_t harmonic, exact level spacing lattice). For oblique ensemble beams, the reference lattice follows the largest momentum-transfer component. Co-propagating beams use their largest direction component for reporting and have no motional sideband coupling.")
     beat_frequency_hz: float = P(3.0357324e9 + 70e3, "Hz", "Signed beat: emitted tone minus absorbed tone for A -> B. Negative when B is higher in energy than A. Used in absolute_beat mode.")
     wavelength_nm: float = P(783.0, "nm", "Wavelength of the tone absorbed from state A. Sets recoil and D1+D2 optical detunings in measured_carrier mode.", min=100.0)
     beam_low_direction: list = P(
         [0.70710678, 0.70710678, 0.0], "lab unit vector",
-        "Beam 1: absorbed tone on |A,n> -> |B,n-1>. The legacy low/high names assume A is higher in energy than B.", illustrative=True,
+        "Beam 1 lab direction, independent of the lattice axes: absorbed tone on |A,n> -> |B,n-1>. The legacy low/high names assume A is higher in energy than B.", illustrative=True,
     )
     beam_high_direction: list = P(
         [-0.70710678, 0.70710678, 0.0], "lab unit vector",
-        "Beam 2: emitted tone on A -> B. The legacy low/high names assume A is higher in energy than B.", illustrative=True,
+        "Beam 2 lab direction, independent of beam 1 and the lattice axes: emitted tone on A -> B. The legacy low/high names assume A is higher in energy than B.", illustrative=True,
     )
     tone_layout: str = P(
         "one_tone_per_beam",
@@ -166,11 +168,17 @@ class RamanConfig:
         "depolarizing: spin reshuffled uniformly over 12 sublevels (crude worst case).",
         choices=["spin_preserving", "depolarizing"],
     )
-    max_sideband_order: int = P(3, "", "Keep Raman couplings with |n-m| <= this order (exact matrix elements; convergence parameter).", min=1, max=20)
+    max_sideband_order: int = P(3, "", "Keep Raman couplings with |n-m| <= this order in 1D, or sum_axis |n_axis-m_axis| <= this order across all coupled ensemble axes (exact matrix elements; convergence parameter).", min=1, max=20)
 
     def state_indices(self) -> tuple[int, int]:
         """Indices in the fixed 12-state population order, never module globals."""
         return at.GROUND_STATES.index(tuple(self.state_up)), at.GROUND_STATES.index(tuple(self.state_down))
+
+    def tone_powers(self):
+        """Relative low/high powers in each beam for the active tone layout."""
+        if self.tone_layout == "one_tone_per_beam":
+            return np.array([1., 0.]), np.array([0., 1.])
+        return np.asarray(self.tone_powers_low, float), np.asarray(self.tone_powers_high, float)
 
     def field_vectors(self, bdir):
         dirs = (self.beam_low_direction, self.beam_high_direction)
@@ -328,7 +336,7 @@ class EnsembleConfig:
     lattice_linear_polarizations: list = P([[0, 1, 0], [1, 0, 0], [1, 0, 0]], "lab vectors", "Linear electric field directions for the local x, y, z lattices, perpendicular to their respective lab directions. Rotate these lab vectors when rotating the apparatus.")
     phase_offset_deg: float = P(0.0, "deg", "Offset added to the uniformly sampled Raman spatial phase; use for quadrature sensitivity.")
     time_step_us: float = P(2.0, "us", "Maximum Strang splitting step; halve to verify integration convergence.", min=0.01)
-    calibration_samples: int = P(128, "", "Position/phase samples for independent pump-off carrier calibration with only the Raman-driven lattice present.", min=8)
+    calibration_samples: int = P(128, "", "Position/phase samples for independent pump-off carrier calibration, including thermal carrier overlaps on every Raman-coupled lattice axis.", min=8)
 
 
 @dataclass
@@ -453,20 +461,6 @@ class SimConfig:
                     if value is None or not np.isfinite(value) or value <= 0:
                         errs.append(f"trap.lattice_{label}.{name} must be positive")
             axis = directions.get("trap.axis")
-            low = directions.get("raman.beam_low_direction")
-            high = directions.get("raman.beam_high_direction")
-            if low is not None and high is not None:
-                if not np.allclose(low, -high, rtol=0, atol=1e-8):
-                    errs.append("ensemble mode requires counterpropagating Raman beams (opposite beam directions)")
-                if axis is not None and "ensemble.transverse_reference_direction" in directions:
-                    axes = pol.lattice_frame(axis, directions["ensemble.transverse_reference_direction"])
-                    try:
-                        pol.lattice_axis_index(low, axes)
-                        pol.lattice_axis_index(high, axes)
-                    except ValueError as e:
-                        errs.append(str(e))
-            if self.raman.tone_layout != "both_tones_both_beams":
-                errs.append("ensemble mode requires both tones in both Raman beams")
             if self.numerics.solver == "rate":
                 errs.append("ensemble mode uses coherent evolution; rate solver is unsupported")
             if self.trap.heating_rate_quanta_per_s != 0:
